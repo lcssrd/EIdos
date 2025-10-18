@@ -17,6 +17,10 @@
             color: #1f2937;
         }
         
+        #main-content-wrapper {
+            overflow-y: scroll;
+        }
+
         .content-section { display: none; }
         .content-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
 
@@ -527,68 +531,75 @@
             if (!patientId) return;
             const SAVE_KEY = getSaveKey(patientId);
             const savedState = localStorage.getItem(SAVE_KEY);
-            if (!savedState) {
-                // Set default room number if no data exists
-                document.getElementById('patient-room').value = patientId.split('_')[1];
-                return;
-            };
-            const state = JSON.parse(savedState);
 
-            Object.keys(state).forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    if (el.type === 'checkbox' || el.type === 'radio') {
-                        el.checked = state[id];
-                    } else {
-                        el.value = state[id];
-                    }
-                }
-            });
-            
-            const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'];
-            dynamicContentIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (el && state[id + '_html']) el.innerHTML = state[id + '_html'];
-            });
+            if (!savedState || savedState === '{}') {
+                resetForm(); // Ensure a completely clean slate
+            } else {
+                const state = JSON.parse(savedState);
 
-            if (state.prescriptionCheckboxes) {
-                document.querySelectorAll('#prescription-tbody input[type="checkbox"]').forEach((cb, index) => {
-                    cb.checked = state.prescriptionCheckboxes[index] || false;
-                });
-            }
-             if (state.careDiagramCheckboxes) {
-                document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
-                    cb.checked = state.careDiagramCheckboxes[index] || false;
-                });
-            }
-
-            if (state.pancarteValues) {
-                document.querySelectorAll('#pancarte-table tbody input').forEach((input, index) => {
-                    input.value = state.pancarteValues[index] || '';
-                });
-            }
-
-            const entryDateValue = document.getElementById('patient-entry-date').value;
-            if (entryDateValue) {
-                const entryDate = new Date(entryDateValue);
-                if (!isNaN(entryDate.getTime())) updateDynamicDates(entryDate);
-            }
-            
-            if (state.lockButtonStates) {
-                Object.keys(state.lockButtonStates).forEach(buttonId => {
-                    if (state.lockButtonStates[buttonId]) {
-                        const button = document.getElementById(buttonId);
-                        if (button && button.innerHTML.includes('fa-check')) {
-                            let containerId;
-                            if (buttonId === 'lock-header-btn') containerId = 'patient-header-form';
-                            if (buttonId === 'lock-admin-btn') containerId = 'administratif';
-                            if (buttonId === 'lock-vie-btn') containerId = 'mode-de-vie';
-                            if (containerId) toggleLock(containerId, buttonId);
+                Object.keys(state).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.type === 'checkbox' || el.type === 'radio') {
+                            el.checked = state[id];
+                        } else {
+                            el.value = state[id];
                         }
                     }
                 });
+
+                const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'];
+                dynamicContentIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && state[id + '_html']) el.innerHTML = state[id + '_html'];
+                });
+
+                if (state.prescriptionCheckboxes) {
+                    document.querySelectorAll('#prescription-tbody input[type="checkbox"]').forEach((cb, index) => {
+                        cb.checked = state.prescriptionCheckboxes[index] || false;
+                    });
+                }
+                if (state.careDiagramCheckboxes) {
+                    document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
+                        cb.checked = state.careDiagramCheckboxes[index] || false;
+                    });
+                }
+
+                if (state.pancarteValues) {
+                    document.querySelectorAll('#pancarte-table tbody input').forEach((input, index) => {
+                        input.value = state.pancarteValues[index] || '';
+                    });
+                }
+
+                const entryDateValue = document.getElementById('patient-entry-date').value;
+                if (entryDateValue) {
+                    const entryDate = new Date(entryDateValue);
+                    if (!isNaN(entryDate.getTime())) updateDynamicDates(entryDate);
+                }
+
+                if (state.lockButtonStates) {
+                    Object.keys(state.lockButtonStates).forEach(buttonId => {
+                        if (state.lockButtonStates[buttonId]) {
+                            const button = document.getElementById(buttonId);
+                            if (button && button.innerHTML.includes('fa-check')) {
+                                let containerId;
+                                if (buttonId === 'lock-header-btn') containerId = 'patient-header-form';
+                                if (buttonId === 'lock-admin-btn') containerId = 'administratif';
+                                if (buttonId === 'lock-vie-btn') containerId = 'mode-de-vie';
+                                if (containerId) toggleLock(containerId, buttonId);
+                            }
+                        }
+                    });
+                }
             }
+
+            // --- MODIFICATION ---
+            // This ensures the room number is always correct and not editable.
+            const roomInput = document.getElementById('patient-room');
+            roomInput.value = patientId.split('_')[1];
+            roomInput.readOnly = true;
         }
+
 
         function clearCurrentPatientData() {
             if (!confirm(`Êtes-vous sûr de vouloir effacer le dossier du patient dans la chambre ${activePatientId.split('_')[1]} ?`)) return;
@@ -669,7 +680,9 @@
         }
         
         function resetForm() {
-            document.querySelector('main form')?.reset();
+            // BUG FIX: The .reset() method is inconsistent and only targets the first form.
+            // Relying on the explicit loop is safer and clearer.
+            // document.querySelector('main form')?.reset(); 
             document.querySelectorAll('main input, main textarea').forEach(el => {
                 if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
                 else if (el.type !== 'file') el.value = '';
@@ -797,7 +810,8 @@
 
         function changeTab(event, tabId) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+            const activeSection = document.getElementById(tabId);
+            activeSection.classList.add('active');
             
             const baseClasses = "py-2.5 px-4 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
@@ -812,6 +826,10 @@
             document.getElementById(tabId).querySelectorAll('.card-header').forEach(h => h.classList.add(`header-${color}`));
 
             localStorage.setItem('activeTab', tabId);
+
+            // BUG FIX: When a tab becomes visible, its textareas might need resizing.
+            // This ensures that textareas with pre-loaded, multi-line content are displayed at the correct height.
+            activeSection.querySelectorAll('textarea.info-value').forEach(autoResize);
 
             if (tabId === 'pancarte') setTimeout(() => updatePancarteChart(), 50);
         }
