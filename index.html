@@ -53,6 +53,7 @@
         .card-header.header-indigo { color: #4338ca; border-bottom-color: #a5b4fc; border-bottom-width: 2px; }
         .card-header.header-green { color: #15803d; border-bottom-color: #86efac; border-bottom-width: 2px; }
         .card-header.header-violet { color: #6d28d9; border-bottom-color: #c4b5fd; border-bottom-width: 2px; }
+        .card-header.header-purple { color: #7e22ce; border-bottom-color: #d8b4fe; border-bottom-width: 2px; }
         .card-header.header-orange { color: #c2410c; border-bottom-color: #fdba74; border-bottom-width: 2px; }
         
         .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
@@ -284,6 +285,7 @@
                             <button type="button" onclick="changeTab(event, 'transmissions')" data-color="green"><i class="fas fa-exchange-alt mr-2"></i>Transmissions</button>
                             <button type="button" onclick="changeTab(event, 'pancarte')" data-color="violet"><i class="fas fa-chart-line mr-2"></i>Pancarte</button>
                             <button type="button" onclick="changeTab(event, 'diagramme')" data-color="orange"><i class="fas fa-calendar-alt mr-2"></i>Diagramme Soins</button>
+                            <button type="button" onclick="changeTab(event, 'biologie')" data-color="purple"><i class="fas fa-vial mr-2"></i>Résultats Biologiques</button>
                         </nav>
                     </div>
 
@@ -442,6 +444,84 @@
                                 </form>
                             </div>
                         </div>
+                        
+                        <!-- Biological Results -->
+                        <div id="biologie" class="content-section">
+                            <div class="card p-6">
+                                <h2 class="card-header">Suivi Biologique</h2>
+                                <div class="overflow-x-auto mt-4">
+                                    <table class="w-full border-collapse text-sm diagram" id="bio-table">
+                                        <thead class="bg-gray-100 text-gray-600">
+                                            <tr>
+                                                <th class="p-2 text-left w-1/4">Analyse</th>
+                                                <th class="p-2 text-left w-1/4">Valeurs de référence</th>
+                                                <script>
+                                                    for(let i=0; i<6; i++) {
+                                                        document.write(`<th class="p-1"><input type="text" placeholder="JJ/MM/AA" class="font-semibold text-center w-24 bg-transparent"></th>`);
+                                                    }
+                                                </script>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Numération Formule Sanguine (NFS)</td></tr>
+                                            <script>
+                                                const nfsData = { "Hématies (T/L)": "4.5-5.5", "Hémoglobine (g/dL)": "13-17", "Hématocrite (%)": "40-52", "VGM (fL)": "80-100", "Leucocytes (G/L)": "4-10", "Plaquettes (G/L)": "150-400" };
+                                                for(const [key, value] of Object.entries(nfsData)) {
+                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
+                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
+                                                    row += '</tr>';
+                                                    document.write(row);
+                                                }
+                                            </script>
+
+                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Électrolytique</td></tr>
+                                            <script>
+                                                const ionoData = { "Sodium (mmol/L)": "136-145", "Potassium (mmol/L)": "3.5-5.1", "Chlore (mmol/L)": "98-107", "Bicarbonates (mmol/L)": "22-29", "Urée (mmol/L)": "2.8-7.2", "Créatinine (µmol/L)": "62-106" };
+                                                for(const [key, value] of Object.entries(ionoData)) {
+                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
+                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
+                                                    row += '</tr>';
+                                                    document.write(row);
+                                                }
+                                            </script>
+
+                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Hépatique</td></tr>
+                                            <script>
+                                                const hepatiqueData = { "ASAT (UI/L)": "< 40", "ALAT (UI/L)": "< 41", "Gamma-GT (UI/L)": "11-50", "PAL (UI/L)": "40-129", "Bilirubine totale (µmol/L)": "5-21" };
+                                                for(const [key, value] of Object.entries(hepatiqueData)) {
+                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
+                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
+                                                    row += '</tr>';
+                                                    document.write(row);
+                                                }
+                                            </script>
+
+                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Lipidique</td></tr>
+                                            <script>
+                                                const lipidiqueData = { "Cholestérol total (g/L)": "< 2.0", "Triglycérides (g/L)": "< 1.5", "HDL Cholestérol (g/L)": "> 0.4", "LDL Cholestérol (g/L)": "< 1.6" };
+                                                for(const [key, value] of Object.entries(lipidiqueData)) {
+                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
+                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
+                                                    row += '</tr>';
+                                                    document.write(row);
+                                                }
+                                            </script>
+                                            
+                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Gaz du Sang (artériel)</td></tr>
+                                            <script>
+                                                const gdsData = { "pH": "7.35-7.45", "PaCO2 (mmHg)": "35-45", "PaO2 (mmHg)": "80-100", "HCO3- (mmol/L)": "22-26", "SaO2 (%)": "> 95" };
+                                                for(const [key, value] of Object.entries(gdsData)) {
+                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
+                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
+                                                    row += '</tr>';
+                                                    document.write(row);
+                                                }
+                                            </script>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Pancarte -->
                         <div id="pancarte" class="content-section">
@@ -545,7 +625,7 @@
             const SAVE_KEY = getSaveKey(patientId);
             const state = {};
             
-            document.querySelectorAll('input[id], textarea[id]').forEach(el => {
+            document.querySelectorAll('input[id], textarea[id], #bio-table input[type="text"]').forEach(el => {
                 const id = el.id;
                 if (el.type === 'checkbox' || el.type === 'radio') {
                     state[id] = el.checked;
@@ -559,6 +639,10 @@
                 const el = document.getElementById(id);
                 if (el) state[id + '_html'] = el.innerHTML;
             });
+            
+            // Explicitly save biology table inputs as they don't have unique IDs
+            state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
+
 
             state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
             state.prescriptionCheckboxes = Array.from(document.querySelectorAll('#prescription-tbody input[type="checkbox"]')).map(cb => cb.checked);
@@ -631,6 +715,11 @@
                 if (state.careDiagramCheckboxes) {
                     document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
                         cb.checked = state.careDiagramCheckboxes[index] || false;
+                    });
+                }
+                 if (state.bioTableValues) {
+                    document.querySelectorAll('#bio-table tbody input[type="text"]').forEach((input, index) => {
+                        input.value = state.bioTableValues[index] || '';
                     });
                 }
 
@@ -880,9 +969,9 @@
             const activeSection = document.getElementById(tabId);
             activeSection.classList.add('active');
             
-            const baseClasses = "py-2.5 px-4 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-grow md:flex-grow-0 flex items-center justify-center";
+            const baseClasses = "min-h-[4rem] py-2 px-2 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center text-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
-            const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", violet: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
+            const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", violet: "text-violet-900 border-violet-300 bg-gradient-to-br from-violet-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
 
             document.querySelectorAll('nav[aria-label="Tabs"] button').forEach(tab => tab.className = `${baseClasses} ${inactiveClasses}`);
             const clickedTab = event.currentTarget;
@@ -910,7 +999,7 @@
             if (!text || !author) return;
             const eventDate = dateValue ? new Date(dateValue) : new Date();
             const formattedDate = new Date(eventDate.getTime() - (eventDate.getTimezoneOffset() * 60000)).toLocaleDateString('fr-FR');
-            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-rose"></div><h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3><p class="text-gray-600 preserve-whitespace">${text}</p></div>`;
+            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-rose"></div><div class="flex justify-between items-start"><h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3><button type="button" onclick="deleteEntry(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer l'observation"><i class="fas fa-times-circle"></i></button></div><p class="text-gray-600 preserve-whitespace">${text}</p></div>`;
             document.getElementById('observations-list').insertAdjacentHTML('afterbegin', newHTML);
             document.getElementById('new-observation-form').reset();
         }
@@ -923,9 +1012,17 @@
             const eventDate = dateValue ? new Date(dateValue) : new Date();
             const formattedDate = new Date(eventDate.getTime() - (eventDate.getTimezoneOffset() * 60000)).toLocaleDateString('fr-FR');
             const formattedText = text.replace(/Cible :/g, '<strong class="text-gray-900">Cible :</strong>').replace(/Données :/g, '<br><strong class="text-gray-900">Données :</strong>').replace(/Actions :/g, '<br><strong class="text-gray-900">Actions :</strong>').replace(/Résultat :/g, '<br><strong class="text-gray-900">Résultat :</strong>');
-            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-green"></div><h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3><p class="text-gray-600 preserve-whitespace">${formattedText}</p></div>`;
+            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-green"></div><div class="flex justify-between items-start"><h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3><button type="button" onclick="deleteEntry(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la transmission"><i class="fas fa-times-circle"></i></button></div><p class="text-gray-600 preserve-whitespace">${formattedText}</p></div>`;
             document.getElementById('transmissions-list-ide').insertAdjacentHTML('afterbegin', newHTML);
             document.getElementById('new-transmission-form-2').reset();
+        }
+
+        function deleteEntry(button) {
+            const entry = button.closest('.timeline-item');
+            if (entry && confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
+                entry.remove();
+                saveData(activePatientId); // Sauvegarder les données après la suppression
+            }
         }
 
         function addPrescription() {
@@ -1026,3 +1123,4 @@
     </script>
 </body>
 </html>
+
