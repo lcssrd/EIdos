@@ -551,7 +551,24 @@
                 const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'];
                 dynamicContentIds.forEach(id => {
                     const el = document.getElementById(id);
-                    if (el && state[id + '_html']) el.innerHTML = state[id + '_html'];
+                    if (el && state[id + '_html']) {
+                        el.innerHTML = state[id + '_html'];
+                        // Retrofit delete buttons for old data formats
+                        if (id === 'prescription-tbody') {
+                            el.querySelectorAll('tr').forEach(row => {
+                                const firstCell = row.cells[0];
+                                if (firstCell && !firstCell.querySelector('button[onclick^="deletePrescription"]')) {
+                                    const medicationName = firstCell.textContent.trim();
+                                    firstCell.innerHTML = `<div class="flex items-center justify-between">
+                                        <span>${medicationName}</span>
+                                        <button type="button" onclick="deletePrescription(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la prescription">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                    </div>`;
+                                }
+                            });
+                        }
+                    }
                 });
 
                 if (state.prescriptionCheckboxes) {
@@ -593,8 +610,6 @@
                 }
             }
 
-            // --- MODIFICATION ---
-            // This ensures the room number is always correct and not editable.
             const roomInput = document.getElementById('patient-room');
             roomInput.value = patientId.split('_')[1];
             roomInput.readOnly = true;
@@ -680,9 +695,6 @@
         }
         
         function resetForm() {
-            // BUG FIX: The .reset() method is inconsistent and only targets the first form.
-            // Relying on the explicit loop is safer and clearer.
-            // document.querySelector('main form')?.reset(); 
             document.querySelectorAll('main input, main textarea').forEach(el => {
                 if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
                 else if (el.type !== 'file') el.value = '';
@@ -827,8 +839,6 @@
 
             localStorage.setItem('activeTab', tabId);
 
-            // BUG FIX: When a tab becomes visible, its textareas might need resizing.
-            // This ensures that textareas with pre-loaded, multi-line content are displayed at the correct height.
             activeSection.querySelectorAll('textarea.info-value').forEach(autoResize);
 
             if (tabId === 'pancarte') setTimeout(() => updatePancarteChart(), 50);
@@ -867,10 +877,32 @@
             if (!name || !posologie || !voie || !startDate) return;
             const formattedStartDate = new Date(new Date(startDate).getTime() - (new Date(startDate).getTimezoneOffset() * 60000)).toLocaleDateString('fr-FR');
             const newRow = document.getElementById("prescription-tbody").insertRow();
-            let cellsHTML = `<td class="p-2 text-left">${name}</td><td class="p-2 text-left">${posologie}</td><td class="p-2 text-left">${voie}</td><td class="p-2 text-left">${formattedStartDate}</td>`;
-            for (let i = 0; i < 11; i++) cellsHTML += `<td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td>`;
+            
+            let cellsHTML = `
+                <td class="p-2 text-left">
+                    <div class="flex items-center justify-between">
+                        <span>${name}</span>
+                        <button type="button" onclick="deletePrescription(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la prescription">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                </td>
+                <td class="p-2 text-left">${posologie}</td>
+                <td class="p-2 text-left">${voie}</td>
+                <td class="p-2 text-left">${formattedStartDate}</td>`;
+            for (let i = 0; i < 11; i++) {
+                cellsHTML += `<td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td>`;
+            }
             newRow.innerHTML = cellsHTML;
             document.getElementById('new-prescription-form').reset();
+        }
+
+        function deletePrescription(button) {
+            const row = button.closest('tr');
+            if (row && confirm("Êtes-vous sûr de vouloir supprimer cette prescription ?")) {
+                row.remove();
+                saveData(activePatientId); // Sauvegarder les données après la suppression
+            }
         }
 
         function addCareDiagramRow() {
@@ -935,4 +967,3 @@
     </script>
 </body>
 </html>
-
