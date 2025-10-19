@@ -32,7 +32,7 @@
         .card {
             background-color: white;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px MjEy rgba(0, 0, 0, 0.08);
             margin-bottom: 24px;
             border: 1px solid #e5e7eb;
         }
@@ -40,9 +40,8 @@
             padding: 1rem;
         }
         .card-header {
-            font-size: 1.125rem;
+            font-size: 1.25rem;
             font-weight: 600;
-            margin-bottom: 16px;
             padding-bottom: 12px;
             border-bottom: 1px solid #e5e7eb;
             transition: all 0.3s ease;
@@ -292,25 +291,78 @@
                     <div id="tab-content">
                         <!-- Administrative Info -->
                         <div id="administratif" class="content-section active">
-                            <div class="card p-6"><h2 class="card-header">Informations Personnelles</h2><div class="info-grid"><div class="info-item"><span class="info-label">Nom</span><textarea id="admin-nom" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Date de Naissance</span><textarea id="admin-dob" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Sexe</span><textarea id="admin-sexe" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item col-span-full"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="card p-6"><h2 class="card-header">Contact</h2><div class="info-grid"><div class="info-item"><span class="info-label">Personne à contacter</span><textarea id="admin-contact" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Téléphone</span><textarea id="admin-telephone" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Médecin traitant</span><textarea id="admin-medecin" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="card p-6"><h2 class="card-header">Couverture Sociale</h2><div class="info-grid"><div class="info-item"><span class="info-label">N° de Sécurité Sociale</span><textarea id="admin-secu" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Mutuelle</span><textarea id="admin-mutuelle" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">N° Adhérent Mutuelle</span><textarea id="admin-mutuelle-num" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="flex justify-end">
-                                <button id="lock-admin-btn" type="button" onclick="toggleLock('administratif', 'lock-admin-btn')" class="inline-flex items-center justify-center py-1 px-4 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-blue-600 text-blue-700 hover:bg-blue-600">
+                            <div class="card p-6">
+                                <h2 class="card-header">Dossier Administratif</h2>
+                                
+                                <!-- Section: Identité -->
+                                <div class="mt-6">
+                                    <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Identité du patient</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div class="info-item"><span class="info-label">Nom</span><textarea id="admin-nom" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Date de Naissance</span><textarea id="admin-dob" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Sexe</span><textarea id="admin-sexe" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item col-span-full"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Section: Contacts -->
+                                <div class="mt-8">
+                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Contacts</h3>
+                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="info-item"><span class="info-label">Personne à contacter</span><textarea id="admin-contact" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Téléphone</span><textarea id="admin-telephone" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Médecin traitant</span><textarea id="admin-medecin" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                    </div>
+                                </div>
+                                
+                                 <!-- Section: Couverture Sociale -->
+                                <div class="mt-8">
+                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Couverture Sociale</h3>
+                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="info-item"><span class="info-label">N° de Sécurité Sociale</span><textarea id="admin-secu" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Mutuelle</span><textarea id="admin-mutuelle" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">N° Adhérent Mutuelle</span><textarea id="admin-mutuelle-num" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                     </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-end mt-4">
+                                <button id="lock-admin-btn" type="button" onclick="toggleLock('administratif', 'lock-admin-btn')" class="inline-flex items-center justify-center py-2 px-4 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-blue-600 text-blue-700 hover:bg-blue-600">
                                     <i class="fas fa-check mr-2"></i>Valider les données
                                 </button>
                             </div>
                         </div>
+
                         <!-- Lifestyle & History -->
                         <div id="mode-de-vie" class="content-section">
-                            <div class="card p-6"><h2 class="card-header">Mode de vie</h2><div class="info-grid"><div class="info-item"><span class="info-label">Situation</span><textarea id="vie-situation" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Habitat</span><textarea id="vie-habitat" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Habitudes</span><textarea id="vie-habitudes" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="card p-6"><h2 class="card-header">Antécédents (ATCD)</h2><div class="info-grid"><div class="info-item"><span class="info-label">Médicaux</span><textarea id="atcd-medicaux" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Chirurgicaux</span><textarea id="atcd-chirurgicaux" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Allergies</span><textarea id="atcd-allergies" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="flex justify-end">
-                                <button id="lock-vie-btn" type="button" onclick="toggleLock('mode-de-vie', 'lock-vie-btn')" class="inline-flex items-center justify-center py-1 px-4 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-teal-600 text-teal-700 hover:bg-teal-600">
+                            <div class="card p-6">
+                                <h2 class="card-header">Mode de Vie & Antécédents</h2>
+                                
+                                <div class="mt-6">
+                                    <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Mode de vie</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="info-item"><span class="info-label">Situation familiale/professionnelle</span><textarea id="vie-situation" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Conditions de logement (Habitat)</span><textarea id="vie-habitat" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Habitudes (Alcool, Tabac, etc.)</span><textarea id="vie-habitudes" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-8">
+                                    <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Antécédents (ATCD)</h3>
+                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        <div class="info-item"><span class="info-label">Médicaux</span><textarea id="atcd-medicaux" class="info-value" rows="6" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Chirurgicaux</span><textarea id="atcd-chirurgicaux" class="info-value" rows="6" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Allergies</span><textarea id="atcd-allergies" class="info-value" rows="6" oninput="autoResize(this)"></textarea></div>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="flex justify-end mt-4">
+                                <button id="lock-vie-btn" type="button" onclick="toggleLock('mode-de-vie', 'lock-vie-btn')" class="inline-flex items-center justify-center py-2 px-4 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-teal-600 text-teal-700 hover:bg-teal-600">
                                     <i class="fas fa-check mr-2"></i>Valider les données
                                 </button>
                             </div>
                         </div>
+                        
                         <!-- Medical Observations -->
                         <div id="observations" class="content-section">
                             <div class="card p-6"><h2 class="card-header">Suivi Médical</h2><div id="observations-list" class="space-y-8 mt-4"></div></div>
@@ -828,7 +880,7 @@
             const activeSection = document.getElementById(tabId);
             activeSection.classList.add('active');
             
-            const baseClasses = "py-2.5 px-4 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center";
+            const baseClasses = "py-2.5 px-4 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-grow md:flex-grow-0 flex items-center justify-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
             const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", violet: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
 
@@ -974,4 +1026,3 @@
     </script>
 </body>
 </html>
-
