@@ -292,9 +292,9 @@
                     <div id="tab-content">
                         <!-- Administrative Info -->
                         <div id="administratif" class="content-section active">
-                            <div class="card p-6"><h2 class="card-header">Informations Personnelles</h2><div class="info-grid"><div class="info-item"><span class="info-label">Nom</span><textarea id="admin-nom" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Date de Naissance</span><textarea id="admin-dob" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Sexe</span><textarea id="admin-sexe" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item col-span-full"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="card p-6"><h2 class="card-header">Contact</h2><div class="info-grid"><div class="info-item"><span class="info-label">Personne à contacter</span><textarea id="admin-contact" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Téléphone</span><textarea id="admin-telephone" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Médecin traitant</span><textarea id="admin-medecin" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="card p-6"><h2 class="card-header">Couverture Sociale</h2><div class="info-grid"><div class="info-item"><span class="info-label">N° de Sécurité Sociale</span><textarea id="admin-secu" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Mutuelle</span><textarea id="admin-mutuelle" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">N° Adhérent Mutuelle</span><textarea id="admin-mutuelle-num" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div></div></div>
+                            <div class="card p-6"><h2 class="card-header">Informations Personnelles</h2><div class="info-grid"><div class="info-item"><span class="info-label">Nom</span><textarea id="admin-nom" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Date de Naissance</span><textarea id="admin-dob" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Sexe</span><textarea id="admin-sexe" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item col-span-full"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
+                            <div class="card p-6"><h2 class="card-header">Contact</h2><div class="info-grid"><div class="info-item"><span class="info-label">Personne à contacter</span><textarea id="admin-contact" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Téléphone</span><textarea id="admin-telephone" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Médecin traitant</span><textarea id="admin-medecin" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
+                            <div class="card p-6"><h2 class="card-header">Couverture Sociale</h2><div class="info-grid"><div class="info-item"><span class="info-label">N° de Sécurité Sociale</span><textarea id="admin-secu" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Mutuelle</span><textarea id="admin-mutuelle" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">N° Adhérent Mutuelle</span><textarea id="admin-mutuelle-num" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
                             <div class="flex justify-end">
                                 <button id="lock-admin-btn" type="button" onclick="toggleLock('administratif', 'lock-admin-btn')" class="inline-flex items-center justify-center py-1 px-4 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-blue-600 text-blue-700 hover:bg-blue-600">
                                     <i class="fas fa-check mr-2"></i>Valider les données
@@ -303,8 +303,8 @@
                         </div>
                         <!-- Lifestyle & History -->
                         <div id="mode-de-vie" class="content-section">
-                            <div class="card p-6"><h2 class="card-header">Mode de vie</h2><div class="info-grid"><div class="info-item"><span class="info-label">Situation</span><textarea id="vie-situation" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Habitat</span><textarea id="vie-habitat" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Habitudes</span><textarea id="vie-habitudes" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div></div></div>
-                            <div class="card p-6"><h2 class="card-header">Antécédents (ATCD)</h2><div class="info-grid"><div class="info-item"><span class="info-label">Médicaux</span><textarea id="atcd-medicaux" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Chirurgicaux</span><textarea id="atcd-chirurgicaux" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Allergies</span><textarea id="atcd-allergies" class="info-value" rows="1" oninput="autoResize(this)"></textarea></div></div></div>
+                            <div class="card p-6"><h2 class="card-header">Mode de vie</h2><div class="info-grid"><div class="info-item"><span class="info-label">Situation</span><textarea id="vie-situation" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Habitat</span><textarea id="vie-habitat" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Habitudes</span><textarea id="vie-habitudes" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
+                            <div class="card p-6"><h2 class="card-header">Antécédents (ATCD)</h2><div class="info-grid"><div class="info-item"><span class="info-label">Médicaux</span><textarea id="atcd-medicaux" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Chirurgicaux</span><textarea id="atcd-chirurgicaux" class="info-value" oninput="autoResize(this)"></textarea></div><div class="info-item"><span class="info-label">Allergies</span><textarea id="atcd-allergies" class="info-value" oninput="autoResize(this)"></textarea></div></div></div>
                             <div class="flex justify-end">
                                 <button id="lock-vie-btn" type="button" onclick="toggleLock('mode-de-vie', 'lock-vie-btn')" class="inline-flex items-center justify-center py-1 px-4 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-teal-600 text-teal-700 hover:bg-teal-600">
                                     <i class="fas fa-check mr-2"></i>Valider les données
@@ -724,7 +724,10 @@
             loadData(newPatientId);
             updateSidebarActiveState(newPatientId);
             
-            document.querySelectorAll('textarea.info-value').forEach(autoResize);
+            setTimeout(() => {
+                document.querySelectorAll('textarea.info-value').forEach(autoResize);
+            }, 0);
+            
             updatePancarteChart();
             
             const mainContent = document.getElementById('main-content-wrapper');
@@ -839,7 +842,11 @@
 
             localStorage.setItem('activeTab', tabId);
 
-            activeSection.querySelectorAll('textarea.info-value').forEach(autoResize);
+            // Defer resize to ensure the browser has rendered the newly visible tab content,
+            // allowing for correct scrollHeight calculation.
+            setTimeout(() => {
+                activeSection.querySelectorAll('textarea.info-value').forEach(autoResize);
+            }, 0);
 
             if (tabId === 'pancarte') setTimeout(() => updatePancarteChart(), 50);
         }
@@ -967,3 +974,4 @@
     </script>
 </body>
 </html>
+
