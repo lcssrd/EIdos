@@ -115,7 +115,7 @@
             overflow: hidden;
         }
         
-        .styled-input:disabled, textarea.info-value:disabled {
+        .styled-input:disabled, textarea.info-value:disabled, input.info-value:disabled {
             background-color: transparent;
             border-color: transparent;
             cursor: default;
@@ -147,6 +147,11 @@
         }
         .preserve-whitespace {
             white-space: pre-wrap;
+        }
+        
+        /* Modal Styles */
+        #custom-confirm-modal #custom-confirm-box {
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
         }
 
         /* Sidebar Styles */
@@ -244,11 +249,14 @@
                                 
                                 <div class="info-item flex-grow min-w-[220px]">
                                     <span class="info-label">Nom, Prénom</span>
-                                    <input type="text" id="patient-name" class="info-value text-lg font-bold">
+                                    <input type="text" id="patient-name" class="info-value text-lg font-bold" placeholder="NOM, Prénom">
                                 </div>
-                                <div class="info-item flex-grow min-w-[150px]">
+                                <div class="info-item flex-grow min-w-[200px]">
                                     <span class="info-label">Date de naissance</span>
-                                    <input type="text" id="patient-dob" placeholder="(JJ/MM/AAAA)" class="info-value text-gray-500">
+                                    <div class="flex items-center gap-2">
+                                        <input type="date" id="patient-dob" class="info-value text-gray-500 flex-grow" style="flex-basis: 150px;">
+                                        <span id="patient-age" class="text-sm text-gray-600 font-medium whitespace-nowrap"></span>
+                                    </div>
                                 </div>
                                 <div class="info-item flex-grow min-w-[80px]">
                                     <span class="info-label">Service</span>
@@ -302,7 +310,13 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                         <div class="info-item"><span class="info-label">Nom</span><textarea id="admin-nom" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" oninput="autoResize(this)"></textarea></div>
-                                        <div class="info-item"><span class="info-label">Date de Naissance</span><textarea id="admin-dob" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item">
+                                            <span class="info-label">Date de Naissance</span>
+                                            <div class="flex items-center gap-2">
+                                                <input type="date" id="admin-dob" class="info-value flex-grow" style="flex-basis: 150px;">
+                                                <span id="admin-age" class="text-sm text-gray-600 font-medium whitespace-nowrap"></span>
+                                            </div>
+                                        </div>
                                         <div class="info-item"><span class="info-label">Sexe</span><textarea id="admin-sexe" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item col-span-full"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
@@ -607,6 +621,19 @@
         </div>
     </div>
 
+    <!-- Custom Confirmation Modal -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
+            <h3 class="text-lg font-bold text-gray-800" id="custom-confirm-title">Confirmation requise</h3>
+            <p class="mt-2 text-sm text-gray-600" id="custom-confirm-message">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="custom-confirm-cancel" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">Annuler</button>
+                <button id="custom-confirm-ok" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         let pancarteChartInstance;
         const patients = Array.from({ length: 10 }, (_, i) => ({ 
@@ -689,21 +716,6 @@
                     const el = document.getElementById(id);
                     if (el && state[id + '_html']) {
                         el.innerHTML = state[id + '_html'];
-                        // Retrofit delete buttons for old data formats
-                        if (id === 'prescription-tbody') {
-                            el.querySelectorAll('tr').forEach(row => {
-                                const firstCell = row.cells[0];
-                                if (firstCell && !firstCell.querySelector('button[onclick^="deletePrescription"]')) {
-                                    const medicationName = firstCell.textContent.trim();
-                                    firstCell.innerHTML = `<div class="flex items-center justify-between">
-                                        <span>${medicationName}</span>
-                                        <button type="button" onclick="deletePrescription(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la prescription">
-                                            <i class="fas fa-times-circle"></i>
-                                        </button>
-                                    </div>`;
-                                }
-                            });
-                        }
                     }
                 });
 
@@ -754,19 +766,25 @@
             const roomInput = document.getElementById('patient-room');
             roomInput.value = patientId.split('_')[1];
             roomInput.readOnly = true;
+
+            syncHeaderToAdmin();
+            updateAgeDisplay();
         }
 
-
         function clearCurrentPatientData() {
-            if (!confirm(`Êtes-vous sûr de vouloir effacer le dossier du patient dans la chambre ${activePatientId.split('_')[1]} ?`)) return;
-            localStorage.removeItem(getSaveKey(activePatientId));
-            switchPatient(activePatientId, true); // true to skip saving old state
+            const message = `Êtes-vous sûr de vouloir effacer le dossier du patient dans la chambre ${activePatientId.split('_')[1]} ? Cette action est irréversible.`;
+            showDeleteConfirmation(message, () => {
+                localStorage.removeItem(getSaveKey(activePatientId));
+                switchPatient(activePatientId, true); // true to skip saving old state
+            });
         }
 
         function clearAllData() {
-            if (!confirm("ATTENTION : Vous êtes sur le point de supprimer TOUS les dossiers de tous les patients. Cette action est irréversible. Continuer ?")) return;
-            localStorage.clear();
-            location.reload();
+            const message = "ATTENTION : Vous êtes sur le point de supprimer TOUS les dossiers de tous les patients. Cette action est irréversible. Continuer ?";
+            showDeleteConfirmation(message, () => {
+                localStorage.clear();
+                location.reload();
+            });
         }
 
         function exportCurrentPatientData() {
@@ -887,12 +905,128 @@
             document.querySelector('main').addEventListener('input', debouncedSave);
             document.querySelector('main').addEventListener('change', debouncedSave);
 
+            // Event listeners for new features
+            document.getElementById('patient-name').addEventListener('input', syncHeaderToAdmin);
+            document.getElementById('patient-dob').addEventListener('input', syncHeaderToAdmin);
+            document.getElementById('admin-dob').addEventListener('input', updateAgeDisplay);
+            setupModalListeners();
+
             const activeTabId = localStorage.getItem('activeTab') || 'administratif';
             const activeTabButton = document.querySelector(`nav button[onclick*="'${activeTabId}'"]`);
             if (activeTabButton) changeTab({ currentTarget: activeTabButton }, activeTabId);
             else document.querySelector('nav[aria-label="Tabs"] button').click();
         }
 
+        // --- Custom Confirmation Modal Logic ---
+        let confirmCallback = null;
+        
+        function showDeleteConfirmation(message, callback) {
+            const modal = document.getElementById('custom-confirm-modal');
+            const modalBox = document.getElementById('custom-confirm-box');
+            document.getElementById('custom-confirm-message').textContent = message;
+            confirmCallback = callback;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalBox.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function hideConfirmation() {
+            const modal = document.getElementById('custom-confirm-modal');
+            const modalBox = document.getElementById('custom-confirm-box');
+            modalBox.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            }, 200);
+        }
+
+        function setupModalListeners() {
+            document.getElementById('custom-confirm-ok').addEventListener('click', () => {
+                if (typeof confirmCallback === 'function') {
+                    confirmCallback();
+                }
+                hideConfirmation();
+            });
+            document.getElementById('custom-confirm-cancel').addEventListener('click', hideConfirmation);
+        }
+
+        // --- NEW/MODIFIED FUNCTIONS ---
+
+        function calculateAge(dobString) {
+            if (!dobString) return '';
+            const dob = new Date(dobString);
+            const today = new Date();
+            if (isNaN(dob.getTime()) || dob > today) return '';
+
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            return age >= 0 ? `${age} ans` : '';
+        }
+
+        function updateAgeDisplay() {
+            const dobHeader = document.getElementById('patient-dob').value;
+            document.getElementById('patient-age').textContent = calculateAge(dobHeader);
+            
+            const dobAdmin = document.getElementById('admin-dob').value;
+            document.getElementById('admin-age').textContent = calculateAge(dobAdmin);
+        }
+
+        function syncHeaderToAdmin() {
+            const patientNameInput = document.getElementById('patient-name');
+            const patientDobInput = document.getElementById('patient-dob');
+
+            const nameValue = patientNameInput.value.trim();
+            let nom = '', prenom = '';
+            if (nameValue.includes(',')) {
+                [nom, prenom] = nameValue.split(',').map(s => s.trim());
+            } else {
+                const parts = nameValue.split(' ').filter(Boolean);
+                nom = parts.shift() || ''; // First part is last name
+                prenom = parts.join(' '); // The rest is first name
+            }
+
+            const adminNom = document.getElementById('admin-nom');
+            const adminPrenom = document.getElementById('admin-prenom');
+            const adminDob = document.getElementById('admin-dob');
+
+            if (!adminNom.disabled) {
+                adminNom.value = nom || '';
+                autoResize(adminNom);
+            }
+            if (!adminPrenom.disabled) {
+                adminPrenom.value = prenom || '';
+                autoResize(adminPrenom);
+            }
+            if (!adminDob.disabled) {
+                adminDob.value = patientDobInput.value;
+            }
+            updateAgeDisplay();
+        }
+
+        function deleteEntry(button) {
+            const entry = button.closest('.timeline-item');
+            if (entry) {
+                showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette entrée ?", () => {
+                    entry.remove();
+                    saveData(activePatientId);
+                });
+            }
+        }
+
+        function deletePrescription(button) {
+            const row = button.closest('tr');
+            if (row) {
+                showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette prescription ?", () => {
+                    row.remove();
+                    saveData(activePatientId);
+                });
+            }
+        }
+        
         // --- ORIGINAL FUNCTIONS (with minor adaptations) ---
         function autoResize(textarea) {
             textarea.style.height = 'auto';
@@ -930,7 +1064,7 @@
         function toggleLock(containerId, buttonId) {
             const container = document.getElementById(containerId);
             const button = document.getElementById(buttonId);
-            const inputs = container.querySelectorAll('.info-value');
+            const inputs = container.querySelectorAll('.info-value, input[type=text], input[type=date]');
             const isUnlocking = button.innerHTML.includes('fa-lock');
             
             if (!isUnlocking && containerId === 'patient-header-form') {
@@ -983,8 +1117,6 @@
 
             localStorage.setItem('activeTab', tabId);
 
-            // Defer resize to ensure the browser has rendered the newly visible tab content,
-            // allowing for correct scrollHeight calculation.
             setTimeout(() => {
                 activeSection.querySelectorAll('textarea.info-value').forEach(autoResize);
             }, 0);
@@ -1017,14 +1149,6 @@
             document.getElementById('new-transmission-form-2').reset();
         }
 
-        function deleteEntry(button) {
-            const entry = button.closest('.timeline-item');
-            if (entry && confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
-                entry.remove();
-                saveData(activePatientId); // Sauvegarder les données après la suppression
-            }
-        }
-
         function addPrescription() {
             const name = document.getElementById('med-name').value.trim();
             const posologie = document.getElementById('med-posologie').value.trim();
@@ -1051,14 +1175,6 @@
             }
             newRow.innerHTML = cellsHTML;
             document.getElementById('new-prescription-form').reset();
-        }
-
-        function deletePrescription(button) {
-            const row = button.closest('tr');
-            if (row && confirm("Êtes-vous sûr de vouloir supprimer cette prescription ?")) {
-                row.remove();
-                saveData(activePatientId); // Sauvegarder les données après la suppression
-            }
         }
 
         function addCareDiagramRow() {
@@ -1123,4 +1239,3 @@
     </script>
 </body>
 </html>
-
