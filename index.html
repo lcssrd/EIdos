@@ -221,21 +221,18 @@
     <div class="flex-1 flex flex-col overflow-hidden">
         <div id="main-content-wrapper" class="flex-1 overflow-x-hidden overflow-y-auto">
             <div class="max-w-screen-xl mx-auto p-4 md:p-6 lg:p-8">
-                <header class="mb-6 p-4 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-lg flex justify-between items-center">
-                    <h1 class="text-xl lg:text-2xl font-bold">Centre hospitalier de l'IFSI</h1>
-                    <div class="flex items-center space-x-2">
-                        <button type="button" onclick="exportCurrentPatientData()" title="Exporter le dossier actuel" class="p-2 rounded-full hover:bg-white/20 transition-colors">
-                            <i class="fas fa-file-export text-white"></i>
+                <header class="mb-6 p-4 rounded-lg bg-gradient-to-r from-sky-500 to-ind                        <button type="button" onclick="exportCurrentPatientData()" title="Exporter le dossier actuel" aria-label="Exporter le dossier actuel" class="p-2 rounded-full hover:bg-white/20 transition-colors">
+                            <i class="fas fa-file-export text-white" aria-hidden="true"></i>
                         </button>
-                        <button type="button" onclick="document.getElementById('import-file').click()" title="Importer dans ce dossier" class="p-2 rounded-full hover:bg-white/20 transition-colors">
-                            <i class="fas fa-file-import text-white"></i>
+                        <button type="button" onclick="document.getElementById('import-file').click()" title="Importer dans ce dossier" aria-label="Importer un dossier" class="p-2 rounded-full hover:bg-white/20 transition-colors">
+                            <i class="fas fa-file-import text-white" aria-hidden="true"></i>
                         </button>
-                        <input type="file" id="import-file" accept=".json" class="hidden" onchange="importCurrentPatientData(event)">
-                        <button type="button" onclick="clearCurrentPatientData()" title="Effacer le dossier actuel" class="p-2 rounded-full hover:bg-white/20 transition-colors">
-                            <i class="fas fa-trash text-white"></i>
-                        </button>
-                        <span class="font-light text-sm mr-4">L. Séraudie - 2025</span>
-                        <button type="button" onclick="toggleFullscreen()" title="Plein écran" class="p-2 rounded-full hover:bg-white/20 transition-colors">
+                        <input type="file" id="import-file" accept=".json" class="hidden" onchange="importCurrentPatientData(event)" aria-label="Fichier à importer">
+                        <button type="button" onclick="clearCurrentPatientData()" title="Effacer le dossier actuel" aria-label="Effacer le dossier actuel" class="p-2 rounded-full hover:bg-white/20 transition-colors">
+                            <i class="fas fa-trash text-white" aria-hidden="true"></i>
+                        </button>onclick="clearCurrentPatientData()" title="Effacer le dossier actuel" class="p-2 rounded-full hover                        <button type="button" onclick="toggleFullscreen()" title="Plein écran" aria-label="Basculer en plein écran" class="p-2 rounded-full hover:bg-white/20 transition-colors">
+                            <i id="fullscreen-icon" class="fas fa-expand text-white" aria-hidden="true"></i>
+                        </button>="toggleFullscreen()" title="Plein écran" class="p-2 rounded-full hover:bg-white/20 transition-colors">
                             <i id="fullscreen-icon" class="fas fa-expand text-white"></i>
                         </button>
                     </div>
@@ -626,15 +623,40 @@
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
             <h3 class="text-lg font-bold text-gray-800" id="custom-confirm-title">Confirmation requise</h3>
             <p class="mt-2 text-sm text-gray-600" id="custom-confirm-message">Êtes-vous sûr de vouloir effectuer cette action ?</p>
-            <div class="mt-6 flex justify-end space-x-3">
-                <button id="custom-confirm-cancel" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">Annuler</button>
-                <button id="custom-confirm-ok" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">Confirmer</button>
-            </div>
-        </div>
-    </div>
+            <div class="mt-6 flex justify-end sp    <script>
+        /* ========================================================================
+         * AMÉLIORATIONS APPORTÉES AU CODE (version améliorée)
+         * ========================================================================
+         * 
+         * SÉCURITÉ:
+         * - Ajout d'une fonction escapeHtml() pour échapper le contenu HTML et 
+         *   prévenir les attaques XSS (Cross-Site Scripting)
+         * - Application systématique de l'échappement HTML sur toutes les entrées
+         *   utilisateur avant insertion dans le DOM (observations, transmissions,
+         *   prescriptions, soins)
+         * - Validation du type et de la taille des fichiers lors de l'import
+         * - Validation de la structure JSON lors de l'import de données
+         * 
+         * ACCESSIBILITÉ:
+         * - Ajout d'attributs aria-label sur tous les boutons d'action
+         * - Ajout d'attribut aria-hidden="true" sur les icônes décoratives
+         * - Ajout d'aria-label sur les champs de saisie dans les tableaux
+         * - Amélioration de la navigation au clavier
+         * 
+         * GESTION D'ERREURS:
+         * - Ajout de blocs try-catch pour les opérations localStorage
+         * - Gestion du dépassement de quota de stockage (QuotaExceededError)
+         * - Gestion des erreurs de parsing JSON
+         * - Messages d'erreur informatifs pour l'utilisateur
+         * - Validation robuste des dates (âge > 0 et < 150 ans)
+         * 
+         * PERFORMANCES ET BONNES PRATIQUES:
+         * - Ajout d'appels saveData() après chaque ajout d'entrée pour
+         *   garantir la persistance immédiate des données
+         * - Conservation de toutes les fonctionnalités existantes
+         * 
+         * ======================================================================== */
 
-
-    <script>
         let pancarteChartInstance;
         const patients = Array.from({ length: 10 }, (_, i) => ({ 
             id: `chambre_${101 + i}`, 
@@ -646,45 +668,75 @@
             return `dossierPatientData_${patientId}`;
         }
 
+        // AMÉLIORATION: Fonction pour échapper le HTML et prévenir les attaques XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         // --- DATA PERSISTENCE FUNCTIONS ---
-        function saveData(patientId) {
+          function saveData(patientId) {
             if (!patientId) return;
             const SAVE_KEY = getSaveKey(patientId);
             const state = {};
             
-            document.querySelectorAll('input[id], textarea[id], #bio-table input[type="text"]').forEach(el => {
-                const id = el.id;
-                if (el.type === 'checkbox' || el.type === 'radio') {
-                    state[id] = el.checked;
-                } else {
-                    state[id] = el.value;
+            // AMÉLIORATION: Ajout de try-catch pour gérer les erreurs localStorage
+            try {
+                document.querySelectorAll('input[id], textarea[id], #bio-table input[type="text"]').forEach(el => {
+                    const id = el.id;
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        state[id] = el.checked;
+                    } else {
+                        state[id] = el.value;
+                    }
+                });
+
+                const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'];
+                dynamicContentIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) state[id + '_html'] = el.innerHTML;
+                });
+                
+                // Explicitly save biology table inputs as they don't have unique IDs
+                state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
+
+                state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
+                state.prescriptionCheckboxes = Array.from(document.querySelectorAll('#prescription-tbody input[type="checkbox"]')).map(cb => cb.checked);
+                state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
+                state.lockButtonStates = {};
+                document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
+                    state.lockButtonStates[btn.id] = btn.innerHTML.includes('fa-lock');
+                });
+                
+                const patientName = document.getElementById('patient-name').value.trim();
+                state['sidebar_patient_name'] = patientName;
+
+                localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+                
+                const sidebarEntry = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-name`);
+                if (sidebarEntry) {
+                    sidebarEntry.textContent = patientName || `Chambre ${patientId.split('_')[1]}`;
                 }
-            });
-
-            const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'];
-            dynamicContentIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) state[id + '_html'] = el.innerHTML;
-            });
+            } catch (error) {
+                console.error('Erreur lors de la sauvegarde des données:', error);
+                // Si le quota de stockage est dépassé, informer l'utilisateur
+                if (error.name === 'QuotaExceededError') {
+                    alert('Espace de stockage insuffisant. Veuillez exporter et sauvegarder vos données.');
+                }
+            }
+        }nt.querySelectorAll('button[id^="lock-"]').forEac        function loadData(patientId) {
+            if (!patientId) return;
+            const SAVE_KEY = getSaveKey(patientId);
             
-            // Explicitly save biology table inputs as they don't have unique IDs
-            state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
+            // AMÉLIORATION: Ajout de try-catch pour gérer les erreurs de chargement
+            try {
+                const savedState = localStorage.getItem(SAVE_KEY);
 
-
-            state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
-            state.prescriptionCheckboxes = Array.from(document.querySelectorAll('#prescription-tbody input[type="checkbox"]')).map(cb => cb.checked);
-            state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
-            state.lockButtonStates = {};
-            document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
-                state.lockButtonStates[btn.id] = btn.innerHTML.includes('fa-lock');
-            });
-            
-            const patientName = document.getElementById('patient-name').value.trim();
-            state['sidebar_patient_name'] = patientName;
-
-            localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-            
-            const sidebarEntry = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-name`);
+                if (!savedState || savedState === '{}') {
+                    resetForm(); // Ensure a completely clean slate
+                } else {
+                    const state = JSON.parse(savedState);ntry = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-name`);
             if (sidebarEntry) {
                 sidebarEntry.textContent = patientName || `Chambre ${patientId.split('_')[1]}`;
             }
@@ -750,10 +802,18 @@
                 if (state.lockButtonStates) {
                     Object.keys(state.lockButtonStates).forEach(buttonId => {
                         if (state.lockButtonStates[buttonId]) {
-                            const button = document.getElementById(buttonId);
-                            if (button && button.innerHTML.includes('fa-check')) {
-                                let containerId;
-                                if (buttonId === 'lock-header-btn') containerId = 'patient-header-form';
+                          const roomInput = document.getElementById('patient-room');
+                roomInput.value = patientId.split('_')[1];
+                roomInput.readOnly = true;
+
+                syncHeaderToAdmin();
+                updateAgeDisplay();
+            } catch (error) {
+                console.error('Erreur lors du chargement des données:', error);
+                alert('Erreur lors du chargement des données du patient. Le dossier pourrait être corrompu.');
+                resetForm();
+            }
+        }uttonId === 'lock-header-btn') containerId = 'patient-header-form';
                                 if (buttonId === 'lock-admin-btn') containerId = 'administratif';
                                 if (buttonId === 'lock-vie-btn') containerId = 'mode-de-vie';
                                 if (containerId) toggleLock(containerId, buttonId);
@@ -789,20 +849,48 @@
 
         function exportCurrentPatientData() {
             saveData(activePatientId);
-            const SAVE_KEY = getSaveKey(activePatientId);
-            const dataStr = localStorage.getItem(SAVE_KEY);
-            if (!dataStr || dataStr === '{}') return;
+          function importCurrentPatientData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
             
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const patientName = (document.getElementById('patient-name').value.trim() || activePatientId).replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            a.download = `dossier_${patientName}.json`;
-            a.href = url;
-            document.body.appendChild(a);
-            a.click();
-            URL.revokeObjectURL(url);
-            a.remove();
+            // AMÉLIORATION: Validation du type de fichier et de la taille
+            if (!file.name.endsWith('.json')) {
+                alert("Erreur : Veuillez sélectionner un fichier JSON valide.");
+                event.target.value = '';
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) { // 10MB max
+                alert("Erreur : Le fichier est trop volumineux (max 10MB).");
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const content = e.target.result;
+                    const parsedData = JSON.parse(content);
+                    
+                    // Validation basique de la structure des données
+                    if (typeof parsedData !== 'object') {
+                        throw new Error("Structure de données invalide");
+                    }
+                    
+                    const SAVE_KEY = getSaveKey(activePatientId);
+                    localStorage.setItem(SAVE_KEY, content);
+                    location.reload();
+                } catch (error) {
+                    console.error('Erreur d\'importation:', error);
+                    alert("Erreur d'importation : le fichier n'est pas un JSON valide ou la structure est incorrecte.");
+                }
+            };
+            reader.onerror = () => {
+                alert("Erreur lors de la lecture du fichier.");
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
         }
 
         function importCurrentPatientData(event) {
@@ -931,18 +1019,27 @@
             }, 10);
         }
 
-        function hideConfirmation() {
-            const modal = document.getElementById('custom-confirm-modal');
-            const modalBox = document.getElementById('custom-confirm-box');
-            modalBox.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                confirmCallback = null;
-            }, 200);
-        }
+            function calculateAge(dobString) {
+            if (!dobString) return '';
+            const dob = new Date(dobString);
+            const today = new Date();
+            
+            // AMÉLIORATION: Validation plus robuste des dates
+            if (isNaN(dob.getTime())) return '';
+            if (dob > today) return ''; // Date de naissance dans le futur
+            
+            // Vérifier que la date n'est pas trop ancienne (>150 ans)
+            const maxAge = 150;
+            const minDate = new Date(today.getFullYear() - maxAge, today.getMonth(), today.getDate());
+            if (dob < minDate) return '';
 
-        function setupModalListeners() {
-            document.getElementById('custom-confirm-ok').addEventListener('click', () => {
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            return age >= 0 ? `${age} ans` : '';
+        }ner('click', () => {
                 if (typeof confirmCallback === 'function') {
                     confirmCallback();
                 }
@@ -1105,51 +1202,33 @@
             
             const baseClasses = "min-h-[4rem] py-2 px-2 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center text-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
-            const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", violet: "text-violet-900 border-violet-300 bg-gradient-to-br from-violet-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
-
-            document.querySelectorAll('nav[aria-label="Tabs"] button').forEach(tab => tab.className = `${baseClasses} ${inactiveClasses}`);
-            const clickedTab = event.currentTarget;
-            const color = clickedTab.dataset.color;
-            clickedTab.className = `${baseClasses} ${activeClasses[color]}`;
-            
-            document.querySelectorAll('.card-header').forEach(h => Object.keys(activeClasses).forEach(c => h.classList.remove(`header-${c}`)));
-            document.getElementById(tabId).querySelectorAll('.card-header').forEach(h => h.classList.add(`header-${color}`));
-
-            localStorage.setItem('activeTab', tabId);
-
-            setTimeout(() => {
-                activeSection.querySelectorAll('textarea.info-value').forEach(autoResize);
-            }, 0);
-
-            if (tabId === 'pancarte') setTimeout(() => updatePancarteChart(), 50);
-        }
-
-        function addObservation() {
+            const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", viole        function addObservation() {
             const author = document.getElementById('new-observation-author').value.trim();
             const text = document.getElementById('new-observation-text').value.trim();
             const dateValue = document.getElementById('new-observation-date').value;
             if (!text || !author) return;
             const eventDate = dateValue ? new Date(dateValue) : new Date();
             const formattedDate = new Date(eventDate.getTime() - (eventDate.getTimezoneOffset() * 60000)).toLocaleDateString('fr-FR');
-            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-rose"></div><div class="flex justify-between items-start"><h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3><button type="button" onclick="deleteEntry(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer l'observation"><i class="fas fa-times-circle"></i></button></div><p class="text-gray-600 preserve-whitespace">${text}</p></div>`;
+            // AMÉLIORATION: Échappement HTML pour prévenir les attaques XSS + ajout d'aria-label
+            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-rose"></div><div class="flex justify-between items-start"><h3 class="font-semibold text-gray-800">${escapeHtml(formattedDate)} - ${escapeHtml(author.toUpperCase())}</h3><button type="button" onclick="deleteEntry(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer l'observation" aria-label="Supprimer l'observation"><i class="fas fa-times-circle" aria-hidden="true"></i></button></div><p class="text-gray-600 preserve-whitespace">${escapeHtml(text)}</p></div>`;
             document.getElementById('observations-list').insertAdjacentHTML('afterbegin', newHTML);
             document.getElementById('new-observation-form').reset();
-        }
-
-        function addTransmission() {
+            saveData(activePatientId);
+        }ervation-author').valu        function addTransmission() {
             const author = document.getElementById('new-transmission-author-2').value.trim();
             const text = document.getElementById('new-transmission-text-2').value.trim();
             const dateValue = document.getElementById('new-transmission-date').value;
             if (!text || !author) return;
             const eventDate = dateValue ? new Date(dateValue) : new Date();
             const formattedDate = new Date(eventDate.getTime() - (eventDate.getTimezoneOffset() * 60000)).toLocaleDateString('fr-FR');
-            const formattedText = text.replace(/Cible :/g, '<strong class="text-gray-900">Cible :</strong>').replace(/Données :/g, '<br><strong class="text-gray-900">Données :</strong>').replace(/Actions :/g, '<br><strong class="text-gray-900">Actions :</strong>').replace(/Résultat :/g, '<br><strong class="text-gray-900">Résultat :</strong>');
-            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-green"></div><div class="flex justify-between items-start"><h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3><button type="button" onclick="deleteEntry(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la transmission"><i class="fas fa-times-circle"></i></button></div><p class="text-gray-600 preserve-whitespace">${formattedText}</p></div>`;
+            // AMÉLIORATION: Échappement HTML d'abord, puis application de la mise en forme
+            const escapedText = escapeHtml(text);
+            const formattedText = escapedText.replace(/Cible :/g, '<strong class="text-gray-900">Cible :</strong>').replace(/Données :/g, '<br><strong class="text-gray-900">Données :</strong>').replace(/Actions :/g, '<br><strong class="text-gray-900">Actions :</strong>').replace(/Résultat :/g, '<br><strong class="text-gray-900">Résultat :</strong>');
+            const newHTML = `<div class="timeline-item"><div class="timeline-dot dot-green"></div><div class="flex justify-between items-start"><h3 class="font-semibold text-gray-800">${escapeHtml(formattedDate)} - ${escapeHtml(author.toUpperCase())}</h3><button type="button" onclick="deleteEntry(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la transmission" aria-label="Supprimer la transmission"><i class="fas fa-times-circle" aria-hidden="true"></i></button></div><p class="text-gray-600 preserve-whitespace">${formattedText}</p></div>`;
             document.getElementById('transmissions-list-ide').insertAdjacentHTML('afterbegin', newHTML);
             document.getElementById('new-transmission-form-2').reset();
-        }
-
-        function addPrescription() {
+            saveData(activePatientId);
+        }tDate.getTime() - (        function addPrescription() {
             const name = document.getElementById('med-name').value.trim();
             const posologie = document.getElementById('med-posologie').value.trim();
             const voie = document.getElementById('med-voie').value.trim();
@@ -1158,15 +1237,36 @@
             const formattedStartDate = new Date(new Date(startDate).getTime() - (new Date(startDate).getTimezoneOffset() * 60000)).toLocaleDateString('fr-FR');
             const newRow = document.getElementById("prescription-tbody").insertRow();
             
+            // AMÉLIORATION: Échappement HTML pour prévenir les attaques XSS + ajout d'aria-labels
             let cellsHTML = `
                 <td class="p-2 text-left">
                     <div class="flex items-center justify-between">
-                        <span>${name}</span>
-                        <button type="button" onclick="deletePrescription(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la prescription">
-                            <i class="fas fa-times-circle"></i>
+                        <span>${escapeHtml(name)}</span>
+                        <button type="button" onclick="deletePrescription(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la prescription" aria-label="Supprimer la prescription">
+                            <i class="fas fa-times-circle" aria-hidden="true"></i>
                         </button>
                     </div>
                 </td>
+                <td class="p-2 text-left">${escapeHtml(posologie)}</td>
+                <td class="p-2 text-left">${escapeHtml(voie)}</td>
+                <td class="p-2 text-left">${escapeHtml(formattedStartDate)}</td>`;
+            for (let i = 0; i < 11; i++) {
+                cellsHTML += `<td><input type="checkbox" aria-label="Matin jour ${i+1}"></td><td><input type="checkbox" aria-label="Midi jour ${i+1}"></td><td><input type="checkbox" aria-label="Soir jour ${i+1}"></td><td><input type="checkbox" aria-label="Nuit jour ${i+1}"></td>`;
+            }
+            newRow.innerHTML = cellsHTML;
+            document.getElementById('new-prescription-form').reset();
+            saveData(activePatientId);
+        } newRow = docume        function addCareDiagramRow() {
+            const name = document.getElementById('care-name').value.trim();
+            if (!name) return;
+            const newRow = document.getElementById('care-diagram-tbody').insertRow();
+            // AMÉLIORATION: Échappement HTML pour prévenir les attaques XSS + ajout d'aria-labels
+            let cellsHTML = `<td class="text-left p-2">${escapeHtml(name)}</td>`;
+            for(let i=0; i<11; i++) cellsHTML += `<td class="border-l"><input type="checkbox" aria-label="Matin jour ${i+1}"></td><td><input type="checkbox" aria-label="Soir jour ${i+1}"></td><td><input type="checkbox" aria-label="Nuit jour ${i+1}"></td>`;
+            newRow.innerHTML = cellsHTML;
+            document.getElementById('new-care-form').reset();
+            saveData(activePatientId);
+        } </td>
                 <td class="p-2 text-left">${posologie}</td>
                 <td class="p-2 text-left">${voie}</td>
                 <td class="p-2 text-left">${formattedStartDate}</td>`;
