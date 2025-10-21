@@ -20,15 +20,12 @@
         #main-content-wrapper {
             overflow-y: scroll;
         }
-
         .content-section { display: none; }
         .content-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         .card {
             background-color: white;
             border-radius: 12px;
@@ -77,7 +74,6 @@
         .timeline-dot { position: absolute; left: -0.6rem; top: 0.25rem; height: 1rem; width: 1rem; border-radius: 9999px; border: 3px solid white; }
         .timeline-dot.dot-rose { background-color: #f43f5e; }
         .timeline-dot.dot-green { background-color: #22c55e; }
-
         .diagram th, .diagram td { border: 1px solid #e5e7eb; padding: 0.5rem; vertical-align: middle; }
         .diagram input[type="checkbox"] { height: 1.1rem; width: 1.1rem; accent-color: #3b82f6; }
         .diagram thead { font-size: 0.8rem; background-color: #f9fafb; color: #374151; }
@@ -89,7 +85,6 @@
         .diagram input[type="text"]:focus, .diagram input[type="number"]:focus {
             outline: 2px solid #3b82f6; background-color: #eff6ff; border-radius: 4px;
         }
-
         input[type=number]::-webkit-outer-spin-button,
         input[type=number]::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -98,7 +93,6 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
-
         .continuous-surveillance { background-image: linear-gradient(45deg, #fef3c7 25%, transparent 25%, transparent 50%, #fef3c7 50%, #fef3c7 75%, transparent 75%, transparent 100%); background-size: 20px 20px; }
         
         .styled-input {
@@ -121,7 +115,6 @@
             cursor: default;
             color: #1f2937;
         }
-
         .info-item > textarea.info-value, 
         .info-item > input.info-value,
         .info-item > textarea.info-value:disabled,
@@ -153,7 +146,6 @@
         #custom-confirm-modal #custom-confirm-box {
             transition: transform 0.2s ease-out, opacity 0.2s ease-out;
         }
-
         /* Sidebar Styles */
         #sidebar {
             transition: width 0.3s ease;
@@ -194,10 +186,58 @@
             color: #6b7280; /* gray-500 */
             margin-left: 0.5rem;
         }
+
+        /* IV Prescription Bar Styles */
+        .iv-bar-container {
+            position: relative;
+            height: 38px;
+            padding: 0 !important;
+            cursor: crosshair;
+        }
+        .iv-bar {
+            position: absolute;
+            top: 55%;
+            transform: translateY(-50%);
+            height: 50%;
+            background-color: #60a5fa;
+            border: 1px solid #2563eb;
+            border-radius: 4px;
+            cursor: move;
+            z-index: 10;
+        }
+        .resize-handle {
+            position: absolute;
+            right: -2px;
+            top: -2px;
+            width: 10px;
+            height: calc(100% + 4px);
+            cursor: ew-resize;
+            z-index: 11;
+        }
+        body.is-drawing-iv, body.is-resizing-iv, body.is-moving-iv {
+            cursor: ew-resize !important;
+            user-select: none;
+        }
+        .iv-bar-container .iv-time-label {
+            position: absolute;
+            top: 2px;
+            font-family: monospace;
+            font-size: 10px;
+            background: rgba(229, 231, 235, 0.8);
+            padding: 1px 3px;
+            border-radius: 3px;
+            color: #374151;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 12;
+        }
+        .iv-time-label.end {
+             transform: translateX(-100%);
+        }
+
     </style>
 </head>
 <body class="flex h-screen bg-gray-100">
-
     <!-- Sidebar -->
     <aside id="sidebar" class="w-64 bg-white shadow-md flex flex-col flex-shrink-0">
         <div class="p-4 border-b">
@@ -216,7 +256,6 @@
             </button>
         </div>
     </aside>
-
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
         <div id="main-content-wrapper" class="flex-1 overflow-x-hidden overflow-y-auto">
@@ -240,49 +279,39 @@
                         </button>
                     </div>
                 </header>
-
                 <main>
                     <!-- Patient Header -->
-                    <header id="patient-header-form" class="mb-6">
-                        <div class="card p-3">
-                            <div class="flex flex-wrap items-end gap-3">
-                                
-                                <div class="info-item flex-grow min-w-[220px]">
-                                    <span class="info-label">Nom, Prénom</span>
-                                    <input type="text" id="patient-name" class="info-value text-lg font-bold" placeholder="NOM, Prénom">
-                                </div>
-                                <div class="info-item flex-grow min-w-[200px]">
+			<header id="patient-header-form" class="mb-6">
+                        <div class="card p-4">
+                            <div class="grid grid-cols-12 gap-x-4 gap-y-3 items-stretch">
+                                <!-- Ligne 1 -->
+                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-4"><span class="info-label">Nom d'usage</span><input type="text" id="patient-nom-usage" class="info-value text-lg font-bold" placeholder="NOM Usage"></div>
+                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-4"><span class="info-label">Prénom</span><input type="text" id="patient-prenom" class="info-value text-lg font-bold" placeholder="Prénom"></div>
+                                <div class="info-item col-span-12 sm:col-span-12 md:col-span-4">
                                     <span class="info-label">Date de naissance</span>
+                                    <div class="flex items-center gap-2"><input type="date" id="patient-dob" class="info-value text-gray-500 flex-grow" style="flex-basis: 150px;"><span id="patient-age" class="text-sm text-gray-600 font-medium whitespace-nowrap"></span></div>
+                                </div>
+
+                                <!-- Ligne 2 -->
+                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-3"><span class="info-label">Motif d'hospitalisation</span><input type="text" id="patient-motif" class="info-value"></div>
+                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-2"><span class="info-label">Médecin</span><input type="text" id="patient-doctor" class="info-value"></div>
+                                <div class="info-item col-span-6 sm:col-span-4 md:col-span-2"><span class="info-label">Service</span><input type="text" id="patient-service" class="info-value"></div>
+                                
+                                <div class="info-item col-span-6 sm:col-span-4 md:col-span-3">
+                                    <span class="info-label">Date d'entrée / Jour</span>
                                     <div class="flex items-center gap-2">
-                                        <input type="date" id="patient-dob" class="info-value text-gray-500 flex-grow" style="flex-basis: 150px;">
-                                        <span id="patient-age" class="text-sm text-gray-600 font-medium whitespace-nowrap"></span>
+                                        <input type="date" id="patient-entry-date" class="info-value">
+                                        <span id="patient-jour-hosp" class="info-value font-bold text-lg text-sky-700">J-</span>
                                     </div>
                                 </div>
-                                <div class="info-item flex-grow min-w-[80px]">
-                                    <span class="info-label">Service</span>
-                                    <input type="text" id="patient-service" class="info-value">
+                                <div class="col-span-12 sm:col-span-4 md:col-span-2 flex items-end justify-end">
+                                    <button id="lock-header-btn" type="button" onclick="toggleLock('patient-header-form', 'lock-header-btn')" class="w-full h-full inline-flex items-center justify-center py-2 px-3 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-sky-600 text-sky-700 hover:bg-sky-600">
+                                        <i class="fas fa-check mr-2"></i> Valider
+                                    </button>
                                 </div>
-                                <div class="info-item flex-grow min-w-[80px]">
-                                    <span class="info-label">Chambre</span>
-                                    <input type="text" id="patient-room" class="info-value">
-                                </div>
-                                <div class="info-item flex-grow min-w-[140px]">
-                                    <span class="info-label">Médecin</span>
-                                    <input type="text" id="patient-doctor" class="info-value">
-                                </div>
-                                <div class="info-item flex-grow min-w-[130px]">
-                                    <span class="info-label">Date d'entrée</span>
-                                    <input type="date" id="patient-entry-date" class="info-value">
-                                </div>
-                                
-                                <button id="lock-header-btn" type="button" onclick="toggleLock('patient-header-form', 'lock-header-btn')" class="flex-shrink-0 inline-flex items-center justify-center py-2 px-4 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-sky-600 text-sky-700 hover:bg-sky-600">
-                                    <i class="fas fa-check mr-2"></i>
-                                    Valider l'en-tête
-                                </button>
                             </div>
                         </div>
                     </header>
-
                     <!-- Navigation Tabs -->
                     <div class="card p-2">
                          <nav class="flex flex-wrap w-full gap-2" aria-label="Tabs">
@@ -296,7 +325,6 @@
                             <button type="button" onclick="changeTab(event, 'biologie')" data-color="purple"><i class="fas fa-vial mr-2"></i>Résultats Biologiques</button>
                         </nav>
                     </div>
-
                     <!-- Tab Content -->
                     <div id="tab-content">
                         <!-- Administrative Info -->
@@ -307,9 +335,10 @@
                                 <!-- Section: Identité -->
                                 <div class="mt-6">
                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Identité du patient</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div class="info-item"><span class="info-label">Nom</span><textarea id="admin-nom" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <div class="info-item"><span class="info-label">Nom d'usage</span><textarea id="admin-nom-usage" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        
                                         <div class="info-item">
                                             <span class="info-label">Date de Naissance</span>
                                             <div class="flex items-center gap-2">
@@ -318,7 +347,7 @@
                                             </div>
                                         </div>
                                         <div class="info-item"><span class="info-label">Sexe</span><textarea id="admin-sexe" class="info-value" oninput="autoResize(this)"></textarea></div>
-                                        <div class="info-item col-span-full"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item col-span-full lg:col-span-2"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
                                 </div>
                                 
@@ -329,6 +358,8 @@
                                         <div class="info-item"><span class="info-label">Personne à contacter</span><textarea id="admin-contact" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Téléphone</span><textarea id="admin-telephone" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Médecin traitant</span><textarea id="admin-medecin" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Personne de confiance</span><textarea id="admin-pers-confiance" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Téléphone P. de confiance</span><textarea id="admin-pers-confiance-tel" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
                                 </div>
                                 
@@ -348,7 +379,6 @@
                                 </button>
                             </div>
                         </div>
-
                         <!-- Lifestyle & History -->
                         <div id="mode-de-vie" class="content-section">
                             <div class="card p-6">
@@ -360,9 +390,12 @@
                                         <div class="info-item"><span class="info-label">Situation familiale/professionnelle</span><textarea id="vie-situation" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Conditions de logement (Habitat)</span><textarea id="vie-habitat" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Habitudes (Alcool, Tabac, etc.)</span><textarea id="vie-habitudes" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <!-- ADDED: Poids, Taille, Régime -->
+                                        <div class="info-item"><span class="info-label">Poids (kg)</span><textarea id="vie-poids" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Taille (cm)</span><textarea id="vie-taille" class="info-value" oninput="autoResize(this)"></textarea></div>
+                                        <div class="info-item"><span class="info-label">Régime alimentaire</span><textarea id="vie-regime" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
                                 </div>
-
                                 <div class="mt-8">
                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Antécédents (ATCD)</h3>
                                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -403,7 +436,7 @@
                                     <table class="w-full border-collapse text-sm diagram" id="prescription-table">
                                         <thead class="bg-gray-100 text-gray-600">
                                             <tr>
-                                                <th class="p-2 text-left align-bottom" rowspan="2">Médicament</th>
+                                                <th class="p-2 text-left align-bottom" rowspan="2">Médicament / Soin</th>
                                                 <th class="p-2 text-left align-bottom" rowspan="2">Posologie</th>
                                                 <th class="p-2 text-left align-bottom" rowspan="2">Voie</th>
                                                 <th class="p-2 text-left align-bottom" rowspan="2">Date de début</th>
@@ -419,30 +452,29 @@
                             </div>
                              <div class="card p-6">
                                  <h2 class="card-header">Ajouter une prescription</h2>
-                                 <form id="new-prescription-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                                 <form id="new-prescription-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                                      <div>
-                                        <label for="med-name" class="block text-sm font-medium text-gray-700">Médicament</label>
-                                        <input type="text" id="med-name" class="styled-input mt-1 block w-full rounded-md shadow-sm sm:text-sm">
+                                        <label for="med-name" class="block text-sm font-medium text-gray-700">Médicament / Soin</label>
+                                        <input type="text" id="med-name" class="styled-input mt-1">
                                     </div>
                                      <div>
                                         <label for="med-posologie" class="block text-sm font-medium text-gray-700">Posologie</label>
-                                        <input type="text" id="med-posologie" class="styled-input mt-1 block w-full rounded-md shadow-sm sm:text-sm">
+                                        <input type="text" id="med-posologie" class="styled-input mt-1">
                                     </div>
                                      <div>
                                         <label for="med-voie" class="block text-sm font-medium text-gray-700">Voie</label>
-                                        <input type="text" id="med-voie" class="styled-input mt-1 block w-full rounded-md shadow-sm sm:text-sm">
+                                        <input type="text" id="med-voie" class="styled-input mt-1">
                                     </div>
                                     <div>
                                         <label for="med-start-date" class="block text-sm font-medium text-gray-700">Date de début</label>
-                                        <input type="date" id="med-start-date" class="styled-input mt-1 block w-full rounded-md shadow-sm sm:text-sm">
+                                        <input type="date" id="med-start-date" class="styled-input mt-1">
                                     </div>
-                                     <div class="flex justify-start">
+                                     <div class="md:col-start-4 flex justify-end">
                                         <button type="button" onclick="addPrescription()" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Ajouter</button>
                                     </div>
                                  </form>
                              </div>
                         </div>
-
                         <!-- Transmissions -->
                         <div id="transmissions" class="content-section">
                             <div class="card p-6"><h2 class="card-header">Transmissions Soignantes</h2><div id="transmissions-list-ide" class="space-y-8 mt-4"></div></div>
@@ -487,7 +519,6 @@
                                                     document.write(row);
                                                 }
                                             </script>
-
                                             <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Électrolytique</td></tr>
                                             <script>
                                                 const ionoData = { "Sodium (mmol/L)": "136-145", "Potassium (mmol/L)": "3.5-5.1", "Chlore (mmol/L)": "98-107", "Bicarbonates (mmol/L)": "22-29", "Urée (mmol/L)": "2.8-7.2", "Créatinine (µmol/L)": "62-106" };
@@ -498,7 +529,6 @@
                                                     document.write(row);
                                                 }
                                             </script>
-
                                             <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Hépatique</td></tr>
                                             <script>
                                                 const hepatiqueData = { "ASAT (UI/L)": "< 40", "ALAT (UI/L)": "< 41", "Gamma-GT (UI/L)": "11-50", "PAL (UI/L)": "40-129", "Bilirubine totale (µmol/L)": "5-21" };
@@ -509,7 +539,6 @@
                                                     document.write(row);
                                                 }
                                             </script>
-
                                             <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Lipidique</td></tr>
                                             <script>
                                                 const lipidiqueData = { "Cholestérol total (g/L)": "< 2.0", "Triglycérides (g/L)": "< 1.5", "HDL Cholestérol (g/L)": "> 0.4", "LDL Cholestérol (g/L)": "< 1.6" };
@@ -536,7 +565,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Pancarte -->
                         <div id="pancarte" class="content-section">
                             <div class="card p-6">
@@ -566,7 +594,6 @@
                                                     if (param === 'Température (°C)') {
                                                         inputHtml = '<input type="number" step="0.1" value="" onchange="updatePancarteChart()">';
                                                     }
-
                                                     for(let i=0; i<33; i++) {
                                                         row += `<td class="p-0">${inputHtml}</td>`;
                                                     }
@@ -579,7 +606,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <!-- Care Diagram -->
                         <div id="diagramme" class="content-section">
                              <div class="card p-6">
@@ -620,7 +646,6 @@
             </div>
         </div>
     </div>
-
     <!-- Custom Confirmation Modal -->
     <div id="custom-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
@@ -633,7 +658,6 @@
         </div>
     </div>
 
-
     <script>
         let pancarteChartInstance;
         const patients = Array.from({ length: 10 }, (_, i) => ({ 
@@ -642,10 +666,20 @@
         }));
         let activePatientId = localStorage.getItem('activePatientId') || patients[0].id;
 
+        // --- IV Bar Interaction State ---
+        let ivInteraction = {
+            active: false,
+            mode: null, // 'draw', 'move', 'resize'
+            targetBar: null,
+            targetCell: null,
+            startX: 0,
+            startLeft: 0,
+            startWidth: 0,
+        };
+
         function getSaveKey(patientId) {
             return `dossierPatientData_${patientId}`;
         }
-
         // --- DATA PERSISTENCE FUNCTIONS ---
         function saveData(patientId) {
             if (!patientId) return;
@@ -660,8 +694,7 @@
                     state[id] = el.value;
                 }
             });
-
-            const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'];
+            const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'care-diagram-tbody'];
             dynamicContentIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) state[id + '_html'] = el.innerHTML;
@@ -670,18 +703,50 @@
             // Explicitly save biology table inputs as they don't have unique IDs
             state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
 
-
             state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
-            state.prescriptionCheckboxes = Array.from(document.querySelectorAll('#prescription-tbody input[type="checkbox"]')).map(cb => cb.checked);
+            
+            // BUG FIX: START - Save all IV bars, not just the first one.
+            state.prescriptions = [];
+            document.querySelectorAll('#prescription-tbody tr').forEach(row => {
+                const isIV = row.dataset.type === 'iv';
+                const prescriptionData = {
+                    name: row.cells[0].querySelector('span').textContent,
+                    posologie: row.cells[1].textContent,
+                    voie: row.cells[2].textContent,
+                    startDate: row.cells[3].textContent,
+                    type: isIV ? 'iv' : 'checkbox'
+                };
+
+                if (isIV) {
+                    const barsNodeList = row.querySelectorAll('.iv-bar');
+                    prescriptionData.bars = [];
+                    barsNodeList.forEach(bar => {
+                        prescriptionData.bars.push({
+                            left: bar.style.left,
+                            width: bar.style.width,
+                            title: bar.title
+                        });
+                    });
+                } else {
+                    prescriptionData.checkboxes = Array.from(row.querySelectorAll('input[type="checkbox"]')).map(cb => cb.checked);
+                }
+                state.prescriptions.push(prescriptionData);
+            });
+            // BUG FIX: END
+
+
             state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
             state.lockButtonStates = {};
             document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
                 state.lockButtonStates[btn.id] = btn.innerHTML.includes('fa-lock');
             });
             
-            const patientName = document.getElementById('patient-name').value.trim();
+            // MODIFIED: Construct sidebar name from new fields
+            const nomUsage = document.getElementById('patient-nom-usage').value.trim();
+            const prenom = document.getElementById('patient-prenom').value.trim();
+            const patientName = `${nomUsage} ${prenom}`.trim();
             state['sidebar_patient_name'] = patientName;
-
+            
             localStorage.setItem(SAVE_KEY, JSON.stringify(state));
             
             const sidebarEntry = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-name`);
@@ -694,12 +759,10 @@
             if (!patientId) return;
             const SAVE_KEY = getSaveKey(patientId);
             const savedState = localStorage.getItem(SAVE_KEY);
-
             if (!savedState || savedState === '{}') {
-                resetForm(); // Ensure a completely clean slate
+                resetForm(); 
             } else {
                 const state = JSON.parse(savedState);
-
                 Object.keys(state).forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
@@ -710,20 +773,22 @@
                         }
                     }
                 });
-
-                const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'];
-                dynamicContentIds.forEach(id => {
+                const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'care-diagram-tbody'];
+                 dynamicContentIds.forEach(id => {
                     const el = document.getElementById(id);
                     if (el && state[id + '_html']) {
                         el.innerHTML = state[id + '_html'];
                     }
                 });
-
-                if (state.prescriptionCheckboxes) {
-                    document.querySelectorAll('#prescription-tbody input[type="checkbox"]').forEach((cb, index) => {
-                        cb.checked = state.prescriptionCheckboxes[index] || false;
+                
+                if (state.prescriptions) {
+                    const tbody = document.getElementById('prescription-tbody');
+                    tbody.innerHTML = '';
+                    state.prescriptions.forEach(pData => {
+                        addPrescription(pData, true); 
                     });
                 }
+
                 if (state.careDiagramCheckboxes) {
                     document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
                         cb.checked = state.careDiagramCheckboxes[index] || false;
@@ -734,19 +799,16 @@
                         input.value = state.bioTableValues[index] || '';
                     });
                 }
-
                 if (state.pancarteValues) {
                     document.querySelectorAll('#pancarte-table tbody input').forEach((input, index) => {
                         input.value = state.pancarteValues[index] || '';
                     });
                 }
-
                 const entryDateValue = document.getElementById('patient-entry-date').value;
                 if (entryDateValue) {
                     const entryDate = new Date(entryDateValue);
                     if (!isNaN(entryDate.getTime())) updateDynamicDates(entryDate);
                 }
-
                 if (state.lockButtonStates) {
                     Object.keys(state.lockButtonStates).forEach(buttonId => {
                         if (state.lockButtonStates[buttonId]) {
@@ -763,12 +825,14 @@
                 }
             }
 
-            const roomInput = document.getElementById('patient-room');
-            roomInput.value = patientId.split('_')[1];
-            roomInput.readOnly = true;
+            const roomDisplay = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-room`);
+            if (roomDisplay) {
+                const patientRoomEl = document.getElementById('patient-room');
+                if (patientRoomEl) patientRoomEl.value = roomDisplay.textContent;
+            }
 
-            syncHeaderToAdmin();
             updateAgeDisplay();
+            updateJourHosp(); // Call new function on load
         }
 
         function clearCurrentPatientData() {
@@ -796,7 +860,7 @@
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            const patientName = (document.getElementById('patient-name').value.trim() || activePatientId).replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const patientName = (document.getElementById('patient-nom-usage').value.trim() || activePatientId).replace(/[^a-z0-9]/gi, '_').toLowerCase();
             a.download = `dossier_${patientName}.json`;
             a.href = url;
             document.body.appendChild(a);
@@ -812,7 +876,7 @@
             reader.onload = e => {
                 try {
                     const content = e.target.result;
-                    JSON.parse(content);
+                    JSON.parse(content); // Just validate
                     const SAVE_KEY = getSaveKey(activePatientId);
                     localStorage.setItem(SAVE_KEY, content);
                     location.reload();
@@ -825,7 +889,6 @@
         }
 
         // --- UI & APP LOGIC ---
-
         function initSidebar() {
             const list = document.getElementById('patient-list');
             let listHTML = '';
@@ -858,7 +921,6 @@
                 if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
                 else if (el.type !== 'file') el.value = '';
             });
-
             ['observations-list', 'transmissions-list-ide', 'prescription-tbody', 'care-diagram-tbody'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = '';
@@ -867,7 +929,6 @@
             document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
                 if (btn.innerHTML.includes('fa-lock')) btn.click();
             });
-
             if (pancarteChartInstance) pancarteChartInstance.destroy();
         }
 
@@ -878,7 +939,6 @@
             
             activePatientId = newPatientId;
             localStorage.setItem('activePatientId', newPatientId);
-
             resetForm();
             loadData(newPatientId);
             updateSidebarActiveState(newPatientId);
@@ -896,7 +956,6 @@
         function initApp() {
             initSidebar();
             switchPatient(activePatientId, true);
-
             let saveTimeout;
             const debouncedSave = () => {
                 clearTimeout(saveTimeout);
@@ -905,11 +964,14 @@
             document.querySelector('main').addEventListener('input', debouncedSave);
             document.querySelector('main').addEventListener('change', debouncedSave);
 
-            // Event listeners for new features
-            document.getElementById('patient-name').addEventListener('input', syncHeaderToAdmin);
-            document.getElementById('patient-dob').addEventListener('input', syncHeaderToAdmin);
-            document.getElementById('admin-dob').addEventListener('input', updateAgeDisplay);
             setupModalListeners();
+            setupSync(); // Setup 2-way data binding
+            document.getElementById('patient-entry-date').addEventListener('input', updateJourHosp);
+
+
+            // Add global listeners for IV bar interactions
+            document.addEventListener('mousemove', handleIVMouseMove);
+            document.addEventListener('mouseup', handleIVMouseUp);
 
             const activeTabId = localStorage.getItem('activeTab') || 'administratif';
             const activeTabButton = document.querySelector(`nav button[onclick*="'${activeTabId}'"]`);
@@ -953,12 +1015,67 @@
 
         // --- NEW/MODIFIED FUNCTIONS ---
 
+        // ADDED: Calculate hospital day
+        function updateJourHosp() {
+            const entryDateEl = document.getElementById('patient-entry-date');
+            const jourHospEl = document.getElementById('patient-jour-hosp');
+            if (!entryDateEl.value) {
+                jourHospEl.textContent = 'J-';
+                return;
+            }
+            const entryDate = new Date(entryDateEl.value);
+            if (isNaN(entryDate.getTime())) {
+                jourHospEl.textContent = 'J-';
+                return;
+            }
+            const today = new Date();
+            // Reset time component for accurate day difference
+            entryDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            const diffTime = today - entryDate;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            
+            jourHospEl.textContent = `J${diffDays}`;
+        }
+        
+        // ADDED: Setup 2-way data binding between header and admin tab
+        function setupSync() {
+            const syncMap = [
+                ['patient-nom-usage', 'admin-nom-usage'],
+                ['patient-prenom', 'admin-prenom'],
+                ['patient-dob', 'admin-dob']
+            ];
+
+            syncMap.forEach(([id1, id2]) => {
+                const el1 = document.getElementById(id1);
+                const el2 = document.getElementById(id2);
+
+                if (el1 && el2) {
+                    el1.addEventListener('input', () => {
+                        if (!el2.disabled) {
+                            el2.value = el1.value;
+                            if (el2.tagName.toLowerCase() === 'textarea') autoResize(el2);
+                            if(id1.includes('dob')) updateAgeDisplay();
+                        }
+                    });
+
+                    el2.addEventListener('input', () => {
+                        if (!el1.disabled) {
+                            el1.value = el2.value;
+                            if (el1.tagName.toLowerCase() === 'textarea') autoResize(el1);
+                            if(id2.includes('dob')) updateAgeDisplay();
+                        }
+                    });
+                }
+            });
+        }
+
         function calculateAge(dobString) {
             if (!dobString) return '';
             const dob = new Date(dobString);
             const today = new Date();
             if (isNaN(dob.getTime()) || dob > today) return '';
-
             let age = today.getFullYear() - dob.getFullYear();
             const m = today.getMonth() - dob.getMonth();
             if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
@@ -973,38 +1090,6 @@
             
             const dobAdmin = document.getElementById('admin-dob').value;
             document.getElementById('admin-age').textContent = calculateAge(dobAdmin);
-        }
-
-        function syncHeaderToAdmin() {
-            const patientNameInput = document.getElementById('patient-name');
-            const patientDobInput = document.getElementById('patient-dob');
-
-            const nameValue = patientNameInput.value.trim();
-            let nom = '', prenom = '';
-            if (nameValue.includes(',')) {
-                [nom, prenom] = nameValue.split(',').map(s => s.trim());
-            } else {
-                const parts = nameValue.split(' ').filter(Boolean);
-                nom = parts.shift() || ''; // First part is last name
-                prenom = parts.join(' '); // The rest is first name
-            }
-
-            const adminNom = document.getElementById('admin-nom');
-            const adminPrenom = document.getElementById('admin-prenom');
-            const adminDob = document.getElementById('admin-dob');
-
-            if (!adminNom.disabled) {
-                adminNom.value = nom || '';
-                autoResize(adminNom);
-            }
-            if (!adminPrenom.disabled) {
-                adminPrenom.value = prenom || '';
-                autoResize(adminPrenom);
-            }
-            if (!adminDob.disabled) {
-                adminDob.value = patientDobInput.value;
-            }
-            updateAgeDisplay();
         }
 
         function deleteEntry(button) {
@@ -1071,10 +1156,12 @@
                 const entryDateValue = document.getElementById('patient-entry-date').value;
                 if (entryDateValue) {
                     const entryDate = new Date(entryDateValue);
-                    if (!isNaN(entryDate.getTime())) updateDynamicDates(entryDate);
+                    if (!isNaN(entryDate.getTime())) {
+                        updateDynamicDates(entryDate);
+                        updateJourHosp();
+                    }
                 }
             }
-
             inputs.forEach(input => {
                 input.disabled = !isUnlocking;
                 if (input.tagName.toLowerCase() === 'textarea' && isUnlocking) autoResize(input);
@@ -1085,9 +1172,8 @@
                 'lock-admin-btn': { unlocked: ['border-blue-600', 'text-blue-700', 'hover:bg-blue-600'], locked: ['border-gray-400', 'text-gray-500', 'hover:bg-gray-400'] },
                 'lock-vie-btn': { unlocked: ['border-teal-600', 'text-teal-700', 'hover:bg-teal-600'], locked: ['border-gray-400', 'text-gray-500', 'hover:bg-gray-400'] }
             };
-
             const styles = colorMap[buttonId];
-            const baseUnlockedText = (buttonId === 'lock-header-btn') ? "Valider l'en-tête" : "Valider les données";
+            const baseUnlockedText = (buttonId === 'lock-header-btn') ? "Valider" : "Valider les données";
             
             if (isUnlocking) {
                 button.innerHTML = `<i class="fas fa-check mr-2"></i> ${baseUnlockedText}`;
@@ -1106,7 +1192,6 @@
             const baseClasses = "min-h-[4rem] py-2 px-2 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center text-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
             const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", violet: "text-violet-900 border-violet-300 bg-gradient-to-br from-violet-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
-
             document.querySelectorAll('nav[aria-label="Tabs"] button').forEach(tab => tab.className = `${baseClasses} ${inactiveClasses}`);
             const clickedTab = event.currentTarget;
             const color = clickedTab.dataset.color;
@@ -1114,13 +1199,10 @@
             
             document.querySelectorAll('.card-header').forEach(h => Object.keys(activeClasses).forEach(c => h.classList.remove(`header-${c}`)));
             document.getElementById(tabId).querySelectorAll('.card-header').forEach(h => h.classList.add(`header-${color}`));
-
             localStorage.setItem('activeTab', tabId);
-
             setTimeout(() => {
                 activeSection.querySelectorAll('textarea.info-value').forEach(autoResize);
             }, 0);
-
             if (tabId === 'pancarte') setTimeout(() => updatePancarteChart(), 50);
         }
 
@@ -1149,34 +1231,93 @@
             document.getElementById('new-transmission-form-2').reset();
         }
 
-        function addPrescription() {
-            const name = document.getElementById('med-name').value.trim();
-            const posologie = document.getElementById('med-posologie').value.trim();
-            const voie = document.getElementById('med-voie').value.trim();
-            const startDate = document.getElementById('med-start-date').value;
-            if (!name || !posologie || !voie || !startDate) return;
-            const formattedStartDate = new Date(new Date(startDate).getTime() - (new Date(startDate).getTimezoneOffset() * 60000)).toLocaleDateString('fr-FR');
-            const newRow = document.getElementById("prescription-tbody").insertRow();
-            
-            let cellsHTML = `
-                <td class="p-2 text-left">
-                    <div class="flex items-center justify-between">
+        // BUG FIX: START - Function updated to load all IV bars from saved data.
+        function addPrescription(data = null, fromLoad = false) {
+            let name, posologie, voie, startDate, type, checkboxes, bars;
+            if (fromLoad) {
+                // Support both new "bars" array and old "left/width" properties for backward compatibility
+                ({ name, posologie, voie, startDate, type, checkboxes, bars } = data);
+            } else {
+                name = document.getElementById('med-name').value.trim();
+                posologie = document.getElementById('med-posologie').value.trim();
+                voie = document.getElementById('med-voie').value.trim();
+                const startDateValue = document.getElementById('med-start-date').value;
+                if (!name || !startDateValue) return;
+
+                const [year, month, day] = startDateValue.split('-');
+                startDate = `${day}/${month}/${year.slice(2)}`;
+
+                type = voie.trim().toUpperCase() === 'IV' ? 'iv' : 'checkbox';
+            }
+
+            const tbody = document.getElementById("prescription-tbody");
+            const newRow = tbody.insertRow();
+            newRow.dataset.type = type;
+
+            const baseCellsHTML = `
+                <td class="p-2 text-left align-top">
+                    <div class="flex items-start justify-between">
                         <span>${name}</span>
                         <button type="button" onclick="deletePrescription(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la prescription">
                             <i class="fas fa-times-circle"></i>
                         </button>
                     </div>
                 </td>
-                <td class="p-2 text-left">${posologie}</td>
-                <td class="p-2 text-left">${voie}</td>
-                <td class="p-2 text-left">${formattedStartDate}</td>`;
-            for (let i = 0; i < 11; i++) {
-                cellsHTML += `<td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td>`;
-            }
-            newRow.innerHTML = cellsHTML;
-            document.getElementById('new-prescription-form').reset();
-        }
+                <td class="p-2 text-left align-top">${posologie}</td>
+                <td class="p-2 text-left align-top">${voie}</td>
+                <td class="p-2 text-left align-top">${startDate}</td>
+            `;
 
+            if (type === 'iv') {
+                newRow.innerHTML = baseCellsHTML;
+                const timelineCell = newRow.insertCell();
+                timelineCell.colSpan = 44;
+                timelineCell.className = 'iv-bar-container';
+                timelineCell.addEventListener('mousedown', handleIVMouseDown);
+
+                const barsToCreate = [];
+                if (fromLoad && bars && Array.isArray(bars)) {
+                    bars.forEach(barData => barsToCreate.push(barData));
+                } else if (fromLoad && data.left && data.width) { // Fallback for old data format
+                    barsToCreate.push({ left: data.left, width: data.width, title: data.title });
+                }
+
+                barsToCreate.forEach(barData => {
+                    if (barData && barData.left && barData.width) {
+                        const bar = document.createElement('div');
+                        bar.className = 'iv-bar';
+                        bar.style.left = barData.left;
+                        bar.style.width = barData.width;
+                        bar.title = barData.title || '';
+                        bar.addEventListener('dblclick', handleIVDblClick);
+
+                        const handle = document.createElement('div');
+                        handle.className = 'resize-handle';
+                        bar.appendChild(handle);
+
+                        timelineCell.appendChild(bar);
+                        setTimeout(() => updateIVBarDetails(bar, timelineCell), 0);
+                    }
+                });
+
+            } else {
+                let checkboxCellsHTML = '';
+                for (let i = 0; i < 11; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        const cbIndex = i * 4 + j;
+                        const isChecked = fromLoad && checkboxes && checkboxes[cbIndex];
+                        checkboxCellsHTML += `<td class="p-0"><input type="checkbox" ${isChecked ? 'checked' : ''}></td>`;
+                    }
+                }
+                newRow.innerHTML = baseCellsHTML + checkboxCellsHTML;
+            }
+
+            if (!fromLoad) {
+                document.getElementById('new-prescription-form').reset();
+            }
+        }
+        // BUG FIX: END
+        
         function addCareDiagramRow() {
             const name = document.getElementById('care-name').value.trim();
             if (!name) return;
@@ -1185,6 +1326,150 @@
             for(let i=0; i<11; i++) cellsHTML += `<td class="border-l"><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td>`;
             newRow.innerHTML = cellsHTML;
             document.getElementById('new-care-form').reset();
+        }
+
+        // --- IV Bar Interaction Handlers ---
+        function handleIVDblClick(e) {
+            const bar = e.currentTarget;
+            showDeleteConfirmation("Effacer cette barre de perfusion IV ?", () => {
+                const cell = bar.parentElement;
+                if(cell) {
+                    cell.querySelectorAll('.iv-time-label').forEach(label => label.remove());
+                }
+                bar.remove();
+                saveData(activePatientId);
+            });
+        }
+
+        function handleIVMouseDown(e) {
+            if (e.target.classList.contains('iv-bar-container')) {
+                ivInteraction.mode = 'draw';
+                const cell = e.target;
+                const rect = cell.getBoundingClientRect();
+                const startX = e.clientX - rect.left;
+
+                const newBar = document.createElement('div');
+                newBar.className = 'iv-bar';
+                newBar.style.left = `${(startX / rect.width) * 100}%`;
+                newBar.style.width = '0px';
+                newBar.addEventListener('dblclick', handleIVDblClick);
+
+                const handle = document.createElement('div');
+                handle.className = 'resize-handle';
+                newBar.appendChild(handle);
+                cell.appendChild(newBar);
+                
+                ivInteraction = {
+                    ...ivInteraction,
+                    active: true,
+                    targetBar: newBar,
+                    targetCell: cell,
+                    startX: e.clientX,
+                };
+                document.body.classList.add('is-drawing-iv');
+
+            } else if (e.target.classList.contains('resize-handle')) {
+                ivInteraction.mode = 'resize';
+                const bar = e.target.parentElement;
+                const cell = bar.parentElement;
+                
+                ivInteraction = {
+                    ...ivInteraction,
+                    active: true,
+                    targetBar: bar,
+                    targetCell: cell,
+                    startX: e.clientX,
+                    startWidth: bar.offsetWidth,
+                };
+                document.body.classList.add('is-resizing-iv');
+
+            } else if (e.target.classList.contains('iv-bar')) {
+                ivInteraction.mode = 'move';
+                const bar = e.target;
+                const cell = bar.parentElement;
+                
+                 ivInteraction = {
+                    ...ivInteraction,
+                    active: true,
+                    targetBar: bar,
+                    targetCell: cell,
+                    startX: e.clientX,
+                    startLeft: bar.offsetLeft,
+                };
+                document.body.classList.add('is-moving-iv');
+            }
+        }
+
+        function handleIVMouseMove(e) {
+            if (!ivInteraction.active) return;
+            e.preventDefault();
+
+            const { mode, targetBar, targetCell, startX, startWidth, startLeft } = ivInteraction;
+            const cellRect = targetCell.getBoundingClientRect();
+            const dx = e.clientX - startX;
+
+            if (mode === 'draw' || mode === 'resize') {
+                let newWidth = startWidth + dx;
+                newWidth = Math.max(5, newWidth); // min width
+                newWidth = Math.min(newWidth, cellRect.width - targetBar.offsetLeft);
+                targetBar.style.width = `${(newWidth / cellRect.width) * 100}%`;
+            } else if (mode === 'move') {
+                let newLeft = startLeft + dx;
+                newLeft = Math.max(0, newLeft);
+                newLeft = Math.min(newLeft, cellRect.width - targetBar.offsetWidth);
+                 targetBar.style.left = `${(newLeft / cellRect.width) * 100}%`;
+            }
+            updateIVBarDetails(targetBar, targetCell);
+        }
+
+        function handleIVMouseUp(e) {
+            if (!ivInteraction.active) return;
+            document.body.className = document.body.className.replace(/is-(drawing|resizing|moving)-iv/g, '').trim();
+            ivInteraction = { active: false, mode: null, targetBar: null, targetCell: null, startX: 0, startLeft: 0, startWidth: 0 };
+            saveData(activePatientId);
+        }
+        
+        function updateIVBarDetails(bar, cell) {
+            if (!bar || !cell) return;
+            const tableStartDateStr = document.getElementById('patient-entry-date').value;
+            if (!tableStartDateStr) return;
+
+            const tableStartDate = new Date(tableStartDateStr);
+            const totalTimelineMillis = 11 * 24 * 60 * 60 * 1000;
+            
+            const startPercent = parseFloat(bar.style.left);
+            const widthPercent = parseFloat(bar.style.width);
+            const endPercent = startPercent + widthPercent;
+
+            const startOffsetMillis = (startPercent / 100) * totalTimelineMillis;
+            const durationMillis = (widthPercent / 100) * totalTimelineMillis;
+
+            const startDateTime = new Date(tableStartDate.getTime() + startOffsetMillis);
+            const endDateTime = new Date(startDateTime.getTime() + durationMillis);
+            
+            const formatTime = (date) => date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+
+            bar.title = `Début: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}\nFin: ${endDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
+
+            let startLabel = cell.querySelector('.iv-time-label.start');
+            if (!startLabel) {
+                startLabel = document.createElement('span');
+                startLabel.className = 'iv-time-label start';
+                cell.appendChild(startLabel);
+            }
+            
+            let endLabel = cell.querySelector('.iv-time-label.end');
+            if (!endLabel) {
+                endLabel = document.createElement('span');
+                endLabel.className = 'iv-time-label end';
+                cell.appendChild(endLabel);
+            }
+            
+            startLabel.textContent = formatTime(startDateTime);
+            startLabel.style.left = `${startPercent}%`;
+            
+            endLabel.textContent = formatTime(endDateTime);
+            endLabel.style.left = `${endPercent}%`;
         }
         
         function updatePancarteChart() {
@@ -1213,7 +1498,6 @@
                 });
                 return { label: paramName, data, type: 'line', tension: 0.2, borderWidth: 2, spanGaps: true, pointBackgroundColor: dataSetsConfig[paramName].borderColor, ...dataSetsConfig[paramName] };
             });
-
             const ctx = document.getElementById('pancarteChart').getContext('2d');
             if (pancarteChartInstance) pancarteChartInstance.destroy();
             pancarteChartInstance = new Chart(ctx, {
