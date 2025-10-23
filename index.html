@@ -686,7 +686,9 @@
             const SAVE_KEY = getSaveKey(patientId);
             const state = {};
             
-            document.querySelectorAll('input[id], textarea[id], #bio-table input[type="text"]').forEach(el => {
+            // BUG FIX: Removed , #bio-table input[type="text"] from the selector
+            // This loop now only processes elements WITH an ID.
+            document.querySelectorAll('input[id], textarea[id]').forEach(el => {
                 const id = el.id;
                 if (el.type === 'checkbox' || el.type === 'radio') {
                     state[id] = el.checked;
@@ -700,12 +702,15 @@
                 if (el) state[id + '_html'] = el.innerHTML;
             });
             
-            // Explicitly save biology table inputs as they don't have unique IDs
+            // This line correctly saves biology table inputs
             state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
+            
+            // AJOUT: Sauvegarde des dates de l'en-tête bio
+            state.bioTableDateHeaders = Array.from(document.querySelectorAll('#bio-table thead input[type="text"]')).map(input => input.value); 
 
             state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
             
-            // BUG FIX: START - Save all IV bars, not just the first one.
+            // Save all IV bars
             state.prescriptions = [];
             document.querySelectorAll('#prescription-tbody tr').forEach(row => {
                 const isIV = row.dataset.type === 'iv';
@@ -732,7 +737,6 @@
                 }
                 state.prescriptions.push(prescriptionData);
             });
-            // BUG FIX: END
 
 
             state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
@@ -797,6 +801,12 @@
                  if (state.bioTableValues) {
                     document.querySelectorAll('#bio-table tbody input[type="text"]').forEach((input, index) => {
                         input.value = state.bioTableValues[index] || '';
+                    });
+                }
+                // AJOUT: Chargement des dates de l'en-tête bio
+                if (state.bioTableDateHeaders) {
+                    document.querySelectorAll('#bio-table thead input[type="text"]').forEach((input, index) => {
+                        input.value = state.bioTableDateHeaders[index] || '';
                     });
                 }
                 if (state.pancarteValues) {
@@ -1231,7 +1241,6 @@
             document.getElementById('new-transmission-form-2').reset();
         }
 
-        // BUG FIX: START - Function updated to load all IV bars from saved data.
         function addPrescription(data = null, fromLoad = false) {
             let name, posologie, voie, startDate, type, checkboxes, bars;
             if (fromLoad) {
@@ -1277,7 +1286,7 @@
 
                 const barsToCreate = [];
                 if (fromLoad && bars && Array.isArray(bars)) {
-                    bars.forEach(barData => barsToCreate.push(barData));
+                    barsToCreate.push(...bars);
                 } else if (fromLoad && data.left && data.width) { // Fallback for old data format
                     barsToCreate.push({ left: data.left, width: data.width, title: data.title });
                 }
@@ -1316,7 +1325,6 @@
                 document.getElementById('new-prescription-form').reset();
             }
         }
-        // BUG FIX: END
         
         function addCareDiagramRow() {
             const name = document.getElementById('care-name').value.trim();
@@ -1523,3 +1531,4 @@
     </script>
 </body>
 </html>
+
