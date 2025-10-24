@@ -16,10 +16,18 @@
             font-family: 'Inter', sans-serif;
             color: #1f2937;
         }
-        
+
         #main-content-wrapper {
             overflow-y: scroll;
+            /* Ajout pour masquer la scrollbar visuelle */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
         }
+        /* Ajout pour masquer la scrollbar visuelle (Chrome, Safari, Edge) */
+        #main-content-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
         .content-section { display: none; }
         .content-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn {
@@ -30,11 +38,12 @@
             background-color: white;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 24px;
+            margin-bottom: 16px; /* MODIFICATION : Réduction de la marge de 24px à 16px */
             border: 1px solid #e5e7eb;
         }
+        /* MODIFICATION : Changement p-4 en p-2 pour l'en-tête patient */
         #patient-header-form .card {
-            padding: 1rem;
+            padding: 0.5rem; /* p-2 */
         }
         .card-header {
             font-size: 1.25rem;
@@ -52,7 +61,7 @@
         .card-header.header-violet { color: #6d28d9; border-bottom-color: #c4b5fd; border-bottom-width: 2px; }
         .card-header.header-purple { color: #7e22ce; border-bottom-color: #d8b4fe; border-bottom-width: 2px; }
         .card-header.header-orange { color: #c2410c; border-bottom-color: #fdba74; border-bottom-width: 2px; }
-        
+
         .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
         .info-item {
             display: flex;
@@ -69,7 +78,7 @@
         }
         .info-label { font-size: 0.875rem; color: #6b7280; margin-bottom: 4px; }
         .info-value { font-size: 1rem; font-weight: 500; color: #1f2937; }
-        
+
         .timeline-item { position: relative; padding-left: 2rem; border-left: 2px solid #e5e7eb; }
         .timeline-dot { position: absolute; left: -0.6rem; top: 0.25rem; height: 1rem; width: 1rem; border-radius: 9999px; border: 3px solid white; }
         .timeline-dot.dot-rose { background-color: #f43f5e; }
@@ -77,7 +86,7 @@
         .diagram th, .diagram td { border: 1px solid #e5e7eb; padding: 0.5rem; vertical-align: middle; }
         .diagram input[type="checkbox"] { height: 1.1rem; width: 1.1rem; accent-color: #3b82f6; }
         .diagram thead { font-size: 0.8rem; background-color: #f9fafb; color: #374151; }
-        
+
         .diagram input[type="text"], .diagram input[type="number"] {
             width: 100%; border: none; text-align: center; padding: 4px; background-color: transparent;
             transition: background-color 0.2s; color: #1f2937; font-size: 0.75rem;
@@ -91,10 +100,11 @@
             margin: 0;
         }
         input[type=number] {
+            appearance: textfield;
             -moz-appearance: textfield;
         }
         .continuous-surveillance { background-image: linear-gradient(45deg, #fef3c7 25%, transparent 25%, transparent 50%, #fef3c7 50%, #fef3c7 75%, transparent 75%, transparent 100%); background-size: 20px 20px; }
-        
+
         .styled-input {
             background-color: #f9fafb; border: 1px solid #d1d5db; transition: all 0.2s ease-in-out;
             padding: 0.5rem 0.75rem; border-radius: 0.375rem;
@@ -108,14 +118,14 @@
             resize: none;
             overflow: hidden;
         }
-        
+
         .styled-input:disabled, textarea.info-value:disabled, input.info-value:disabled {
             background-color: transparent;
             border-color: transparent;
             cursor: default;
             color: #1f2937;
         }
-        .info-item > textarea.info-value, 
+        .info-item > textarea.info-value,
         .info-item > input.info-value,
         .info-item > textarea.info-value:disabled,
         .info-item > input.info-value:disabled {
@@ -141,7 +151,7 @@
         .preserve-whitespace {
             white-space: pre-wrap;
         }
-        
+
         /* Modal Styles */
         #custom-confirm-modal #custom-confirm-box {
             transition: transform 0.2s ease-out, opacity 0.2s ease-out;
@@ -237,30 +247,31 @@
 
     </style>
 </head>
-<body class="flex h-screen bg-gray-100">
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-white shadow-md flex flex-col flex-shrink-0">
-        <div class="p-4 border-b">
+<body class="flex h-screen bg-gray-200">
+    <aside id="sidebar" class="w-64 bg-sky-50 shadow-xl flex flex-col flex-shrink-0 m-4 rounded-2xl h-[calc(100vh-2rem)] transition-all duration-300 ease-in-out">
+        <div class="p-4">
             <h2 class="text-lg font-bold text-sky-700">Service de Soins de l'IFSI</h2>
             <p class="text-sm text-gray-500">Aile B</p>
         </div>
         <nav class="flex-1 overflow-y-auto">
             <ul id="patient-list" class="p-2">
-                <!-- La liste des patients sera générée par JavaScript -->
-            </ul>
+                </ul>
         </nav>
-        <div class="p-2 border-t">
+        <div class="p-2">
             <button onclick="clearAllData()" class="w-full text-left text-sm text-red-600 hover:bg-red-100 p-2 rounded-md transition-colors">
                 <i class="fas fa-exclamation-triangle w-6 text-center mr-1"></i>
                 Vider tous les dossiers
             </button>
         </div>
     </aside>
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-        <div id="main-content-wrapper" class="flex-1 overflow-x-hidden overflow-y-auto">
-            <div class="max-w-screen-xl mx-auto p-4 md:p-6 lg:p-8">
-                <header class="mb-6 p-4 rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-lg flex justify-between items-center">
+    <!-- MODIFICATION : Suppression de 'rounded-2xl' et 'shadow-xl' pour la transparence -->
+    <div class="flex-1 flex flex-col overflow-hidden m-4 h-[calc(100vh-2rem)]">
+
+        <!-- MODIFICATION : Suppression de 'pt-0' pour aligner avec le padding de la sidebar -->
+        <div class="p-0 md:p-0 lg:p-0 pb-0">
+            <div class="max-w-screen-xl mx-auto">
+                <!-- MODIFICATION : 'mb-6' (24px) changé en 'mb-4' (16px) et 'rounded-lg' en 'rounded-xl' -->
+                <header class="mb-4 p-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-lg flex justify-between items-center">
                     <h1 class="text-xl lg:text-2xl font-bold">Centre hospitalier de l'IFSI</h1>
                     <div class="flex items-center space-x-2">
                         <button type="button" onclick="exportCurrentPatientData()" title="Exporter le dossier actuel" class="p-2 rounded-full hover:bg-white/20 transition-colors">
@@ -279,66 +290,69 @@
                         </button>
                     </div>
                 </header>
-                <main>
-                    <!-- Patient Header -->
-			<header id="patient-header-form" class="mb-6">
-                        <div class="card p-4">
-                            <div class="grid grid-cols-12 gap-x-4 gap-y-3 items-stretch">
-                                <!-- Ligne 1 -->
-                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-4"><span class="info-label">Nom d'usage</span><input type="text" id="patient-nom-usage" class="info-value text-lg font-bold" placeholder="NOM Usage"></div>
-                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-4"><span class="info-label">Prénom</span><input type="text" id="patient-prenom" class="info-value text-lg font-bold" placeholder="Prénom"></div>
-                                <div class="info-item col-span-12 sm:col-span-12 md:col-span-4">
-                                    <span class="info-label">Date de naissance</span>
-                                    <div class="flex items-center gap-2"><input type="date" id="patient-dob" class="info-value text-gray-500 flex-grow" style="flex-basis: 150px;"><span id="patient-age" class="text-sm text-gray-600 font-medium whitespace-nowrap"></span></div>
-                                </div>
 
-                                <!-- Ligne 2 -->
-                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-3"><span class="info-label">Motif d'hospitalisation</span><input type="text" id="patient-motif" class="info-value"></div>
-                                <div class="info-item col-span-12 sm:col-span-6 md:col-span-2"><span class="info-label">Médecin</span><input type="text" id="patient-doctor" class="info-value"></div>
-                                <div class="info-item col-span-6 sm:col-span-4 md:col-span-2"><span class="info-label">Service</span><input type="text" id="patient-service" class="info-value"></div>
-                                
-                                <div class="info-item col-span-6 sm:col-span-4 md:col-span-3">
-                                    <span class="info-label">Date d'entrée / Jour</span>
-                                    <div class="flex items-center gap-2">
-                                        <input type="date" id="patient-entry-date" class="info-value">
-                                        <span id="patient-jour-hosp" class="info-value font-bold text-lg text-sky-700">J-</span>
-                                    </div>
-                                </div>
-                                <div class="col-span-12 sm:col-span-4 md:col-span-2 flex items-end justify-end">
-                                    <button id="lock-header-btn" type="button" onclick="toggleLock('patient-header-form', 'lock-header-btn')" class="w-full h-full inline-flex items-center justify-center py-2 px-3 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-sky-600 text-sky-700 hover:bg-sky-600">
-                                        <i class="fas fa-check mr-2"></i> Valider
-                                    </button>
+                <!-- MODIFICATION : 'mb-6' (24px) changé en 'mb-4' (16px) -->
+                <header id="patient-header-form" class="mb-4">
+                    <!-- MODIFICATION : Changement p-4 en p-2 -->
+                    <div class="card p-2">
+                        <div class="grid grid-cols-12 gap-x-2 gap-y-3 items-stretch">
+                            <div class="info-item col-span-12 sm:col-span-6 md:col-span-2"><span class="info-label">Nom d'usage</span><input type="text" id="patient-nom-usage" class="info-value text-lg font-bold" placeholder="NOM Usage"></div>
+                            <div class="info-item col-span-12 sm:col-span-6 md:col-span-2"><span class="info-label">Prénom</span><input type="text" id="patient-prenom" class="info-value text-lg font-bold" placeholder="Prénom"></div>
+                            <div class="info-item col-span-12 sm:col-span-12 md:col-span-3">
+                                <span class="info-label">Date de naissance</span>
+                                <div class="flex items-center gap-2"><input type="date" id="patient-dob" class="info-value text-gray-500 flex-grow" style="flex-basis: 150px;"><span id="patient-age" class="text-sm text-gray-600 font-medium whitespace-nowrap"></span></div>
+                            </div>
+
+                            <div class="info-item col-span-12 sm:col-span-6 md:col-span-2"><span class="info-label">Motif d'hospitalisation</span><input type="text" id="patient-motif" class="info-value"></div>
+
+                            <div class="info-item col-span-12 sm:col-span-6 md:col-span-2">
+                                <span class="info-label">Date d'entrée / Jour</span>
+                                <div class="flex items-center gap-2">
+                                    <input type="date" id="patient-entry-date" class="info-value">
+                                    <span id="patient-jour-hosp" class="info-value font-bold text-lg text-sky-700">J-</span>
                                 </div>
                             </div>
+                            <div class="col-span-12 sm:col-span-12 md:col-span-1 flex items-end justify-end">
+                                <button id="lock-header-btn" type="button" onclick="toggleLock('patient-header-form', 'lock-header-btn')" class="w-full h-full inline-flex items-center justify-center py-2 px-3 border shadow-sm text-sm font-medium rounded-md transition-colors bg-transparent hover:text-white border-sky-600 text-sky-700 hover:bg-sky-600">
+                                    <i class="fas fa-check mr-2"></i> Valider
+                                </button>
+                            </div>
                         </div>
-                    </header>
-                    <!-- Navigation Tabs -->
-                    <div class="card p-2">
-                         <nav class="flex flex-wrap w-full gap-2" aria-label="Tabs">
-                            <button type="button" onclick="changeTab(event, 'administratif')" data-color="blue"><i class="fas fa-user-circle mr-2"></i>Administratif</button>
-                            <button type="button" onclick="changeTab(event, 'mode-de-vie')" data-color="teal"><i class="fas fa-home mr-2"></i>Vie & ATCD</button>
-                            <button type="button" onclick="changeTab(event, 'observations')" data-color="rose"><i class="fas fa-notes-medical mr-2"></i>Observations Médicales</button>
-                            <button type="button" onclick="changeTab(event, 'prescriptions')" data-color="indigo"><i class="fas fa-pills mr-2"></i>Prescriptions</button>
-                            <button type="button" onclick="changeTab(event, 'transmissions')" data-color="green"><i class="fas fa-exchange-alt mr-2"></i>Transmissions</button>
-                            <button type="button" onclick="changeTab(event, 'pancarte')" data-color="violet"><i class="fas fa-chart-line mr-2"></i>Pancarte</button>
-                            <button type="button" onclick="changeTab(event, 'diagramme')" data-color="orange"><i class="fas fa-calendar-alt mr-2"></i>Diagramme Soins</button>
-                            <button type="button" onclick="changeTab(event, 'biologie')" data-color="purple"><i class="fas fa-vial mr-2"></i>Résultats Biologiques</button>
-                        </nav>
                     </div>
-                    <!-- Tab Content -->
+                </header>
+
+                <!-- MODIFICATION : Suppression de 'mb-4' -->
+                <div class="card p-2">
+                     <nav class="flex flex-wrap w-full gap-2" aria-label="Tabs">
+                        <button type="button" onclick="changeTab(event, 'administratif')" data-color="blue"><i class="fas fa-user-circle mr-2"></i>Administratif</button>
+                        <button type="button" onclick="changeTab(event, 'mode-de-vie')" data-color="teal"><i class="fas fa-home mr-2"></i>Vie & ATCD</button>
+                        <button type="button" onclick="changeTab(event, 'observations')" data-color="rose"><i class="fas fa-notes-medical mr-2"></i>Observations Médicales</button>
+                        <button type="button" onclick="changeTab(event, 'prescriptions')" data-color="indigo"><i class="fas fa-pills mr-2"></i>Prescriptions</button>
+                        <button type="button" onclick="changeTab(event, 'transmissions')" data-color="green"><i class="fas fa-exchange-alt mr-2"></i>Transmissions</button>
+                        <button type="button" onclick="changeTab(event, 'pancarte')" data-color="violet"><i class="fas fa-chart-line mr-2"></i>Pancarte</button>
+                        <button type="button" onclick="changeTab(event, 'diagramme')" data-color="orange"><i class="fas fa-calendar-alt mr-2"></i>Diagramme Soins</button>
+                        <button type="button" onclick="changeTab(event, 'biologie')" data-color="purple"><i class="fas fa-vial mr-2"></i>Résultats Biologiques</button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <!-- MODIFICATION : Suppression des classes bg-white, rounded-xl, shadow-lg, border, border-gray-200 -->
+        <!-- MODIFICATION : Ajout de 'px-...' pour aligner horizontalement avec les headers -->
+        <div id="main-content-wrapper" class="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-6 lg:px-8">
+            <!-- MODIFICATION : Remplacement de 'p-...' par 'py-...' pour ne garder que le padding vertical -->
+            <div class="max-w-screen-xl mx-auto py-4 md:py-6 lg:py-8 pt-0">
+                <main>
                     <div id="tab-content">
-                        <!-- Administrative Info -->
                         <div id="administratif" class="content-section active">
                             <div class="card p-6">
                                 <h2 class="card-header">Dossier Administratif</h2>
-                                
-                                <!-- Section: Identité -->
+
                                 <div class="mt-6">
                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Identité du patient</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         <div class="info-item"><span class="info-label">Nom d'usage</span><textarea id="admin-nom-usage" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" oninput="autoResize(this)"></textarea></div>
-                                        
+
                                         <div class="info-item">
                                             <span class="info-label">Date de Naissance</span>
                                             <div class="flex items-center gap-2">
@@ -350,8 +364,7 @@
                                         <div class="info-item col-span-full lg:col-span-2"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
                                 </div>
-                                
-                                <!-- Section: Contacts -->
+
                                 <div class="mt-8">
                                      <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Contacts</h3>
                                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -362,9 +375,8 @@
                                         <div class="info-item"><span class="info-label">Téléphone P. de confiance</span><textarea id="admin-pers-confiance-tel" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
                                 </div>
-                                
-                                 <!-- Section: Couverture Sociale -->
-                                <div class="mt-8">
+
+                                 <div class="mt-8">
                                      <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Couverture Sociale</h3>
                                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div class="info-item"><span class="info-label">N° de Sécurité Sociale</span><textarea id="admin-secu" class="info-value" oninput="autoResize(this)"></textarea></div>
@@ -379,18 +391,16 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- Lifestyle & History -->
                         <div id="mode-de-vie" class="content-section">
                             <div class="card p-6">
                                 <h2 class="card-header">Mode de Vie & Antécédents</h2>
-                                
+
                                 <div class="mt-6">
                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Mode de vie</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div class="info-item"><span class="info-label">Situation familiale/professionnelle</span><textarea id="vie-situation" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Conditions de logement (Habitat)</span><textarea id="vie-habitat" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Habitudes (Alcool, Tabac, etc.)</span><textarea id="vie-habitudes" class="info-value" oninput="autoResize(this)"></textarea></div>
-                                        <!-- ADDED: Poids, Taille, Régime -->
                                         <div class="info-item"><span class="info-label">Poids (kg)</span><textarea id="vie-poids" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Taille (cm)</span><textarea id="vie-taille" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Régime alimentaire</span><textarea id="vie-regime" class="info-value" oninput="autoResize(this)"></textarea></div>
@@ -411,8 +421,7 @@
                                 </button>
                             </div>
                         </div>
-                        
-                        <!-- Medical Observations -->
+
                         <div id="observations" class="content-section">
                             <div class="card p-6"><h2 class="card-header">Suivi Médical</h2><div id="observations-list" class="space-y-8 mt-4"></div></div>
                             <div class="card p-6">
@@ -427,8 +436,7 @@
                                 </form>
                             </div>
                         </div>
-                        
-                        <!-- Prescriptions -->
+
                         <div id="prescriptions" class="content-section">
                             <div class="card p-6">
                                  <h2 class="card-header">Prescriptions Médicales</h2>
@@ -440,7 +448,8 @@
                                                 <th class="p-2 text-left align-bottom" rowspan="2">Posologie</th>
                                                 <th class="p-2 text-left align-bottom" rowspan="2">Voie</th>
                                                 <th class="p-2 text-left align-bottom" rowspan="2">Date de début</th>
-                                                <script>for(let i=1; i<=11; i++) { document.write(`<th class="p-2 text-center" colspan="4">Jour ${i}</th>`);}</script>
+                                                <!-- MODIFICATION: Boucle commence à 0 et affiche Jour i -->
+                                                <script>for(let i=0; i<11; i++) { document.write(`<th class="p-2 text-center" colspan="4">Jour ${i}</th>`);}</script>
                                             </tr>
                                             <tr>
                                                 <script>for(let i=0; i<11; i++) { document.write(`<th class="p-1 text-center w-8">M</th><th class="p-1 text-center w-8">Mi</th><th class="p-1 text-center w-8">S</th><th class="p-1 text-center w-8">N</th>`);}</script>
@@ -475,7 +484,6 @@
                                  </form>
                              </div>
                         </div>
-                        <!-- Transmissions -->
                         <div id="transmissions" class="content-section">
                             <div class="card p-6"><h2 class="card-header">Transmissions Soignantes</h2><div id="transmissions-list-ide" class="space-y-8 mt-4"></div></div>
                             <div class="card p-6">
@@ -490,8 +498,7 @@
                                 </form>
                             </div>
                         </div>
-                        
-                        <!-- Biological Results -->
+
                         <div id="biologie" class="content-section">
                             <div class="card p-6">
                                 <h2 class="card-header">Suivi Biologique</h2>
@@ -549,7 +556,7 @@
                                                     document.write(row);
                                                 }
                                             </script>
-                                            
+
                                             <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Gaz du Sang (artériel)</td></tr>
                                             <script>
                                                 const gdsData = { "pH": "7.35-7.45", "PaCO2 (mmHg)": "35-45", "PaO2 (mmHg)": "80-100", "HCO3- (mmol/L)": "22-26", "SaO2 (%)": "> 95" };
@@ -565,7 +572,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Pancarte -->
                         <div id="pancarte" class="content-section">
                             <div class="card p-6">
                                 <h2 class="card-header">Graphique des Constantes</h2>
@@ -578,7 +584,8 @@
                                         <thead class="bg-gray-100 text-gray-600">
                                             <tr>
                                                 <th class="p-2 text-left" rowspan="2">Paramètres</th>
-                                                <script>for(let i=1; i<=11; i++) { document.write(`<th class="p-2 text-center" colspan="3">Jour ${i}</th>`);}</script>
+                                                <!-- MODIFICATION: Boucle commence à 0 et affiche Jour i -->
+                                                <script>for(let i=0; i<11; i++) { document.write(`<th class="p-2 text-center" colspan="3">Jour ${i}</th>`);}</script>
                                             </tr>
                                             <tr><script>for(let i=0; i<11; i++) document.write(`<th class="p-1 w-32">Matin</th><th class="p-1 w-32">Soir</th><th class="p-1 w-32">Nuit</th>`)</script></tr>
                                         </thead>
@@ -589,7 +596,7 @@
                                                 };
                                                 for (const param in pancarteData) {
                                                     let row = `<tr><td class="p-2 text-left font-semibold">${param}</td>`;
-                                                    
+
                                                     let inputHtml = '<input type="text" value="" onchange="updatePancarteChart()">'; // Default
                                                     if (param === 'Température (°C)') {
                                                         inputHtml = '<input type="number" step="0.1" value="" onchange="updatePancarteChart()">';
@@ -606,14 +613,14 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Care Diagram -->
                         <div id="diagramme" class="content-section">
                              <div class="card p-6">
                                 <h2 class="card-header">Diagramme de Soins</h2>
                                 <div class="overflow-x-auto"><table class="w-full table-auto text-sm text-center diagram" id="care-diagram-table">
                                     <thead class="font-semibold bg-gray-100">
                                         <tr><th class="p-2 text-left">Soin / Surveillance</th>
-                                            <script>for(let i=1; i<=11; i++) document.write(`<th colspan="3" class="border-l">Jour ${i}</th>`)</script>
+                                            <!-- MODIFICATION: Boucle commence à 0 et affiche Jour i -->
+                                            <script>for(let i=0; i<11; i++) document.write(`<th colspan="3" class="border-l">Jour ${i}</th>`)</script>
                                         </tr>
                                         <tr><th></th><script>for(let i=0; i<11; i++) document.write(`<th class="border-l">M</th><th>S</th><th>N</th>`)</script></tr>
                                     </thead>
@@ -645,8 +652,7 @@
                 </main>
             </div>
         </div>
-    </div>
-    <!-- Custom Confirmation Modal -->
+        </div>
     <div id="custom-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
             <h3 class="text-lg font-bold text-gray-800" id="custom-confirm-title">Confirmation requise</h3>
@@ -660,9 +666,9 @@
 
     <script>
         let pancarteChartInstance;
-        const patients = Array.from({ length: 10 }, (_, i) => ({ 
-            id: `chambre_${101 + i}`, 
-            room: `${101 + i}` 
+        const patients = Array.from({ length: 10 }, (_, i) => ({
+            id: `chambre_${101 + i}`,
+            room: `${101 + i}`
         }));
         let activePatientId = localStorage.getItem('activePatientId') || patients[0].id;
 
@@ -685,7 +691,7 @@
             if (!patientId) return;
             const SAVE_KEY = getSaveKey(patientId);
             const state = {};
-            
+
             // BUG FIX: Removed , #bio-table input[type="text"] from the selector
             // This loop now only processes elements WITH an ID.
             document.querySelectorAll('input[id], textarea[id]').forEach(el => {
@@ -701,15 +707,15 @@
                 const el = document.getElementById(id);
                 if (el) state[id + '_html'] = el.innerHTML;
             });
-            
+
             // This line correctly saves biology table inputs
             state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
-            
+
             // AJOUT: Sauvegarde des dates de l'en-tête bio
-            state.bioTableDateHeaders = Array.from(document.querySelectorAll('#bio-table thead input[type="text"]')).map(input => input.value); 
+            state.bioTableDateHeaders = Array.from(document.querySelectorAll('#bio-table thead input[type="text"]')).map(input => input.value);
 
             state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
-            
+
             // Save all IV bars
             state.prescriptions = [];
             document.querySelectorAll('#prescription-tbody tr').forEach(row => {
@@ -744,15 +750,15 @@
             document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
                 state.lockButtonStates[btn.id] = btn.innerHTML.includes('fa-lock');
             });
-            
+
             // MODIFIED: Construct sidebar name from new fields
             const nomUsage = document.getElementById('patient-nom-usage').value.trim();
             const prenom = document.getElementById('patient-prenom').value.trim();
             const patientName = `${nomUsage} ${prenom}`.trim();
             state['sidebar_patient_name'] = patientName;
-            
+
             localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-            
+
             const sidebarEntry = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-name`);
             if (sidebarEntry) {
                 sidebarEntry.textContent = patientName || `Chambre ${patientId.split('_')[1]}`;
@@ -764,7 +770,7 @@
             const SAVE_KEY = getSaveKey(patientId);
             const savedState = localStorage.getItem(SAVE_KEY);
             if (!savedState || savedState === '{}') {
-                resetForm(); 
+                resetForm();
             } else {
                 const state = JSON.parse(savedState);
                 Object.keys(state).forEach(id => {
@@ -784,12 +790,12 @@
                         el.innerHTML = state[id + '_html'];
                     }
                 });
-                
+
                 if (state.prescriptions) {
                     const tbody = document.getElementById('prescription-tbody');
                     tbody.innerHTML = '';
                     state.prescriptions.forEach(pData => {
-                        addPrescription(pData, true); 
+                        addPrescription(pData, true);
                     });
                 }
 
@@ -817,7 +823,9 @@
                 const entryDateValue = document.getElementById('patient-entry-date').value;
                 if (entryDateValue) {
                     const entryDate = new Date(entryDateValue);
-                    if (!isNaN(entryDate.getTime())) updateDynamicDates(entryDate);
+                    if (!isNaN(entryDate.getTime())) {
+                        updateDynamicDates(entryDate);
+                    }
                 }
                 if (state.lockButtonStates) {
                     Object.keys(state.lockButtonStates).forEach(buttonId => {
@@ -866,7 +874,7 @@
             const SAVE_KEY = getSaveKey(activePatientId);
             const dataStr = localStorage.getItem(SAVE_KEY);
             if (!dataStr || dataStr === '{}') return;
-            
+
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -925,7 +933,7 @@
                 }
             });
         }
-        
+
         function resetForm() {
             document.querySelectorAll('main input, main textarea').forEach(el => {
                 if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
@@ -935,7 +943,7 @@
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = '';
             });
-            
+
             document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
                 if (btn.innerHTML.includes('fa-lock')) btn.click();
             });
@@ -946,23 +954,23 @@
             if (activePatientId !== newPatientId && !skipSave) {
                 saveData(activePatientId);
             }
-            
+
             activePatientId = newPatientId;
             localStorage.setItem('activePatientId', newPatientId);
             resetForm();
             loadData(newPatientId);
             updateSidebarActiveState(newPatientId);
-            
+
             setTimeout(() => {
                 document.querySelectorAll('textarea.info-value').forEach(autoResize);
             }, 0);
-            
+
             updatePancarteChart();
-            
+
             const mainContent = document.getElementById('main-content-wrapper');
             mainContent.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        
+
         function initApp() {
             initSidebar();
             switchPatient(activePatientId, true);
@@ -991,7 +999,7 @@
 
         // --- Custom Confirmation Modal Logic ---
         let confirmCallback = null;
-        
+
         function showDeleteConfirmation(message, callback) {
             const modal = document.getElementById('custom-confirm-modal');
             const modalBox = document.getElementById('custom-confirm-box');
@@ -1035,20 +1043,20 @@
             }
             const entryDate = new Date(entryDateEl.value);
             if (isNaN(entryDate.getTime())) {
-                jourHospEl.textContent = 'J-';
+                jourHHospEl.textContent = 'J-';
                 return;
             }
             const today = new Date();
             // Reset time component for accurate day difference
             entryDate.setHours(0, 0, 0, 0);
             today.setHours(0, 0, 0, 0);
-            
+
             const diffTime = today - entryDate;
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-            
+
             jourHospEl.textContent = `J${diffDays}`;
         }
-        
+
         // ADDED: Setup 2-way data binding between header and admin tab
         function setupSync() {
             const syncMap = [
@@ -1072,7 +1080,7 @@
 
                     el2.addEventListener('input', () => {
                         if (!el1.disabled) {
-                            el1.value = el2.value;
+                            el1.value = el1.value;
                             if (el1.tagName.toLowerCase() === 'textarea') autoResize(el1);
                             if(id2.includes('dob')) updateAgeDisplay();
                         }
@@ -1097,7 +1105,7 @@
         function updateAgeDisplay() {
             const dobHeader = document.getElementById('patient-dob').value;
             document.getElementById('patient-age').textContent = calculateAge(dobHeader);
-            
+
             const dobAdmin = document.getElementById('admin-dob').value;
             document.getElementById('admin-age').textContent = calculateAge(dobAdmin);
         }
@@ -1121,7 +1129,7 @@
                 });
             }
         }
-        
+
         // --- ORIGINAL FUNCTIONS (with minor adaptations) ---
         function autoResize(textarea) {
             textarea.style.height = 'auto';
@@ -1147,7 +1155,8 @@
                     currentDate.setDate(startDate.getDate() + index);
                     const day = String(currentDate.getDate()).padStart(2, '0');
                     const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                    th.innerHTML = `Jour ${index + 1}<br><span class="text-xs font-normal">${day}/${month}</span>`;
+                    // MODIFICATION: Affiche "Jour {index}" au lieu de "Jour {index + 1}"
+                    th.innerHTML = `Jour ${index}<br><span class="text-xs font-normal">${day}/${month}</span>`;
                 });
             };
             updateHeaders('#prescription-table thead tr:first-child th[colspan="4"]');
@@ -1161,7 +1170,7 @@
             const button = document.getElementById(buttonId);
             const inputs = container.querySelectorAll('.info-value, input[type=text], input[type=date]');
             const isUnlocking = button.innerHTML.includes('fa-lock');
-            
+
             if (!isUnlocking && containerId === 'patient-header-form') {
                 const entryDateValue = document.getElementById('patient-entry-date').value;
                 if (entryDateValue) {
@@ -1176,7 +1185,7 @@
                 input.disabled = !isUnlocking;
                 if (input.tagName.toLowerCase() === 'textarea' && isUnlocking) autoResize(input);
             });
-            
+
             const colorMap = {
                 'lock-header-btn': { unlocked: ['border-sky-600', 'text-sky-700', 'hover:bg-sky-600'], locked: ['border-gray-400', 'text-gray-500', 'hover:bg-gray-400'] },
                 'lock-admin-btn': { unlocked: ['border-blue-600', 'text-blue-700', 'hover:bg-blue-600'], locked: ['border-gray-400', 'text-gray-500', 'hover:bg-gray-400'] },
@@ -1184,12 +1193,12 @@
             };
             const styles = colorMap[buttonId];
             const baseUnlockedText = (buttonId === 'lock-header-btn') ? "Valider" : "Valider les données";
-            
+
             if (isUnlocking) {
                 button.innerHTML = `<i class="fas fa-check mr-2"></i> ${baseUnlockedText}`;
                 button.classList.remove(...styles.locked); button.classList.add(...styles.unlocked);
             } else {
-                button.innerHTML = `<i class="fas fa-lock mr-2"></i> Déverrouiller`;
+                button.innerHTML = `<i class="fas fa-lock mr-2"></i> Lock`;
                 button.classList.remove(...styles.unlocked); button.classList.add(...styles.locked);
             }
         }
@@ -1198,7 +1207,7 @@
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             const activeSection = document.getElementById(tabId);
             activeSection.classList.add('active');
-            
+
             const baseClasses = "min-h-[4rem] py-2 px-2 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center text-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
             const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", violet: "text-violet-900 border-violet-300 bg-gradient-to-br from-violet-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
@@ -1206,7 +1215,7 @@
             const clickedTab = event.currentTarget;
             const color = clickedTab.dataset.color;
             clickedTab.className = `${baseClasses} ${activeClasses[color]}`;
-            
+
             document.querySelectorAll('.card-header').forEach(h => Object.keys(activeClasses).forEach(c => h.classList.remove(`header-${c}`)));
             document.getElementById(tabId).querySelectorAll('.card-header').forEach(h => h.classList.add(`header-${color}`));
             localStorage.setItem('activeTab', tabId);
@@ -1325,7 +1334,7 @@
                 document.getElementById('new-prescription-form').reset();
             }
         }
-        
+
         function addCareDiagramRow() {
             const name = document.getElementById('care-name').value.trim();
             if (!name) return;
@@ -1366,7 +1375,7 @@
                 handle.className = 'resize-handle';
                 newBar.appendChild(handle);
                 cell.appendChild(newBar);
-                
+
                 ivInteraction = {
                     ...ivInteraction,
                     active: true,
@@ -1380,7 +1389,7 @@
                 ivInteraction.mode = 'resize';
                 const bar = e.target.parentElement;
                 const cell = bar.parentElement;
-                
+
                 ivInteraction = {
                     ...ivInteraction,
                     active: true,
@@ -1395,7 +1404,7 @@
                 ivInteraction.mode = 'move';
                 const bar = e.target;
                 const cell = bar.parentElement;
-                
+
                  ivInteraction = {
                     ...ivInteraction,
                     active: true,
@@ -1436,7 +1445,7 @@
             ivInteraction = { active: false, mode: null, targetBar: null, targetCell: null, startX: 0, startLeft: 0, startWidth: 0 };
             saveData(activePatientId);
         }
-        
+
         function updateIVBarDetails(bar, cell) {
             if (!bar || !cell) return;
             const tableStartDateStr = document.getElementById('patient-entry-date').value;
@@ -1444,7 +1453,7 @@
 
             const tableStartDate = new Date(tableStartDateStr);
             const totalTimelineMillis = 11 * 24 * 60 * 60 * 1000;
-            
+
             const startPercent = parseFloat(bar.style.left);
             const widthPercent = parseFloat(bar.style.width);
             const endPercent = startPercent + widthPercent;
@@ -1454,7 +1463,7 @@
 
             const startDateTime = new Date(tableStartDate.getTime() + startOffsetMillis);
             const endDateTime = new Date(startDateTime.getTime() + durationMillis);
-            
+
             const formatTime = (date) => date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
 
             bar.title = `Début: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}\nFin: ${endDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
@@ -1465,26 +1474,26 @@
                 startLabel.className = 'iv-time-label start';
                 cell.appendChild(startLabel);
             }
-            
+
             let endLabel = cell.querySelector('.iv-time-label.end');
             if (!endLabel) {
                 endLabel = document.createElement('span');
                 endLabel.className = 'iv-time-label end';
                 cell.appendChild(endLabel);
             }
-            
+
             startLabel.textContent = formatTime(startDateTime);
             startLabel.style.left = `${startPercent}%`;
-            
+
             endLabel.textContent = formatTime(endDateTime);
             endLabel.style.left = `${endPercent}%`;
         }
-        
+
         function updatePancarteChart() {
             const table = document.getElementById('pancarte-table');
             const entryDateVal = document.getElementById('patient-entry-date').value;
             const startDate = entryDateVal ? new Date(entryDateVal) : new Date();
-            
+
             const labels = Array.from({ length: 33 }).map((_, i) => {
                 const dayOffset = Math.floor(i / 3);
                 const timeOfDay = ['Matin', 'Soir', 'Nuit'][i % 3];
@@ -1492,7 +1501,7 @@
                 currentDate.setDate(startDate.getDate() + dayOffset);
                 return `${currentDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})} ${timeOfDay}`;
             });
-            
+
             const dataSetsConfig = { 'Pouls (/min)': { yAxisID: 'y1', borderColor: '#ef4444' }, 'Tension (mmHg)': { type: 'bar', yAxisID: 'y', backgroundColor: '#f9731640' }, 'Température (°C)': { yAxisID: 'y3', borderColor: '#3b82f6' }, 'SpO2 (%)': { yAxisID: 'y4', borderColor: '#10b981' }, 'Douleur (EVA /10)': { yAxisID: 'y2', borderColor: '#8b5cf6' }};
             const datasets = Array.from(table.querySelectorAll('tbody tr')).map(row => {
                 const paramName = row.cells[0].textContent.trim();
@@ -1503,32 +1512,31 @@
                     }
                     const value = parseFloat(input.value.replace(',', '.'));
                     return isNaN(value) ? null : value;
-                });
+                }); // <-- CORRECTION : Ajout de la parenthèse fermante
                 return { label: paramName, data, type: 'line', tension: 0.2, borderWidth: 2, spanGaps: true, pointBackgroundColor: dataSetsConfig[paramName].borderColor, ...dataSetsConfig[paramName] };
             });
             const ctx = document.getElementById('pancarteChart').getContext('2d');
             if (pancarteChartInstance) pancarteChartInstance.destroy();
             pancarteChartInstance = new Chart(ctx, {
                 type: 'bar', data: { labels, datasets },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { 
-                        y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 }, 
-                        y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 }, 
-                        y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 }, 
-                        y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } }, 
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 },
+                        y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 },
+                        y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 },
+                        y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } },
                         y4: { position: 'right', title: { display: true, text: 'SpO2' }, grid: { drawOnChartArea: false }, min: 50, max: 100 }
                     },
-                    plugins: { 
-                        legend: { position: 'bottom' }, 
+                    plugins: {
+                        legend: { position: 'bottom' },
                         tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }}
                     }
                 }
             });
         }
-        
+
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
-
