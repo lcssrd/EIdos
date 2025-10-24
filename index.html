@@ -170,7 +170,7 @@
             text-align: left;
         }
         #patient-list li button:hover {
-            background-color: #f3f4f6; /* gray-100 */
+            background-color: #f3f4f6; /* gray-100 */ /* MODIFICATION: Retour au hover original */
         }
         #patient-list li button.active {
             background-color: #3b82f6; /* blue-500 */
@@ -248,7 +248,8 @@
     </style>
 </head>
 <body class="flex h-screen bg-gray-200">
-    <aside id="sidebar" class="w-64 bg-sky-50 shadow-xl flex flex-col flex-shrink-0 m-4 rounded-2xl h-[calc(100vh-2rem)] transition-all duration-300 ease-in-out">
+    <!-- MODIFICATION: Retour à bg-white -->
+    <aside id="sidebar" class="w-64 bg-white shadow-xl flex flex-col flex-shrink-0 m-4 rounded-2xl h-[calc(100vh-2rem)] transition-all duration-300 ease-in-out">
         <div class="p-4">
             <h2 class="text-lg font-bold text-sky-700">Service de Soins de l'IFSI</h2>
             <p class="text-sm text-gray-500">Aile B</p>
@@ -272,7 +273,7 @@
             <div class="max-w-screen-xl mx-auto">
                 <!-- MODIFICATION : 'mb-6' (24px) changé en 'mb-4' (16px) et 'rounded-lg' en 'rounded-xl' -->
                 <header class="mb-4 p-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-lg flex justify-between items-center">
-                    <h1 class="text-xl lg:text-2xl font-bold">Centre hospitalier de l'IFSI</h1>
+                    <h1 class="text-xl lg:text-2xl font-bold">SimuCare 2025</h1>
                     <div class="flex items-center space-x-2">
                         <button type="button" onclick="exportCurrentPatientData()" title="Exporter le dossier actuel" class="p-2 rounded-full hover:bg-white/20 transition-colors">
                             <i class="fas fa-file-export text-white"></i>
@@ -1130,7 +1131,7 @@
             }
         }
 
-        // --- ORIGINAL FUNCTIONS (with minor adaptations) ---
+// --- ORIGINAL FUNCTIONS (with minor adaptations) ---
         function autoResize(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = textarea.scrollHeight + 'px';
@@ -1540,3 +1541,4 @@
     </script>
 </body>
 </html>
+
