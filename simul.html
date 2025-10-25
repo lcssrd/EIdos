@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF--8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIdos - Dossier Patient Informatisé</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -238,6 +238,57 @@
              transform: translateX(-100%);
         }
 
+        /* --- STYLES DU TUTORIEL (MIS À JOUR) --- */
+        #tutorial-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(2px); /* EFFET DE FLOU AJOUTÉ */
+            z-index: 9990;
+            transition: opacity 0.3s ease;
+        }
+        #tutorial-step-box {
+            position: absolute;
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            width: 100%;
+            max-width: 350px;
+            transition: top 0.3s ease, left 0.3s ease, opacity 0.3s ease;
+        }
+        .tutorial-highlight {
+            position: relative;
+            z-index: 9995 !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.7);
+            border-radius: 0.5rem;
+            /* Supprime le background-color: white; ici pour les icônes */
+        }
+        /* Assure que les enfants de l'élément surligné sont aussi au-dessus */
+        .tutorial-highlight > * {
+             position: relative;
+             z-index: 9996;
+        }
+        /* Style spécifique pour les icônes dans le header pour qu'elles restent visibles */
+        #header-buttons .tutorial-highlight {
+            background-color: rgba(255, 255, 255, 0.2); /* Fond léger pour les boutons surlignés */
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 9999px; /* Pour les boutons ronds */
+            display: flex; /* Pour centrer l'icône si nécessaire */
+            align-items: center;
+            justify-content: center;
+        }
+        #header-buttons .tutorial-highlight i {
+             color: white !important; /* Force la couleur des icônes à blanc */
+             z-index: 9997; /* S'assure que l'icône est au-dessus de tout */
+        }
+        /* Force un fond blanc pour les boutons du tuto dans la sidebar */
+        #sidebar .tutorial-highlight {
+            background-color: white;
+        }
+        /* --- FIN STYLES TUTORIEL --- */
+
     </style>
 </head>
 <body class="flex h-screen bg-gray-100">
@@ -257,7 +308,17 @@
             <ul id="patient-list" class="p-2">
                 </ul>
         </nav>
-        <div class="p-2">
+        <div class="p-2 border-t border-gray-100">
+            <!-- Lien de contact LinkedIn -->
+            <a href="https://fr.linkedin.com/in/lucas-s%C3%A9raudie-1858ba14b" target="_blank" rel="noopener noreferrer" class="block w-full text-left text-sm text-gray-600 hover:bg-gray-100 p-2 rounded-md transition-colors mb-1">
+                <i class="fab fa-linkedin w-6 text-center mr-1"></i>
+                Me contacter
+            </a>
+            <!-- Bouton pour relancer le tutoriel -->
+            <button onclick="startTutorial()" class="w-full text-left text-sm text-blue-600 hover:bg-blue-100 p-2 rounded-md transition-colors mb-1">
+                <i class="fas fa-question-circle w-6 text-center mr-1"></i>
+                Aide / Tuto
+            </button>
             <button onclick="clearAllData()" class="w-full text-left text-sm text-red-600 hover:bg-red-100 p-2 rounded-md transition-colors">
                 <i class="fas fa-exclamation-triangle w-6 text-center mr-1"></i>
                 Vider tous les dossiers
@@ -268,9 +329,9 @@
 
         <div class="p-0 md:p-0 lg:p-0 pb-0">
             <div class="max-w-screen-xl mx-auto">
-                <header class="mb-4 p-4 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-400 text-white shadow-lg flex justify-between items-center">
+                <header id="main-header" class="mb-4 p-4 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-400 text-white shadow-lg flex justify-between items-center">
                     <h1 class="text-xl lg:text-2xl font-bold">Service de soins de l'IFSI</h1>
-                    <div class="flex items-center space-x-2">
+                    <div id="header-buttons" class="flex items-center space-x-2">
                         <button type="button" onclick="exportCurrentPatientData()" title="Exporter le dossier actuel" class="p-2 rounded-full hover:bg-white/20 transition-colors">
                             <i class="fas fa-file-export text-white"></i>
                         </button>
@@ -316,7 +377,7 @@
                     </div>
                 </header>
 
-                <div class="card p-2">
+                <div id="tabs-nav-container" class="card p-2">
                        <nav class="flex flex-wrap w-full gap-2" aria-label="Tabs">
                             <button type="button" onclick="changeTab(event, 'administratif')" data-color="teal"><i class="fas fa-user-circle mr-2"></i>Administratif</button>
                             <button type="button" onclick="changeTab(event, 'mode-de-vie')" data-color="blue"><i class="fas fa-home mr-2"></i>Vie & ATCD</button>
@@ -334,16 +395,16 @@
             <div class="max-w-screen-xl mx-auto py-4 md:py-6 lg:py-8 pt-0">
                 <main>
                     <div id="tab-content">
+                        <!-- Le reste du contenu des onglets (administratif, mode-de-vie, etc.) reste inchangé -->
+                        <!-- ... -->
                         <div id="administratif" class="content-section active">
                             <div class="card p-6">
                                 <h2 class="card-header">Dossier Administratif</h2>
-
                                 <div class="mt-6">
                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Identité du patient</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         <div class="info-item"><span class="info-label">Nom d'usage</span><textarea id="admin-nom-usage" class="info-value" oninput="autoResize(this)"></textarea></div>
                                         <div class="info-item"><span class="info-label">Prénom</span><textarea id="admin-prenom" class="info-value" oninput="autoResize(this)"></textarea></div>
-
                                         <div class="info-item">
                                             <span class="info-label">Date de Naissance</span>
                                             <div class="flex items-center gap-2">
@@ -355,7 +416,6 @@
                                         <div class="info-item col-span-full lg:col-span-2"><span class="info-label">Adresse</span><textarea id="admin-adresse" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
                                 </div>
-
                                 <div class="mt-8">
                                      <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Contacts</h3>
                                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -366,7 +426,6 @@
                                         <div class="info-item"><span class="info-label">Téléphone P. de confiance</span><textarea id="admin-pers-confiance-tel" class="info-value" oninput="autoResize(this)"></textarea></div>
                                     </div>
                                 </div>
-
                                  <div class="mt-8">
                                      <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Couverture Sociale</h3>
                                      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -385,7 +444,6 @@
                         <div id="mode-de-vie" class="content-section">
                             <div class="card p-6">
                                 <h2 class="card-header">Mode de Vie & Antécédents</h2>
-
                                 <div class="mt-6">
                                     <h3 class="text-lg font-medium text-gray-800 mb-4 pb-2 border-b">Mode de vie</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -412,7 +470,6 @@
                                 </button>
                             </div>
                         </div>
-
                         <div id="observations" class="content-section">
                             <div class="card p-6"><h2 class="card-header">Suivi Médical</h2><div id="observations-list" class="space-y-8 mt-4"></div></div>
                             <div class="card p-6">
@@ -427,7 +484,6 @@
                                 </form>
                             </div>
                         </div>
-
                         <div id="prescriptions" class="content-section">
                             <div class="card p-6">
                                  <h2 class="card-header">Prescriptions Médicales</h2>
@@ -488,7 +544,6 @@
                                 </form>
                             </div>
                         </div>
-
                         <div id="biologie" class="content-section">
                             <div class="card p-6">
                                 <h2 class="card-header">Suivi Biologique</h2>
@@ -546,7 +601,6 @@
                                                     document.write(row);
                                                 }
                                             </script>
-
                                             <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Gaz du Sang (artériel)</td></tr>
                                             <script>
                                                 const gdsData = { "pH": "7.35-7.45", "PaCO2 (mmHg)": "35-45", "PaO2 (mmHg)": "80-100", "HCO3- (mmol/L)": "22-26", "SaO2 (%)": "> 95" };
@@ -585,7 +639,6 @@
                                                 };
                                                 for (const param in pancarteData) {
                                                     let row = `<tr><td class="p-2 text-left font-semibold">${param}</td>`;
-
                                                     let inputHtml = '<input type="text" value="" onchange="updatePancarteChart()">'; 
                                                     if (param === 'Température (°C)') {
                                                         inputHtml = '<input type="number" step="0.1" value="" onchange="updatePancarteChart()">';
@@ -641,6 +694,8 @@
             </div>
         </div>
         </div>
+    
+    <!-- MODAL DE CONFIRMATION (inchangée) -->
     <div id="custom-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
             <h3 class="text-lg font-bold text-gray-800" id="custom-confirm-title">Confirmation requise</h3>
@@ -651,6 +706,18 @@
             </div>
         </div>
     </div>
+
+    <!-- ÉLÉMENTS DU TUTORIEL -->
+    <div id="tutorial-overlay" class="hidden" onclick="endTutorial(true)">
+        <div id="tutorial-step-box" onclick="event.stopPropagation()">
+            <p id="tutorial-text" class="text-gray-700 text-sm mb-4">Ceci est une étape du tutoriel.</p>
+            <div class="flex justify-between items-center">
+                <button id="tutorial-skip-btn" onclick="endTutorial(true)" class="text-xs text-gray-500 hover:text-gray-800 transition-colors">Passer</button>
+                <button id="tutorial-next-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Suivant</button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         let pancarteChartInstance;
@@ -693,11 +760,8 @@
             });
 
             state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
-
             state.bioTableDateHeaders = Array.from(document.querySelectorAll('#bio-table thead input[type="text"]')).map(input => input.value);
-
             state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
-
             state.prescriptions = [];
             document.querySelectorAll('#prescription-tbody tr').forEach(row => {
                 const isIV = row.dataset.type === 'iv';
@@ -724,27 +788,21 @@
                 }
                 state.prescriptions.push(prescriptionData);
             });
-
-
             state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
             state.lockButtonStates = {};
             document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
                 state.lockButtonStates[btn.id] = btn.innerHTML.includes('fa-lock');
             });
-
             const nomUsage = document.getElementById('patient-nom-usage').value.trim();
             const prenom = document.getElementById('patient-prenom').value.trim();
             const patientName = `${nomUsage} ${prenom}`.trim();
             state['sidebar_patient_name'] = patientName;
-
             localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-
             const sidebarEntry = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-name`);
             if (sidebarEntry) {
                 sidebarEntry.textContent = patientName || `Chambre ${patientId.split('_')[1]}`;
             }
         }
-
         function loadData(patientId) {
             if (!patientId) return;
             const SAVE_KEY = getSaveKey(patientId);
@@ -770,7 +828,6 @@
                         el.innerHTML = state[id + '_html'];
                     }
                 });
-
                 if (state.prescriptions) {
                     const tbody = document.getElementById('prescription-tbody');
                     tbody.innerHTML = '';
@@ -778,7 +835,6 @@
                         addPrescription(pData, true);
                     });
                 }
-
                 if (state.careDiagramCheckboxes) {
                     document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
                         cb.checked = state.careDiagramCheckboxes[index] || false;
@@ -821,17 +877,14 @@
                     });
                 }
             }
-
             const roomDisplay = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-room`);
             if (roomDisplay) {
                 const patientRoomEl = document.getElementById('patient-room');
                 if (patientRoomEl) patientRoomEl.value = roomDisplay.textContent;
             }
-
             updateAgeDisplay();
             updateJourHosp(); 
         }
-
         function clearCurrentPatientData() {
             const message = `Êtes-vous sûr de vouloir effacer le dossier du patient dans la chambre ${activePatientId.split('_')[1]} ? Cette action est irréversible.`;
             showDeleteConfirmation(message, () => {
@@ -839,7 +892,6 @@
                 switchPatient(activePatientId, true); 
             });
         }
-
         function clearAllData() {
             const message = "ATTENTION : Vous êtes sur le point de supprimer TOUS les dossiers de tous les patients. Cette action est irréversible. Continuer ?";
             showDeleteConfirmation(message, () => {
@@ -847,13 +899,11 @@
                 location.reload();
             });
         }
-
         function exportCurrentPatientData() {
             saveData(activePatientId);
             const SAVE_KEY = getSaveKey(activePatientId);
             const dataStr = localStorage.getItem(SAVE_KEY);
             if (!dataStr || dataStr === '{}') return;
-
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -865,26 +915,53 @@
             URL.revokeObjectURL(url);
             a.remove();
         }
-
         function importCurrentPatientData(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
+
+            // Log de début
+            console.log("Tentative d'importation du fichier:", file.name);
+
             reader.onload = e => {
+                // Log du contenu lu
+                console.log("Fichier lu avec succès. Tentative d'analyse JSON.");
+                const content = e.target.result;
                 try {
-                    const content = e.target.result;
-                    JSON.parse(content); 
+                    // Vérification simple du contenu avant l'analyse
+                    if (!content || typeof content !== 'string' || content.trim().length === 0) {
+                         throw new Error("Le contenu du fichier est vide ou invalide.");
+                    }
+                    console.log("Contenu brut:", content.substring(0, 100) + "..."); // Affiche les 100 premiers caractères
+
+                    const jsonData = JSON.parse(content); 
+                    console.log("Analyse JSON réussie.");
+
+                    // Vérification optionnelle: s'assurer que c'est bien un objet
+                    if (typeof jsonData !== 'object' || jsonData === null) {
+                         throw new Error("Le fichier JSON ne contient pas un objet valide.");
+                    }
+
                     const SAVE_KEY = getSaveKey(activePatientId);
                     localStorage.setItem(SAVE_KEY, content);
+                    console.log("Données sauvegardées dans localStorage. Rechargement de la page.");
                     location.reload();
                 } catch (error) {
-                    alert("Erreur d'importation : le fichier n'est pas un JSON valide.");
+                    // Remplacer alert() par la modale customisée
+                    console.error("Erreur lors de l'analyse JSON ou de la sauvegarde:", error);
+                    showCustomAlert("Erreur d'importation", `Le fichier n'est pas un JSON valide ou est corrompu. Erreur: ${error.message}`);
                 }
             };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
 
+            // Gestionnaire d'erreur pour FileReader
+            reader.onerror = (e) => {
+                console.error("Erreur lors de la lecture du fichier:", e);
+                showCustomAlert("Erreur de lecture", "Impossible de lire le fichier sélectionné.");
+            };
+
+            reader.readAsText(file); // CORRECTION: readText -> readAsText
+            event.target.value = ''; // Réinitialiser pour permettre de re-sélectionner le même fichier
+        }
         function initSidebar() {
             const list = document.getElementById('patient-list');
             let listHTML = '';
@@ -902,7 +979,6 @@
             });
             list.innerHTML = listHTML;
         }
-
         function updateSidebarActiveState(patientId) {
             document.querySelectorAll('#patient-list button').forEach(btn => {
                 btn.classList.remove('active');
@@ -911,7 +987,6 @@
                 }
             });
         }
-
         function resetForm() {
             document.querySelectorAll('main input, main textarea').forEach(el => {
                 if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
@@ -921,34 +996,27 @@
                 const el = document.getElementById(id);
                 if (el) el.innerHTML = '';
             });
-
             document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
                 if (btn.innerHTML.includes('fa-lock')) btn.click();
             });
             if (pancarteChartInstance) pancarteChartInstance.destroy();
         }
-
         function switchPatient(newPatientId, skipSave = false) {
             if (activePatientId !== newPatientId && !skipSave) {
                 saveData(activePatientId);
             }
-
             activePatientId = newPatientId;
             localStorage.setItem('activePatientId', newPatientId);
             resetForm();
             loadData(newPatientId);
             updateSidebarActiveState(newPatientId);
-
             setTimeout(() => {
                 document.querySelectorAll('textarea.info-value').forEach(autoResize);
             }, 0);
-
             updatePancarteChart();
-
             const mainContent = document.getElementById('main-content-wrapper');
             mainContent.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
         function initApp() {
             initSidebar();
             switchPatient(activePatientId, true);
@@ -959,44 +1027,63 @@
             };
             document.querySelector('main').addEventListener('input', debouncedSave);
             document.querySelector('main').addEventListener('change', debouncedSave);
-
             setupModalListeners();
             setupSync(); 
             document.getElementById('patient-entry-date').addEventListener('input', updateJourHosp);
-
-
             document.addEventListener('mousemove', handleIVMouseMove);
             document.addEventListener('mouseup', handleIVMouseUp);
-
             const activeTabId = localStorage.getItem('activeTab') || 'administratif';
             const activeTabButton = document.querySelector(`nav button[onclick*="'${activeTabId}'"]`);
             if (activeTabButton) changeTab({ currentTarget: activeTabButton }, activeTabId);
             else document.querySelector('nav[aria-label="Tabs"] button').click();
+
+            // Lancement automatique du tutoriel
+            if (!localStorage.getItem('tutorialCompleted')) {
+                // Léger délai pour s'assurer que tout est chargé
+                setTimeout(startTutorial, 500);
+            }
         }
-
         let confirmCallback = null;
-
         function showDeleteConfirmation(message, callback) {
             const modal = document.getElementById('custom-confirm-modal');
             const modalBox = document.getElementById('custom-confirm-box');
-            document.getElementById('custom-confirm-message').textContent = message;
+            const titleEl = document.getElementById('custom-confirm-title');
+            const messageEl = document.getElementById('custom-confirm-message');
+            const cancelBtn = document.getElementById('custom-confirm-cancel');
+            const okBtn = document.getElementById('custom-confirm-ok');
+
+            // --- Réinitialisation avant configuration ---
+            cancelBtn.classList.remove('hidden');
+            okBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500');
+            okBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+            okBtn.textContent = 'Confirmer';
+            // --- Fin Réinitialisation ---
+
+            titleEl.textContent = 'Confirmation requise';
+            messageEl.textContent = message;
+
             confirmCallback = callback;
+
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modalBox.classList.remove('scale-95', 'opacity-0');
             }, 10);
         }
-
         function hideConfirmation() {
             const modal = document.getElementById('custom-confirm-modal');
             const modalBox = document.getElementById('custom-confirm-box');
+            // Plus besoin de réinitialiser ici, c'est fait au début de show...()
+            // const cancelBtn = document.getElementById('custom-confirm-cancel');
+            // const okBtn = document.getElementById('custom-confirm-ok');
+
             modalBox.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
+                
+                // Réinitialisation simple du callback
                 confirmCallback = null;
             }, 200);
         }
-
         function setupModalListeners() {
             document.getElementById('custom-confirm-ok').addEventListener('click', () => {
                 if (typeof confirmCallback === 'function') {
@@ -1005,6 +1092,32 @@
                 hideConfirmation();
             });
             document.getElementById('custom-confirm-cancel').addEventListener('click', hideConfirmation);
+        }
+
+        function showCustomAlert(title, message) {
+            const modal = document.getElementById('custom-confirm-modal');
+            const modalBox = document.getElementById('custom-confirm-box');
+            const titleEl = document.getElementById('custom-confirm-title');
+            const messageEl = document.getElementById('custom-confirm-message');
+            const cancelBtn = document.getElementById('custom-confirm-cancel');
+            const okBtn = document.getElementById('custom-confirm-ok');
+
+             // --- Réinitialisation avant configuration ---
+            cancelBtn.classList.add('hidden'); // Cacher Annuler pour une alerte
+            okBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+            okBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500');
+            okBtn.textContent = 'Fermer';
+             // --- Fin Réinitialisation ---
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            confirmCallback = null; // Assure qu'aucune action n'est déclenchée en cliquant sur "Fermer"
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalBox.classList.remove('scale-95', 'opacity-0');
+            }, 10);
         }
 
         function updateJourHosp() {
@@ -1016,30 +1129,25 @@
             }
             const entryDate = new Date(entryDateEl.value);
             if (isNaN(entryDate.getTime())) {
-                jourHHospEl.textContent = 'J-';
+                jourHospEl.textContent = 'J-';
                 return;
             }
             const today = new Date();
             entryDate.setHours(0, 0, 0, 0);
             today.setHours(0, 0, 0, 0);
-
             const diffTime = today - entryDate;
             const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
             jourHospEl.textContent = `J${diffDays}`;
         }
-
         function setupSync() {
             const syncMap = [
                 ['patient-nom-usage', 'admin-nom-usage'],
                 ['patient-prenom', 'admin-prenom'],
                 ['patient-dob', 'admin-dob']
             ];
-
             syncMap.forEach(([id1, id2]) => {
                 const el1 = document.getElementById(id1);
                 const el2 = document.getElementById(id2);
-
                 if (el1 && el2) {
                     el1.addEventListener('input', () => {
                         if (!el2.disabled) {
@@ -1048,7 +1156,6 @@
                             if(id1.includes('dob')) updateAgeDisplay();
                         }
                     });
-
                     el2.addEventListener('input', () => {
                         if (!el1.disabled) {
                             el1.value = el1.value;
@@ -1059,7 +1166,6 @@
                 }
             });
         }
-
         function calculateAge(dobString) {
             if (!dobString) return '';
             const dob = new Date(dobString);
@@ -1072,15 +1178,12 @@
             }
             return age >= 0 ? `${age} ans` : '';
         }
-
         function updateAgeDisplay() {
             const dobHeader = document.getElementById('patient-dob').value;
             document.getElementById('patient-age').textContent = calculateAge(dobHeader);
-
             const dobAdmin = document.getElementById('admin-dob').value;
             document.getElementById('admin-age').textContent = calculateAge(dobAdmin);
         }
-
         function deleteEntry(button) {
             const entry = button.closest('.timeline-item');
             if (entry) {
@@ -1090,7 +1193,6 @@
                 });
             }
         }
-
         function deletePrescription(button) {
             const row = button.closest('tr');
             if (row) {
@@ -1100,12 +1202,10 @@
                 });
             }
         }
-
         function autoResize(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = textarea.scrollHeight + 'px';
         }
-
         function toggleFullscreen() {
             const elem = document.documentElement;
             const icon = document.getElementById('fullscreen-icon');
@@ -1117,7 +1217,6 @@
                 icon.classList.replace('fa-compress', 'fa-expand');
             }
         }
-
         function updateDynamicDates(startDate) {
             const updateHeaders = (selector) => {
                 document.querySelectorAll(selector).forEach((th, index) => {
@@ -1133,13 +1232,11 @@
             updateHeaders('#care-diagram-table thead tr:first-child th[colspan="3"]');
             if (pancarteChartInstance) updatePancarteChart();
         }
-
         function toggleLock(containerId, buttonId) {
             const container = document.getElementById(containerId);
             const button = document.getElementById(buttonId);
             const inputs = container.querySelectorAll('.info-value, input[type=text], input[type=date]');
             const isUnlocking = button.innerHTML.includes('fa-lock');
-
             if (!isUnlocking && containerId === 'patient-header-form') {
                 const entryDateValue = document.getElementById('patient-entry-date').value;
                 if (entryDateValue) {
@@ -1154,7 +1251,6 @@
                 input.disabled = !isUnlocking;
                 if (input.tagName.toLowerCase() === 'textarea' && isUnlocking) autoResize(input);
             });
-
             const colorMap = {
                 'lock-header-btn': { unlocked: ['border-teal-600', 'text-teal-700', 'hover:bg-teal-600'], locked: ['border-gray-400', 'text-gray-500', 'hover:bg-gray-400'] },
                 'lock-admin-btn': { unlocked: ['border-teal-600', 'text-teal-700', 'hover:bg-teal-600'], locked: ['border-gray-400', 'text-gray-500', 'hover:bg-gray-400'] },
@@ -1162,7 +1258,6 @@
             };
             const styles = colorMap[buttonId];
             const baseUnlockedText = (buttonId === 'lock-header-btn') ? "Valider" : "Valider les données";
-
             if (isUnlocking) {
                 button.innerHTML = `<i class="fas fa-check mr-2"></i> ${baseUnlockedText}`;
                 button.classList.remove(...styles.locked); button.classList.add(...styles.unlocked);
@@ -1171,22 +1266,17 @@
                 button.classList.remove(...styles.unlocked); button.classList.add(...styles.locked);
             }
         }
-
         function changeTab(event, tabId) {
             document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
             const activeSection = document.getElementById(tabId);
             activeSection.classList.add('active');
-
             const baseClasses = "min-h-[4rem] py-2 px-2 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center text-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
-            
             const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", violet: "text-violet-900 border-violet-300 bg-gradient-to-br from-violet-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
-            
             document.querySelectorAll('nav[aria-label="Tabs"] button').forEach(tab => tab.className = `${baseClasses} ${inactiveClasses}`);
             const clickedTab = event.currentTarget;
             const color = clickedTab.dataset.color;
             clickedTab.className = `${baseClasses} ${activeClasses[color]}`;
-
             document.querySelectorAll('.card-header').forEach(h => Object.keys(activeClasses).forEach(c => h.classList.remove(`header-${c}`)));
             document.getElementById(tabId).querySelectorAll('.card-header').forEach(h => h.classList.add(`header-${color}`));
             localStorage.setItem('activeTab', tabId);
@@ -1195,7 +1285,6 @@
             }, 0);
             if (tabId === 'pancarte') setTimeout(() => updatePancarteChart(), 50);
         }
-
         function addObservation() {
             const author = document.getElementById('new-observation-author').value.trim();
             const text = document.getElementById('new-observation-text').value.trim();
@@ -1207,7 +1296,6 @@
             document.getElementById('observations-list').insertAdjacentHTML('afterbegin', newHTML);
             document.getElementById('new-observation-form').reset();
         }
-
         function addTransmission() {
             const author = document.getElementById('new-transmission-author-2').value.trim();
             const text = document.getElementById('new-transmission-text-2').value.trim();
@@ -1220,7 +1308,6 @@
             document.getElementById('transmissions-list-ide').insertAdjacentHTML('afterbegin', newHTML);
             document.getElementById('new-transmission-form-2').reset();
         }
-
         function addPrescription(data = null, fromLoad = false) {
             let name, posologie, voie, startDate, type, checkboxes, bars;
             if (fromLoad) {
@@ -1231,17 +1318,13 @@
                 voie = document.getElementById('med-voie').value.trim();
                 const startDateValue = document.getElementById('med-start-date').value;
                 if (!name || !startDateValue) return;
-
                 const [year, month, day] = startDateValue.split('-');
                 startDate = `${day}/${month}/${year.slice(2)}`;
-
                 type = voie.trim().toUpperCase() === 'IV' ? 'iv' : 'checkbox';
             }
-
             const tbody = document.getElementById("prescription-tbody");
             const newRow = tbody.insertRow();
             newRow.dataset.type = type;
-
             const baseCellsHTML = `
                 <td class="p-2 text-left align-top">
                     <div class="flex items-start justify-between">
@@ -1255,21 +1338,18 @@
                 <td class="p-2 text-left align-top">${voie}</td>
                 <td class="p-2 text-left align-top">${startDate}</td>
             `;
-
             if (type === 'iv') {
                 newRow.innerHTML = baseCellsHTML;
                 const timelineCell = newRow.insertCell();
                 timelineCell.colSpan = 44;
                 timelineCell.className = 'iv-bar-container';
                 timelineCell.addEventListener('mousedown', handleIVMouseDown);
-
                 const barsToCreate = [];
                 if (fromLoad && bars && Array.isArray(bars)) {
                     barsToCreate.push(...bars);
                 } else if (fromLoad && data.left && data.width) { 
                     barsToCreate.push({ left: data.left, width: data.width, title: data.title });
                 }
-
                 barsToCreate.forEach(barData => {
                     if (barData && barData.left && barData.width) {
                         const bar = document.createElement('div');
@@ -1278,16 +1358,13 @@
                         bar.style.width = barData.width;
                         bar.title = barData.title || '';
                         bar.addEventListener('dblclick', handleIVDblClick);
-
                         const handle = document.createElement('div');
                         handle.className = 'resize-handle';
                         bar.appendChild(handle);
-
                         timelineCell.appendChild(bar);
                         setTimeout(() => updateIVBarDetails(bar, timelineCell), 0);
                     }
                 });
-
             } else {
                 let checkboxCellsHTML = '';
                 for (let i = 0; i < 11; i++) {
@@ -1299,12 +1376,10 @@
                 }
                 newRow.innerHTML = baseCellsHTML + checkboxCellsHTML;
             }
-
             if (!fromLoad) {
                 document.getElementById('new-prescription-form').reset();
             }
         }
-
         function addCareDiagramRow() {
             const name = document.getElementById('care-name').value.trim();
             if (!name) return;
@@ -1314,7 +1389,6 @@
             newRow.innerHTML = cellsHTML;
             document.getElementById('new-care-form').reset();
         }
-
         function handleIVDblClick(e) {
             const bar = e.currentTarget;
             showDeleteConfirmation("Effacer cette barre de perfusion IV ?", () => {
@@ -1326,25 +1400,21 @@
                 saveData(activePatientId);
             });
         }
-
         function handleIVMouseDown(e) {
             if (e.target.classList.contains('iv-bar-container')) {
                 ivInteraction.mode = 'draw';
                 const cell = e.target;
                 const rect = cell.getBoundingClientRect();
                 const startX = e.clientX - rect.left;
-
                 const newBar = document.createElement('div');
                 newBar.className = 'iv-bar';
                 newBar.style.left = `${(startX / rect.width) * 100}%`;
                 newBar.style.width = '0px';
                 newBar.addEventListener('dblclick', handleIVDblClick);
-
                 const handle = document.createElement('div');
                 handle.className = 'resize-handle';
                 newBar.appendChild(handle);
                 cell.appendChild(newBar);
-
                 ivInteraction = {
                     ...ivInteraction,
                     active: true,
@@ -1353,12 +1423,10 @@
                     startX: e.clientX,
                 };
                 document.body.classList.add('is-drawing-iv');
-
             } else if (e.target.classList.contains('resize-handle')) {
                 ivInteraction.mode = 'resize';
                 const bar = e.target.parentElement;
                 const cell = bar.parentElement;
-
                 ivInteraction = {
                     ...ivInteraction,
                     active: true,
@@ -1368,12 +1436,10 @@
                     startWidth: bar.offsetWidth,
                 };
                 document.body.classList.add('is-resizing-iv');
-
             } else if (e.target.classList.contains('iv-bar')) {
                 ivInteraction.mode = 'move';
                 const bar = e.target;
                 const cell = bar.parentElement;
-
                  ivInteraction = {
                     ...ivInteraction,
                     active: true,
@@ -1385,15 +1451,12 @@
                 document.body.classList.add('is-moving-iv');
             }
         }
-
         function handleIVMouseMove(e) {
             if (!ivInteraction.active) return;
             e.preventDefault();
-
             const { mode, targetBar, targetCell, startX, startWidth, startLeft } = ivInteraction;
             const cellRect = targetCell.getBoundingClientRect();
             const dx = e.clientX - startX;
-
             if (mode === 'draw' || mode === 'resize') {
                 let newWidth = startWidth + dx;
                 newWidth = Math.max(5, newWidth); 
@@ -1407,62 +1470,48 @@
             }
             updateIVBarDetails(targetBar, targetCell);
         }
-
         function handleIVMouseUp(e) {
             if (!ivInteraction.active) return;
             document.body.className = document.body.className.replace(/is-(drawing|resizing|moving)-iv/g, '').trim();
             ivInteraction = { active: false, mode: null, targetBar: null, targetCell: null, startX: 0, startLeft: 0, startWidth: 0 };
             saveData(activePatientId);
         }
-
         function updateIVBarDetails(bar, cell) {
             if (!bar || !cell) return;
             const tableStartDateStr = document.getElementById('patient-entry-date').value;
             if (!tableStartDateStr) return;
-
             const tableStartDate = new Date(tableStartDateStr);
             const totalTimelineMillis = 11 * 24 * 60 * 60 * 1000;
-
             const startPercent = parseFloat(bar.style.left);
             const widthPercent = parseFloat(bar.style.width);
             const endPercent = startPercent + widthPercent;
-
             const startOffsetMillis = (startPercent / 100) * totalTimelineMillis;
             const durationMillis = (widthPercent / 100) * totalTimelineMillis;
-
             const startDateTime = new Date(tableStartDate.getTime() + startOffsetMillis);
             const endDateTime = new Date(startDateTime.getTime() + durationMillis);
-
             const formatTime = (date) => date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-
             bar.title = `Début: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}\nFin: ${endDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
-
             let startLabel = cell.querySelector('.iv-time-label.start');
             if (!startLabel) {
                 startLabel = document.createElement('span');
                 startLabel.className = 'iv-time-label start';
                 cell.appendChild(startLabel);
             }
-
             let endLabel = cell.querySelector('.iv-time-label.end');
             if (!endLabel) {
                 endLabel = document.createElement('span');
                 endLabel.className = 'iv-time-label end';
                 cell.appendChild(endLabel);
             }
-
             startLabel.textContent = formatTime(startDateTime);
             startLabel.style.left = `${startPercent}%`;
-
             endLabel.textContent = formatTime(endDateTime);
             endLabel.style.left = `${endPercent}%`;
         }
-
         function updatePancarteChart() {
             const table = document.getElementById('pancarte-table');
             const entryDateVal = document.getElementById('patient-entry-date').value;
             const startDate = entryDateVal ? new Date(entryDateVal) : new Date();
-
             const labels = Array.from({ length: 33 }).map((_, i) => {
                 const dayOffset = Math.floor(i / 3);
                 const timeOfDay = ['Matin', 'Soir', 'Nuit'][i % 3];
@@ -1470,7 +1519,6 @@
                 currentDate.setDate(startDate.getDate() + dayOffset);
                 return `${currentDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})} ${timeOfDay}`;
             });
-
             const dataSetsConfig = { 'Pouls (/min)': { yAxisID: 'y1', borderColor: '#ef4444' }, 'Tension (mmHg)': { type: 'bar', yAxisID: 'y', backgroundColor: '#f9731640' }, 'Température (°C)': { yAxisID: 'y3', borderColor: '#3b82f6' }, 'SpO2 (%)': { yAxisID: 'y4', borderColor: '#10b981' }, 'Douleur (EVA /10)': { yAxisID: 'y2', borderColor: '#8b5cf6' }};
             const datasets = Array.from(table.querySelectorAll('tbody tr')).map(row => {
                 const paramName = row.cells[0].textContent.trim();
@@ -1505,7 +1553,192 @@
             });
         }
 
+        // --- LOGIQUE DU TUTORIEL ---
+
+        // Définition des étapes du tutoriel
+        const tutorialSteps = [
+            {
+                element: '#patient-list li:first-child button',
+                text: "Bienvenue ! Voici la liste des patients. Cliquez sur un patient pour ouvrir son dossier. (Vous pouvez remplir le dossier pour voir un nom ici).",
+                position: 'right'
+            },
+            {
+                element: '#patient-header-form',
+                text: "Cet en-tête contient les informations principales du patient. Remplissez-le et cliquez sur 'Valider' pour verrouiller les champs et définir la date d'entrée.",
+                position: 'bottom'
+            },
+            {
+                element: '#tabs-nav-container',
+                text: "Utilisez ces onglets pour naviguer entre les différentes sections du dossier : Administratif, Prescriptions, Transmissions, etc.",
+                position: 'bottom'
+            },
+            {
+                element: '#header-buttons button[title*="Exporter"]',
+                text: "Ce bouton vous permet d'exporter le dossier du patient actuel au format JSON, pour le sauvegarder ou le partager.",
+                position: 'bottom-left'
+            },
+            {
+                element: '#header-buttons button[title*="Importer"]',
+                text: "Utilisez ce bouton pour importer un fichier JSON et charger les données d'un patient dans ce dossier.",
+                position: 'bottom-left'
+            },
+            {
+                element: '#header-buttons button[title*="Effacer"]',
+                text: "Attention : Ce bouton efface toutes les données du patient actuellement sélectionné.",
+                position: 'bottom-left'
+            },
+            {
+                element: 'button[onclick="clearAllData()"]',
+                text: "ATTENTION : Ce bouton supprime DÉFINITIVEMENT tous les dossiers de tous les patients. À n'utiliser que pour réinitialiser la simulation.",
+                position: 'top'
+            },
+            {
+                element: 'button[onclick="startTutorial()"]',
+                text: "Vous avez terminé ! Vous pouvez relancer ce tutoriel à tout moment en cliquant sur ce bouton.",
+                position: 'top'
+            }
+        ];
+
+        let currentStepIndex = 0;
+        let highlightedElement = null;
+
+        function startTutorial() {
+            currentStepIndex = 0;
+            document.getElementById('tutorial-overlay').classList.remove('hidden');
+            showTutorialStep(currentStepIndex);
+        }
+
+        function endTutorial(setFlag = false) {
+            document.getElementById('tutorial-overlay').classList.add('hidden');
+            if (highlightedElement) {
+                highlightedElement.classList.remove('tutorial-highlight');
+                // Remove specific styles for header buttons if they were highlighted (MIS À JOUR)
+                if (highlightedElement.closest('#header-buttons')) {
+                    highlightedElement.style = ''; // Reset inline styles
+                }
+                highlightedElement = null;
+            }
+            if (setFlag) {
+                // Marque le tutoriel comme complété pour ne pas le relancer
+                localStorage.setItem('tutorialCompleted', 'true');
+            }
+        }
+
+        function showTutorialStep(index) {
+            // Enlever le surlignage précédent (MIS À JOUR)
+            if (highlightedElement) {
+                highlightedElement.classList.remove('tutorial-highlight');
+                // Remove specific styles for header buttons if they were highlighted
+                if (highlightedElement.closest('#header-buttons')) {
+                    highlightedElement.style = ''; // Reset inline styles
+                }
+            }
+
+            // Vérifier si le tutoriel est terminé
+            if (index >= tutorialSteps.length) {
+                endTutorial(true);
+                return;
+            }
+
+            const step = tutorialSteps[index];
+            const element = document.querySelector(step.element);
+            const stepBox = document.getElementById('tutorial-step-box');
+            const stepText = document.getElementById('tutorial-text');
+            const nextButton = document.getElementById('tutorial-next-btn');
+
+            // Gérer le cas où l'élément n'existe pas (ex: liste de patients vide)
+            if (!element) {
+                // Si on ne trouve pas le premier patient, on essaie de surligner la sidebar
+                if (index === 0) {
+                     tutorialSteps[0].element = '#sidebar';
+                     tutorialSteps[0].text = "Bienvenue ! Voici la barre latérale où les patients apparaîtront. Pour l'instant, elle est vide. Vous pouvez commencer par remplir les dossiers.";
+                     showTutorialStep(index); // Réeessayer avec le nouvel élément
+                } else {
+                    // Si un autre élément est manquant, on passe à l'étape suivante
+                    console.warn(`Élément du tutoriel non trouvé: ${step.element}. Passage à l'étape suivante.`);
+                    currentStepIndex++;
+                    showTutorialStep(currentStepIndex);
+                }
+                return;
+            }
+
+            // Mettre à jour le texte
+            stepText.textContent = step.text;
+
+            // Mettre à jour le bouton "Suivant"
+            if (index === tutorialSteps.length - 1) {
+                nextButton.textContent = "Terminer";
+            } else {
+                nextButton.textContent = "Suivant";
+            }
+            
+            // Surligner le nouvel élément
+            element.classList.add('tutorial-highlight');
+            highlightedElement = element;
+
+            // Corrige le problème des icônes de la barre de titre (MIS À JOUR)
+            if (element.closest('#header-buttons')) {
+                // Force le z-index pour les icônes de la barre de titre
+                element.style.setProperty('z-index', '9997', 'important');
+                element.style.setProperty('position', 'relative', 'important');
+            }
+
+
+            // Positionner la boîte de dialogue
+            const rect = element.getBoundingClientRect();
+            const boxRect = stepBox.getBoundingClientRect();
+            const margin = 15;
+
+            // Positionnement par défaut (en bas)
+            let top = rect.bottom + margin;
+            let left = rect.left + (rect.width / 2) - (boxRect.width / 2);
+
+            // Ajustement basé sur la position demandée
+            if (step.position === 'right') {
+                top = rect.top + (rect.height / 2) - (boxRect.height / 2);
+                left = rect.right + margin;
+            } else if (step.position === 'left') {
+                top = rect.top + (rect.height / 2) - (boxRect.height / 2);
+                left = rect.left - boxRect.width - margin;
+            } else if (step.position === 'top') {
+                top = rect.top - boxRect.height - margin;
+                left = rect.left + (rect.width / 2) - (boxRect.width / 2);
+            } else if (step.position === 'bottom-left') {
+                 top = rect.bottom + margin;
+                 left = rect.right - boxRect.width;
+            }
+
+            // S'assurer que la boîte ne sort pas de l'écran
+            if (top < margin) top = margin;
+            if (left < margin) left = margin;
+            if (top + boxRect.height > window.innerHeight - margin) {
+                top = window.innerHeight - boxRect.height - margin;
+                // Si 'top' était demandé, le mettre en bas
+                if (step.position === 'top') top = rect.bottom + margin;
+            }
+            if (left + boxRect.width > window.innerWidth - margin) {
+                left = window.innerWidth - boxRect.width - margin;
+            }
+
+
+            stepBox.style.top = `${top}px`;
+            stepBox.style.left = `${left}px`;
+        }
+
+        // Écouteur pour le bouton "Suivant"
+        document.getElementById('tutorial-next-btn').addEventListener('click', () => {
+            currentStepIndex++;
+            showTutorialStep(currentStepIndex);
+        });
+
+        // --- FIN LOGIQUE TUTORIEL ---
+
+
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
+
+
+
+
