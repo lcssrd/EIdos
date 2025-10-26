@@ -54,7 +54,6 @@
         .card-header.header-rose { color: #be123c; border-bottom-color: #fb7185; border-bottom-width: 2px; }
         .card-header.header-indigo { color: #4338ca; border-bottom-color: #a5b4fc; border-bottom-width: 2px; }
         .card-header.header-green { color: #15803d; border-bottom-color: #86efac; border-bottom-width: 2px; }
-        .card-header.header-violet { color: #6d28d9; border-bottom-color: #c4b5fd; border-bottom-width: 2px; }
         .card-header.header-purple { color: #7e22ce; border-bottom-color: #d8b4fe; border-bottom-width: 2px; }
         .card-header.header-orange { color: #c2410c; border-bottom-color: #fdba74; border-bottom-width: 2px; }
 
@@ -238,12 +237,11 @@
              transform: translateX(-100%);
         }
 
-        /* --- STYLES DU TUTORIEL (MIS À JOUR) --- */
         #tutorial-overlay {
             position: fixed;
             inset: 0;
             background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(2px); /* EFFET DE FLOU AJOUTÉ */
+            backdrop-filter: blur(2px);
             z-index: 9990;
             transition: opacity 0.3s ease;
         }
@@ -263,31 +261,26 @@
             z-index: 9995 !important;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.7);
             border-radius: 0.5rem;
-            /* Supprime le background-color: white; ici pour les icônes */
         }
-        /* Assure que les enfants de l'élément surligné sont aussi au-dessus */
         .tutorial-highlight > * {
              position: relative;
              z-index: 9996;
         }
-        /* Style spécifique pour les icônes dans le header pour qu'elles restent visibles */
         #header-buttons .tutorial-highlight {
-            background-color: rgba(255, 255, 255, 0.2); /* Fond léger pour les boutons surlignés */
+            background-color: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 9999px; /* Pour les boutons ronds */
-            display: flex; /* Pour centrer l'icône si nécessaire */
+            border-radius: 9999px;
+            display: flex;
             align-items: center;
             justify-content: center;
         }
         #header-buttons .tutorial-highlight i {
-             color: white !important; /* Force la couleur des icônes à blanc */
-             z-index: 9997; /* S'assure que l'icône est au-dessus de tout */
+             color: white !important;
+             z-index: 9997;
         }
-        /* Force un fond blanc pour les boutons du tuto dans la sidebar */
         #sidebar .tutorial-highlight {
             background-color: white;
         }
-        /* --- FIN STYLES TUTORIEL --- */
 
     </style>
 </head>
@@ -309,12 +302,10 @@
                 </ul>
         </nav>
         <div class="p-2 border-t border-gray-100">
-            <!-- Lien de contact LinkedIn -->
             <a href="https://fr.linkedin.com/in/lucas-s%C3%A9raudie-1858ba14b" target="_blank" rel="noopener noreferrer" class="block w-full text-left text-sm text-gray-600 hover:bg-gray-100 p-2 rounded-md transition-colors mb-1">
                 <i class="fab fa-linkedin w-6 text-center mr-1"></i>
                 Me contacter
             </a>
-            <!-- Bouton pour relancer le tutoriel -->
             <button onclick="startTutorial()" class="w-full text-left text-sm text-blue-600 hover:bg-blue-100 p-2 rounded-md transition-colors mb-1">
                 <i class="fas fa-question-circle w-6 text-center mr-1"></i>
                 Aide / Tuto
@@ -384,8 +375,8 @@
                             <button type="button" onclick="changeTab(event, 'observations')" data-color="rose"><i class="fas fa-notes-medical mr-2"></i>Observations Médicales</button>
                             <button type="button" onclick="changeTab(event, 'prescriptions')" data-color="indigo"><i class="fas fa-pills mr-2"></i>Prescriptions</button>
                             <button type="button" onclick="changeTab(event, 'transmissions')" data-color="green"><i class="fas fa-exchange-alt mr-2"></i>Transmissions</button>
-                            <button type="button" onclick="changeTab(event, 'pancarte')" data-color="violet"><i class="fas fa-chart-line mr-2"></i>Pancarte</button>
-                            <button type="button" onclick="changeTab(event, 'diagramme')" data-color="orange"><i class="fas fa-calendar-alt mr-2"></i>Diagramme Soins</button>
+                            <button type="button" onclick="changeTab(event, 'pancarte')" data-color="orange"><i class="fas fa-chart-line mr-2"></i>Pancarte</button>
+                            <button type="button" onclick="changeTab(event, 'diagramme')" data-color="rose"><i class="fas fa-calendar-alt mr-2"></i>Diagramme Soins</button>
                             <button type="button" onclick="changeTab(event, 'biologie')" data-color="purple"><i class="fas fa-vial mr-2"></i>Résultats Biologiques</button>
                        </nav>
                 </div>
@@ -395,8 +386,6 @@
             <div class="max-w-screen-xl mx-auto py-4 md:py-6 lg:py-8 pt-0">
                 <main>
                     <div id="tab-content">
-                        <!-- Le reste du contenu des onglets (administratif, mode-de-vie, etc.) reste inchangé -->
-                        <!-- ... -->
                         <div id="administratif" class="content-section active">
                             <div class="card p-6">
                                 <h2 class="card-header">Dossier Administratif</h2>
@@ -489,17 +478,7 @@
                                  <h2 class="card-header">Prescriptions Médicales</h2>
                                  <div class="overflow-x-auto mt-4">
                                      <table class="w-full border-collapse text-sm diagram" id="prescription-table">
-                                         <thead class="bg-gray-100 text-gray-600">
-                                             <tr>
-                                                 <th class="p-2 text-left align-bottom" rowspan="2">Médicament / Soin</th>
-                                                 <th class="p-2 text-left align-bottom" rowspan="2">Posologie</th>
-                                                 <th class="p-2 text-left align-bottom" rowspan="2">Voie</th>
-                                                 <th class="p-2 text-left align-bottom" rowspan="2">Date de début</th>
-                                                 <script>for(let i=0; i<11; i++) { document.write(`<th class="p-2 text-center" colspan="4">Jour ${i}</th>`);}</script>
-                                             </tr>
-                                             <tr>
-                                                 <script>for(let i=0; i<11; i++) { document.write(`<th class="p-1 text-center w-8">M</th><th class="p-1 text-center w-8">Mi</th><th class="p-1 text-center w-8">S</th><th class="p-1 text-center w-8">N</th>`);}</script>
-                                             </tr>
+                                         <thead id="prescription-thead" class="bg-gray-100 text-gray-600">
                                          </thead>
                                          <tbody class="text-center" id="prescription-tbody"></tbody>
                                      </table>
@@ -549,68 +528,9 @@
                                 <h2 class="card-header">Suivi Biologique</h2>
                                 <div class="overflow-x-auto mt-4">
                                     <table class="w-full border-collapse text-sm diagram" id="bio-table">
-                                        <thead class="bg-gray-100 text-gray-600">
-                                            <tr>
-                                                <th class="p-2 text-left w-1/4">Analyse</th>
-                                                <th class="p-2 text-left w-1/4">Valeurs de référence</th>
-                                                <script>
-                                                    for(let i=0; i<6; i++) {
-                                                        document.write(`<th class="p-1"><input type="text" placeholder="JJ/MM/AA" class="font-semibold text-center w-24 bg-transparent"></th>`);
-                                                    }
-                                                </script>
-                                            </tr>
+                                        <thead id="bio-thead" class="bg-gray-100 text-gray-600">
                                         </thead>
-                                        <tbody>
-                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Numération Formule Sanguine (NFS)</td></tr>
-                                            <script>
-                                                const nfsData = { "Hématies (T/L)": "4.5-5.5", "Hémoglobine (g/dL)": "13-17", "Hématocrite (%)": "40-52", "VGM (fL)": "80-100", "Leucocytes (G/L)": "4-10", "Plaquettes (G/L)": "150-400" };
-                                                for(const [key, value] of Object.entries(nfsData)) {
-                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
-                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
-                                                    row += '</tr>';
-                                                    document.write(row);
-                                                }
-                                            </script>
-                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Électrolytique</td></tr>
-                                            <script>
-                                                const ionoData = { "Sodium (mmol/L)": "136-145", "Potassium (mmol/L)": "3.5-5.1", "Chlore (mmol/L)": "98-107", "Bicarbonates (mmol/L)": "22-29", "Urée (mmol/L)": "2.8-7.2", "Créatinine (µmol/L)": "62-106" };
-                                                for(const [key, value] of Object.entries(ionoData)) {
-                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
-                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
-                                                    row += '</tr>';
-                                                    document.write(row);
-                                                }
-                                            </script>
-                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Hépatique</td></tr>
-                                            <script>
-                                                const hepatiqueData = { "ASAT (UI/L)": "< 40", "ALAT (UI/L)": "< 41", "Gamma-GT (UI/L)": "11-50", "PAL (UI/L)": "40-129", "Bilirubine totale (µmol/L)": "5-21" };
-                                                for(const [key, value] of Object.entries(hepatiqueData)) {
-                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
-                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
-                                                    row += '</tr>';
-                                                    document.write(row);
-                                                }
-                                            </script>
-                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Bilan Lipidique</td></tr>
-                                            <script>
-                                                const lipidiqueData = { "Cholestérol total (g/L)": "< 2.0", "Triglycérides (g/L)": "< 1.5", "HDL Cholestérol (g/L)": "> 0.4", "LDL Cholestérol (g/L)": "< 1.6" };
-                                                for(const [key, value] of Object.entries(lipidiqueData)) {
-                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
-                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
-                                                    row += '</tr>';
-                                                    document.write(row);
-                                                }
-                                            </script>
-                                            <tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">Gaz du Sang (artériel)</td></tr>
-                                            <script>
-                                                const gdsData = { "pH": "7.35-7.45", "PaCO2 (mmHg)": "35-45", "PaO2 (mmHg)": "80-100", "HCO3- (mmol/L)": "22-26", "SaO2 (%)": "> 95" };
-                                                for(const [key, value] of Object.entries(gdsData)) {
-                                                    let row = `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
-                                                    for(let i=0; i<6; i++) row += '<td class="p-0"><input type="text"></td>';
-                                                    row += '</tr>';
-                                                    document.write(row);
-                                                }
-                                            </script>
+                                        <tbody id="bio-tbody">
                                         </tbody>
                                     </table>
                                 </div>
@@ -625,31 +545,9 @@
                                 <h2 class="card-header">Tableau de Surveillance (Pancarte)</h2>
                                 <div class="overflow-x-auto mt-4">
                                     <table class="w-full border-collapse text-sm text-center diagram" id="pancarte-table">
-                                        <thead class="bg-gray-100 text-gray-600">
-                                            <tr>
-                                                <th class="p-2 text-left" rowspan="2">Paramètres</th>
-                                                <script>for(let i=0; i<11; i++) { document.write(`<th class="p-2 text-center" colspan="3">Jour ${i}</th>`);}</script>
-                                            </tr>
-                                            <tr><script>for(let i=0; i<11; i++) document.write(`<th class="p-1 w-32">Matin</th><th class="p-1 w-32">Soir</th><th class="p-1 w-32">Nuit</th>`)</script></tr>
+                                        <thead id="pancarte-thead" class="bg-gray-100 text-gray-600">
                                         </thead>
-                                        <tbody>
-                                            <script>
-                                                const pancarteData = {
-                                                    'Pouls (/min)': [], 'Tension (mmHg)': [], 'Température (°C)': [], 'SpO2 (%)': [], 'Douleur (EVA /10)': []
-                                                };
-                                                for (const param in pancarteData) {
-                                                    let row = `<tr><td class="p-2 text-left font-semibold">${param}</td>`;
-                                                    let inputHtml = '<input type="text" value="" onchange="updatePancarteChart()">'; 
-                                                    if (param === 'Température (°C)') {
-                                                        inputHtml = '<input type="number" step="0.1" value="" onchange="updatePancarteChart()">';
-                                                    }
-                                                    for(let i=0; i<33; i++) {
-                                                        row += `<td class="p-0">${inputHtml}</td>`;
-                                                    }
-                                                    row += `</tr>`;
-                                                    document.write(row);
-                                                }
-                                            </script>
+                                        <tbody id="pancarte-tbody">
                                         </tbody>
                                     </table>
                                 </div>
@@ -659,11 +557,7 @@
                              <div class="card p-6">
                                 <h2 class="card-header">Diagramme de Soins</h2>
                                 <div class="overflow-x-auto"><table class="w-full table-auto text-sm text-center diagram" id="care-diagram-table">
-                                    <thead class="font-semibold bg-gray-100">
-                                        <tr><th class="p-2 text-left">Soin / Surveillance</th>
-                                            <script>for(let i=0; i<11; i++) document.write(`<th colspan="3" class="border-l">Jour ${i}</th>`)</script>
-                                        </tr>
-                                        <tr><th></th><script>for(let i=0; i<11; i++) document.write(`<th class="border-l">M</th><th>S</th><th>N</th>`)</script></tr>
+                                    <thead id="care-diagram-thead" class="font-semibold bg-gray-100">
                                     </thead>
                                     <tbody id="care-diagram-tbody">
                                          <tr class="font-bold bg-blue-50 text-left"><td class="p-2" colspan="34">Hygiène & Confort</td></tr>
@@ -684,7 +578,7 @@
                                        <input type="text" id="care-name" class="styled-input mt-1 block w-full rounded-md shadow-sm sm:text-sm">
                                    </div>
                                     <div class="flex justify-start md:col-start-4">
-                                       <button type="button" onclick="addCareDiagramRow()" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600">Ajouter</button>
+                                       <button type="button" onclick="addCareDiagramRow()" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-rose-600 hover:bg-rose-700">Ajouter</button>
                                    </div>
                                 </form>
                              </div>
@@ -695,7 +589,6 @@
         </div>
         </div>
     
-    <!-- MODAL DE CONFIRMATION (inchangée) -->
     <div id="custom-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
             <h3 class="text-lg font-bold text-gray-800" id="custom-confirm-title">Confirmation requise</h3>
@@ -707,7 +600,6 @@
         </div>
     </div>
 
-    <!-- ÉLÉMENTS DU TUTORIEL -->
     <div id="tutorial-overlay" class="hidden" onclick="endTutorial(true)">
         <div id="tutorial-step-box" onclick="event.stopPropagation()">
             <p id="tutorial-text" class="text-gray-700 text-sm mb-4">Ceci est une étape du tutoriel.</p>
@@ -735,6 +627,15 @@
             startX: 0,
             startLeft: 0,
             startWidth: 0,
+        };
+
+        const nfsData = { "Hématies (T/L)": "4.5-5.5", "Hémoglobine (g/dL)": "13-17", "Hématocrite (%)": "40-52", "VGM (fL)": "80-100", "Leucocytes (G/L)": "4-10", "Plaquettes (G/L)": "150-400" };
+        const ionoData = { "Sodium (mmol/L)": "136-145", "Potassium (mmol/L)": "3.5-5.1", "Chlore (mmol/L)": "98-107", "Bicarbonates (mmol/L)": "22-29", "Urée (mmol/L)": "2.8-7.2", "Créatinine (µmol/L)": "62-106" };
+        const hepatiqueData = { "ASAT (UI/L)": "< 40", "ALAT (UI/L)": "< 41", "Gamma-GT (UI/L)": "11-50", "PAL (UI/L)": "40-129", "Bilirubine totale (µmol/L)": "5-21" };
+        const lipidiqueData = { "Cholestérol total (g/L)": "< 2.0", "Triglycérides (g/L)": "< 1.5", "HDL Cholestérol (g/L)": "> 0.4", "LDL Cholestérol (g/L)": "< 1.6" };
+        const gdsData = { "pH": "7.35-7.45", "PaCO2 (mmHg)": "35-45", "PaO2 (mmHg)": "80-100", "HCO3- (mmol/L)": "22-26", "SaO2 (%)": "> 95" };
+        const pancarteData = {
+            'Pouls (/min)': [], 'Tension (mmHg)': [], 'Température (°C)': [], 'SpO2 (%)': [], 'Douleur (EVA /10)': []
         };
 
         function getSaveKey(patientId) {
@@ -920,47 +821,29 @@
             if (!file) return;
             const reader = new FileReader();
 
-            // Log de début
-            console.log("Tentative d'importation du fichier:", file.name);
-
             reader.onload = e => {
-                // Log du contenu lu
-                console.log("Fichier lu avec succès. Tentative d'analyse JSON.");
                 const content = e.target.result;
                 try {
-                    // Vérification simple du contenu avant l'analyse
                     if (!content || typeof content !== 'string' || content.trim().length === 0) {
                          throw new Error("Le contenu du fichier est vide ou invalide.");
                     }
-                    console.log("Contenu brut:", content.substring(0, 100) + "..."); // Affiche les 100 premiers caractères
-
                     const jsonData = JSON.parse(content); 
-                    console.log("Analyse JSON réussie.");
-
-                    // Vérification optionnelle: s'assurer que c'est bien un objet
                     if (typeof jsonData !== 'object' || jsonData === null) {
                          throw new Error("Le fichier JSON ne contient pas un objet valide.");
                     }
-
                     const SAVE_KEY = getSaveKey(activePatientId);
                     localStorage.setItem(SAVE_KEY, content);
-                    console.log("Données sauvegardées dans localStorage. Rechargement de la page.");
                     location.reload();
                 } catch (error) {
-                    // Remplacer alert() par la modale customisée
-                    console.error("Erreur lors de l'analyse JSON ou de la sauvegarde:", error);
                     showCustomAlert("Erreur d'importation", `Le fichier n'est pas un JSON valide ou est corrompu. Erreur: ${error.message}`);
                 }
             };
-
-            // Gestionnaire d'erreur pour FileReader
             reader.onerror = (e) => {
-                console.error("Erreur lors de la lecture du fichier:", e);
                 showCustomAlert("Erreur de lecture", "Impossible de lire le fichier sélectionné.");
             };
 
-            reader.readAsText(file); // CORRECTION: readText -> readAsText
-            event.target.value = ''; // Réinitialiser pour permettre de re-sélectionner le même fichier
+            reader.readAsText(file);
+            event.target.value = '';
         }
         function initSidebar() {
             const list = document.getElementById('patient-list');
@@ -988,7 +871,7 @@
             });
         }
         function resetForm() {
-            document.querySelectorAll('main input, main textarea').forEach(el => {
+            document.querySelectorAll('#patient-header-form input, #patient-header-form textarea, main input, main textarea').forEach(el => {
                 if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
                 else if (el.type !== 'file') el.value = '';
             });
@@ -1017,7 +900,99 @@
             const mainContent = document.getElementById('main-content-wrapper');
             mainContent.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        function generateBioRows(title, data) {
+            let html = `<tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">${title}</td></tr>`;
+            for (const [key, value] of Object.entries(data)) {
+                html += `<tr><td class="p-2 text-left font-semibold">${key}</td><td class="p-2 text-left text-xs">${value}</td>`;
+                for (let i = 0; i < 6; i++) {
+                    html += '<td class="p-0"><input type="text"></td>';
+                }
+                html += '</tr>';
+            }
+            return html;
+        }
+
+        function initializeDynamicTables() {
+            let html = '';
+
+            const prescriptionThead = document.getElementById('prescription-thead');
+            if (prescriptionThead) {
+                html = '<tr><th class="p-2 text-left align-bottom" rowspan="2">Médicament / Soin</th><th class="p-2 text-left align-bottom" rowspan="2">Posologie</th><th class="p-2 text-left align-bottom" rowspan="2">Voie</th><th class="p-2 text-left align-bottom" rowspan="2">Date de début</th>';
+                for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="4">Jour ${i}</th>`;}
+                html += '</tr><tr>';
+                for(let i=0; i<11; i++) { html += `<th class="p-1 text-center w-8">M</th><th class="p-1 text-center w-8">Mi</th><th class="p-1 text-center w-8">S</th><th class="p-1 text-center w-8">N</th>`;}
+                html += '</tr>';
+                prescriptionThead.innerHTML = html;
+            }
+
+            const bioThead = document.getElementById('bio-thead');
+            if (bioThead) {
+                html = '<tr><th class="p-2 text-left w-1/4">Analyse</th><th class="p-2 text-left w-1/4">Valeurs de référence</th>';
+                for(let i=0; i<6; i++) {
+                    html += `<th class="p-1"><input type="text" placeholder="JJ/MM/AA" class="font-semibold text-center w-24 bg-transparent"></th>`;
+                }
+                html += '</tr>';
+                bioThead.innerHTML = html;
+            }
+
+            const bioTbody = document.getElementById('bio-tbody');
+            if (bioTbody) {
+                html = '';
+                html += generateBioRows('Numération Formule Sanguine (NFS)', nfsData);
+                html += generateBioRows('Bilan Électrolytique', ionoData);
+                html += generateBioRows('Bilan Hépatique', hepatiqueData);
+                html += generateBioRows('Bilan Lipidique', lipidiqueData);
+                html += generateBioRows('Gaz du Sang (artériel)', gdsData);
+                bioTbody.innerHTML = html;
+            }
+
+            const pancarteThead = document.getElementById('pancarte-thead');
+            if (pancarteThead) {
+                html = '<tr><th class="p-2 text-left" rowspan="2">Paramètres</th>';
+                for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="3">Jour ${i}</th>`;}
+                html += '</tr><tr>';
+                for(let i=0; i<11; i++) { html += `<th class="p-1 w-32">Matin</th><th class="p-1 w-32">Soir</th><th class="p-1 w-32">Nuit</th>`;}
+                html += '</tr>';
+                pancarteThead.innerHTML = html;
+            }
+
+            const pancarteTbody = document.getElementById('pancarte-tbody');
+            if (pancarteTbody) {
+                html = '';
+                for (const param in pancarteData) {
+                    html += `<tr><td class="p-2 text-left font-semibold">${param}</td>`;
+                    let inputHtml = '<input type="text" value="" onchange="updatePancarteChart()">'; 
+                    if (param === 'Température (°C)') {
+                        inputHtml = '<input type="number" step="0.1" value="" onchange="updatePancarteChart()">';
+                    }
+                    for(let i=0; i<33; i++) {
+                        html += `<td class="p-0">${inputHtml}</td>`;
+                    }
+                    html += `</tr>`;
+                }
+                pancarteTbody.innerHTML = html;
+            }
+
+            const careDiagramThead = document.getElementById('care-diagram-thead');
+            if (careDiagramThead) {
+                html = '<tr><th class="p-2 text-left">Soin / Surveillance</th>';
+                for(let i=0; i<11; i++) { html += `<th colspan="3" class="border-l">Jour ${i}</th>`;}
+                html += '</tr><tr><th></th>';
+                for(let i=0; i<11; i++) { html += `<th class="border-l">M</th><th>S</th><th>N</th>`;}
+                html += '</tr>';
+                careDiagramThead.innerHTML = html;
+            }
+            
+            const careDiagramTbody = document.getElementById('care-diagram-tbody');
+            if(careDiagramTbody) {
+                careDiagramTbody.innerHTML = ``;
+            }
+        }
+
+
         function initApp() {
+            initializeDynamicTables();
             initSidebar();
             switchPatient(activePatientId, true);
             let saveTimeout;
@@ -1037,9 +1012,7 @@
             if (activeTabButton) changeTab({ currentTarget: activeTabButton }, activeTabId);
             else document.querySelector('nav[aria-label="Tabs"] button').click();
 
-            // Lancement automatique du tutoriel
             if (!localStorage.getItem('tutorialCompleted')) {
-                // Léger délai pour s'assurer que tout est chargé
                 setTimeout(startTutorial, 500);
             }
         }
@@ -1052,12 +1025,10 @@
             const cancelBtn = document.getElementById('custom-confirm-cancel');
             const okBtn = document.getElementById('custom-confirm-ok');
 
-            // --- Réinitialisation avant configuration ---
             cancelBtn.classList.remove('hidden');
             okBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500');
             okBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
             okBtn.textContent = 'Confirmer';
-            // --- Fin Réinitialisation ---
 
             titleEl.textContent = 'Confirmation requise';
             messageEl.textContent = message;
@@ -1072,15 +1043,11 @@
         function hideConfirmation() {
             const modal = document.getElementById('custom-confirm-modal');
             const modalBox = document.getElementById('custom-confirm-box');
-            // Plus besoin de réinitialiser ici, c'est fait au début de show...()
-            // const cancelBtn = document.getElementById('custom-confirm-cancel');
-            // const okBtn = document.getElementById('custom-confirm-ok');
-
+            
             modalBox.classList.add('scale-95', 'opacity-0');
             setTimeout(() => {
                 modal.classList.add('hidden');
                 
-                // Réinitialisation simple du callback
                 confirmCallback = null;
             }, 200);
         }
@@ -1102,17 +1069,15 @@
             const cancelBtn = document.getElementById('custom-confirm-cancel');
             const okBtn = document.getElementById('custom-confirm-ok');
 
-             // --- Réinitialisation avant configuration ---
-            cancelBtn.classList.add('hidden'); // Cacher Annuler pour une alerte
+            cancelBtn.classList.add('hidden');
             okBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
             okBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500');
             okBtn.textContent = 'Fermer';
-             // --- Fin Réinitialisation ---
 
             titleEl.textContent = title;
             messageEl.textContent = message;
 
-            confirmCallback = null; // Assure qu'aucune action n'est déclenchée en cliquant sur "Fermer"
+            confirmCallback = null;
             
             modal.classList.remove('hidden');
             setTimeout(() => {
@@ -1202,6 +1167,17 @@
                 });
             }
         }
+
+        function deleteCareDiagramRow(button) {
+            const row = button.closest('tr');
+            if (row) {
+                showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer ce soin du diagramme ?", () => {
+                    row.remove();
+                    saveData(activePatientId);
+                });
+            }
+        }
+
         function autoResize(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = textarea.scrollHeight + 'px';
@@ -1210,7 +1186,7 @@
             const elem = document.documentElement;
             const icon = document.getElementById('fullscreen-icon');
             if (!document.fullscreenElement) {
-                elem.requestFullscreen().catch(err => console.error(err));
+                elem.requestFullscreen().catch(err => console.log(err.message));
                 icon.classList.replace('fa-expand', 'fa-compress');
             } else {
                 document.exitFullscreen();
@@ -1272,7 +1248,7 @@
             activeSection.classList.add('active');
             const baseClasses = "min-h-[4rem] py-2 px-2 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center text-center";
             const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
-            const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", violet: "text-violet-900 border-violet-300 bg-gradient-to-br from-violet-200 to-fuchsia-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
+            const activeClasses = { blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"};
             document.querySelectorAll('nav[aria-label="Tabs"] button').forEach(tab => tab.className = `${baseClasses} ${inactiveClasses}`);
             const clickedTab = event.currentTarget;
             const color = clickedTab.dataset.color;
@@ -1384,7 +1360,18 @@
             const name = document.getElementById('care-name').value.trim();
             if (!name) return;
             const newRow = document.getElementById('care-diagram-tbody').insertRow();
-            let cellsHTML = `<td class="text-left p-2">${name}</td>`;
+            
+            let cellsHTML = `
+                <td class="p-2 text-left align-top">
+                    <div class="flex items-start justify-between">
+                        <span>${name}</span>
+                        <button type="button" onclick="deleteCareDiagramRow(this)" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer ce soin">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
             for(let i=0; i<11; i++) cellsHTML += `<td class="border-l"><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td>`;
             newRow.innerHTML = cellsHTML;
             document.getElementById('new-care-form').reset();
@@ -1553,9 +1540,6 @@
             });
         }
 
-        // --- LOGIQUE DU TUTORIEL ---
-
-        // Définition des étapes du tutoriel
         const tutorialSteps = [
             {
                 element: '#patient-list li:first-child button',
@@ -1612,29 +1596,24 @@
             document.getElementById('tutorial-overlay').classList.add('hidden');
             if (highlightedElement) {
                 highlightedElement.classList.remove('tutorial-highlight');
-                // Remove specific styles for header buttons if they were highlighted (MIS À JOUR)
                 if (highlightedElement.closest('#header-buttons')) {
-                    highlightedElement.style = ''; // Reset inline styles
+                    highlightedElement.style = '';
                 }
                 highlightedElement = null;
             }
             if (setFlag) {
-                // Marque le tutoriel comme complété pour ne pas le relancer
                 localStorage.setItem('tutorialCompleted', 'true');
             }
         }
 
         function showTutorialStep(index) {
-            // Enlever le surlignage précédent (MIS À JOUR)
             if (highlightedElement) {
                 highlightedElement.classList.remove('tutorial-highlight');
-                // Remove specific styles for header buttons if they were highlighted
                 if (highlightedElement.closest('#header-buttons')) {
-                    highlightedElement.style = ''; // Reset inline styles
+                    highlightedElement.style = '';
                 }
             }
 
-            // Vérifier si le tutoriel est terminé
             if (index >= tutorialSteps.length) {
                 endTutorial(true);
                 return;
@@ -1646,54 +1625,42 @@
             const stepText = document.getElementById('tutorial-text');
             const nextButton = document.getElementById('tutorial-next-btn');
 
-            // Gérer le cas où l'élément n'existe pas (ex: liste de patients vide)
             if (!element) {
-                // Si on ne trouve pas le premier patient, on essaie de surligner la sidebar
                 if (index === 0) {
                      tutorialSteps[0].element = '#sidebar';
                      tutorialSteps[0].text = "Bienvenue ! Voici la barre latérale où les patients apparaîtront. Pour l'instant, elle est vide. Vous pouvez commencer par remplir les dossiers.";
-                     showTutorialStep(index); // Réeessayer avec le nouvel élément
+                     showTutorialStep(index);
                 } else {
-                    // Si un autre élément est manquant, on passe à l'étape suivante
-                    console.warn(`Élément du tutoriel non trouvé: ${step.element}. Passage à l'étape suivante.`);
                     currentStepIndex++;
                     showTutorialStep(currentStepIndex);
                 }
                 return;
             }
 
-            // Mettre à jour le texte
             stepText.textContent = step.text;
 
-            // Mettre à jour le bouton "Suivant"
             if (index === tutorialSteps.length - 1) {
                 nextButton.textContent = "Terminer";
             } else {
                 nextButton.textContent = "Suivant";
             }
             
-            // Surligner le nouvel élément
             element.classList.add('tutorial-highlight');
             highlightedElement = element;
 
-            // Corrige le problème des icônes de la barre de titre (MIS À JOUR)
             if (element.closest('#header-buttons')) {
-                // Force le z-index pour les icônes de la barre de titre
                 element.style.setProperty('z-index', '9997', 'important');
                 element.style.setProperty('position', 'relative', 'important');
             }
 
 
-            // Positionner la boîte de dialogue
             const rect = element.getBoundingClientRect();
             const boxRect = stepBox.getBoundingClientRect();
             const margin = 15;
 
-            // Positionnement par défaut (en bas)
             let top = rect.bottom + margin;
             let left = rect.left + (rect.width / 2) - (boxRect.width / 2);
 
-            // Ajustement basé sur la position demandée
             if (step.position === 'right') {
                 top = rect.top + (rect.height / 2) - (boxRect.height / 2);
                 left = rect.right + margin;
@@ -1708,12 +1675,10 @@
                  left = rect.right - boxRect.width;
             }
 
-            // S'assurer que la boîte ne sort pas de l'écran
             if (top < margin) top = margin;
             if (left < margin) left = margin;
             if (top + boxRect.height > window.innerHeight - margin) {
                 top = window.innerHeight - boxRect.height - margin;
-                // Si 'top' était demandé, le mettre en bas
                 if (step.position === 'top') top = rect.bottom + margin;
             }
             if (left + boxRect.width > window.innerWidth - margin) {
@@ -1725,19 +1690,17 @@
             stepBox.style.left = `${left}px`;
         }
 
-        // Écouteur pour le bouton "Suivant"
         document.getElementById('tutorial-next-btn').addEventListener('click', () => {
             currentStepIndex++;
             showTutorialStep(currentStepIndex);
         });
-
-        // --- FIN LOGIQUE TUTORIEL ---
 
 
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
+
 
 
 
