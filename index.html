@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EIdos - Accueil</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome pour l'icône LinkedIn --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap" rel="stylesheet">
@@ -18,6 +19,21 @@
         .font-custom-title {
             font-family: 'Parkinsans', sans-serif;
             font-weight: 600;
+        }
+        /* Style pour centrer l'icône Font Awesome */
+        .btn-icon-centered {
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Pour centrer le texte et l'icône si nécessaire */
+        }
+        .btn-icon-centered .fa-linkedin {
+            font-size: 1.25rem; /* Ajuste la taille si besoin pour correspondre aux SVG h-5 w-5 */
+            height: 1.25rem; /* Force la hauteur */
+            width: 1.25rem; /* Force la largeur */
+            line-height: 1; /* Supprime l'espace additionnel de la ligne */
+            display: flex; /* Utilise flexbox pour centrer le contenu de l'icône si elle est complexe */
+            align-items: center; /* Centrer verticalement */
+            justify-content: center; /* Centrer horizontalement */
         }
     </style>
 </head>
@@ -47,12 +63,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
                         </svg>
                     </a>
-                    <a href="URL_DU_TUTORIEL" 
-                       class="w-full mt-4 inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-md text-lg font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-300 ease-in-out hover:scale-105">
-                        Voir le tutoriel
-                        <svg class="ml-3 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" />
-                        </svg>
+                    <!-- Bouton Contact LinkedIn --><a href="https://www.linkedin.com/in/lucas-s%C3%A9raudie-1858ba14b/" target="_blank"
+                       class="w-full mt-4 inline-flex justify-center btn-icon-centered py-3 px-8 border border-transparent rounded-lg shadow-md text-lg font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-300 ease-in-out hover:scale-105">
+                        Me Contacter
+                        <i class="fab fa-linkedin ml-3 -mr-1 text-gray-700"></i>
                     </a>
                 </div>
                 <div class="mt-12 text-center">
