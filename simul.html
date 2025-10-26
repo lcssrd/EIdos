@@ -8,13 +8,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        /* MODIFICATION : Import de la police Parkinsans en plus d'Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap');
         html {
             scroll-behavior: smooth;
         }
         body {
             font-family: 'Inter', sans-serif;
             color: #1f2937;
+        }
+
+        /* MODIFICATION : Ajout du style pour le titre EIdos */
+        #sidebar h1 {
+            font-family: 'Parkinsans', sans-serif;
+            font-weight: 600;
         }
 
         #main-content-wrapper {
@@ -292,6 +299,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
                 </svg>
                 <div>
+                    <!-- Le H1 ici utilisera la nouvelle police "Parkinsans" -->
                     <h1 class="text-2xl font-bold">EIdos</h1>
                     <p class="text-xs text-cyan-100">Simulation de Dossier Patient</p>
                 </div>
@@ -634,6 +642,8 @@
         const hepatiqueData = { "ASAT (UI/L)": "< 40", "ALAT (UI/L)": "< 41", "Gamma-GT (UI/L)": "11-50", "PAL (UI/L)": "40-129", "Bilirubine totale (µmol/L)": "5-21" };
         const lipidiqueData = { "Cholestérol total (g/L)": "< 2.0", "Triglycérides (g/L)": "< 1.5", "HDL Cholestérol (g/L)": "> 0.4", "LDL Cholestérol (g/L)": "< 1.6" };
         const gdsData = { "pH": "7.35-7.45", "PaCO2 (mmHg)": "35-45", "PaO2 (mmHg)": "80-100", "HCO3- (mmol/L)": "22-26", "SaO2 (%)": "> 95" };
+        // MODIFICATION : Ajout des données pour la CRP
+        const inflammationData = { "CRP (mg/L)": "< 5" };
         const pancarteData = {
             'Pouls (/min)': [], 'Tension (mmHg)': [], 'Température (°C)': [], 'SpO2 (%)': [], 'Douleur (EVA /10)': []
         };
@@ -641,11 +651,14 @@
         function getSaveKey(patientId) {
             return `dossierPatientData_${patientId}`;
         }
+
+        // MODIFICATION : `saveData` pour générer un JSON structuré
         function saveData(patientId) {
             if (!patientId) return;
             const SAVE_KEY = getSaveKey(patientId);
             const state = {};
 
+            // 1. Sauvegarder tous les champs <input> et <textarea> simples avec un ID
             document.querySelectorAll('input[id], textarea[id]').forEach(el => {
                 const id = el.id;
                 if (el.type === 'checkbox' || el.type === 'radio') {
@@ -654,15 +667,50 @@
                     state[id] = el.value;
                 }
             });
+
+            // 2. Sauvegarder le contenu HTML des listes dynamiques (Observations, Transmissions)
             const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'care-diagram-tbody'];
             dynamicContentIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) state[id + '_html'] = el.innerHTML;
             });
 
-            state.bioTableValues = Array.from(document.querySelectorAll('#bio-table tbody input[type="text"]')).map(input => input.value);
-            state.bioTableDateHeaders = Array.from(document.querySelectorAll('#bio-table thead input[type="text"]')).map(input => input.value);
-            state.pancarteValues = Array.from(document.querySelectorAll('#pancarte-table tbody input')).map(input => input.value);
+            // 3. NOUVEAU : Sauvegarder les données de Biologie dans un objet structuré
+            const bioData = {
+                dates: [],
+                analyses: {}
+            };
+            document.querySelectorAll('#bio-table thead input[type="text"]').forEach(input => {
+                bioData.dates.push(input.value);
+            });
+            document.querySelectorAll('#bio-table tbody tr').forEach(row => {
+                // S'assurer que c'est une ligne d'analyse (contient une cellule de titre)
+                if (row.cells.length > 1 && row.cells[0].classList.contains('font-semibold')) { 
+                    const analyseName = row.cells[0].textContent.trim();
+                    if (analyseName) {
+                        bioData.analyses[analyseName] = [];
+                        row.querySelectorAll('input[type="text"]').forEach(input => {
+                            bioData.analyses[analyseName].push(input.value);
+                        });
+                    }
+                }
+            });
+            state.biologie = bioData;
+
+            // 4. NOUVEAU : Sauvegarder les données de Pancarte dans un objet structuré
+            const pancarteData = {};
+            document.querySelectorAll('#pancarte-table tbody tr').forEach(row => {
+                const paramName = row.cells[0].textContent.trim();
+                if (paramName) {
+                    pancarteData[paramName] = [];
+                    row.querySelectorAll('input').forEach(input => {
+                        pancarteData[paramName].push(input.value);
+                    });
+                }
+            });
+            state.pancarte = pancarteData;
+
+            // 5. Sauvegarder les Prescriptions (déjà structurées)
             state.prescriptions = [];
             document.querySelectorAll('#prescription-tbody tr').forEach(row => {
                 const isIV = row.dataset.type === 'iv';
@@ -689,30 +737,48 @@
                 }
                 state.prescriptions.push(prescriptionData);
             });
+
+            // 6. Sauvegarder les cases à cocher du diagramme de soins
             state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
+            
+            // 7. Sauvegarder l'état des boutons de verrouillage
             state.lockButtonStates = {};
             document.querySelectorAll('button[id^="lock-"]').forEach(btn => {
                 state.lockButtonStates[btn.id] = btn.innerHTML.includes('fa-lock');
             });
+
+            // 8. Sauvegarder le nom du patient pour la barre latérale
             const nomUsage = document.getElementById('patient-nom-usage').value.trim();
             const prenom = document.getElementById('patient-prenom').value.trim();
             const patientName = `${nomUsage} ${prenom}`.trim();
             state['sidebar_patient_name'] = patientName;
+            
+            // 9. Sauvegarder dans le localStorage
             localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+            
+            // 10. Mettre à jour la barre latérale
             const sidebarEntry = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-name`);
             if (sidebarEntry) {
                 sidebarEntry.textContent = patientName || `Chambre ${patientId.split('_')[1]}`;
             }
         }
+        
+        // MODIFICATION : `loadData` pour lire le JSON structuré
         function loadData(patientId) {
             if (!patientId) return;
             const SAVE_KEY = getSaveKey(patientId);
             const savedState = localStorage.getItem(SAVE_KEY);
+
             if (!savedState || savedState === '{}') {
                 resetForm();
             } else {
                 const state = JSON.parse(savedState);
+                
+                // 1. Charger tous les champs <input> et <textarea> simples
                 Object.keys(state).forEach(id => {
+                    // Ne pas essayer de charger les objets structurés comme des champs simples
+                    if (id === 'biologie' || id === 'pancarte' || id === 'prescriptions' || id === 'lockButtonStates' || id === 'careDiagramCheckboxes' || id.endsWith('_html')) return;
+                    
                     const el = document.getElementById(id);
                     if (el) {
                         if (el.type === 'checkbox' || el.type === 'radio') {
@@ -722,6 +788,8 @@
                         }
                     }
                 });
+
+                // 2. Charger le contenu HTML dynamique (Observations, Transmissions)
                 const dynamicContentIds = ['observations-list', 'transmissions-list-ide', 'care-diagram-tbody'];
                  dynamicContentIds.forEach(id => {
                     const el = document.getElementById(id);
@@ -729,6 +797,8 @@
                         el.innerHTML = state[id + '_html'];
                     }
                 });
+
+                // 3. Charger les Prescriptions
                 if (state.prescriptions) {
                     const tbody = document.getElementById('prescription-tbody');
                     tbody.innerHTML = '';
@@ -736,26 +806,46 @@
                         addPrescription(pData, true);
                     });
                 }
+                
+                // 4. Charger les cases à cocher du diagramme de soins
                 if (state.careDiagramCheckboxes) {
                     document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
                         cb.checked = state.careDiagramCheckboxes[index] || false;
                     });
                 }
-                 if (state.bioTableValues) {
-                    document.querySelectorAll('#bio-table tbody input[type="text"]').forEach((input, index) => {
-                        input.value = state.bioTableValues[index] || '';
-                    });
-                }
-                if (state.bioTableDateHeaders) {
+
+                // 5. NOUVEAU : Charger les données de Biologie depuis l'objet structuré
+                if (state.biologie) {
                     document.querySelectorAll('#bio-table thead input[type="text"]').forEach((input, index) => {
-                        input.value = state.bioTableDateHeaders[index] || '';
+                        if (state.biologie.dates && state.biologie.dates[index]) {
+                            input.value = state.biologie.dates[index];
+                        }
+                    });
+                    document.querySelectorAll('#bio-table tbody tr').forEach(row => {
+                        if (row.cells.length > 1 && row.cells[0].classList.contains('font-semibold')) {
+                            const analyseName = row.cells[0].textContent.trim();
+                            if (analyseName && state.biologie.analyses && state.biologie.analyses[analyseName]) {
+                                row.querySelectorAll('input[type="text"]').forEach((input, index) => {
+                                    input.value = state.biologie.analyses[analyseName][index] || '';
+                                });
+                            }
+                        }
                     });
                 }
-                if (state.pancarteValues) {
-                    document.querySelectorAll('#pancarte-table tbody input').forEach((input, index) => {
-                        input.value = state.pancarteValues[index] || '';
+
+                // 6. NOUVEAU : Charger les données de Pancarte depuis l'objet structuré
+                if (state.pancarte) {
+                    document.querySelectorAll('#pancarte-table tbody tr').forEach(row => {
+                        const paramName = row.cells[0].textContent.trim();
+                        if (paramName && state.pancarte && state.pancarte[paramName]) {
+                            row.querySelectorAll('input').forEach((input, index) => {
+                                input.value = state.pancarte[paramName][index] || '';
+                            });
+                        }
                     });
                 }
+                
+                // 7. Mettre à jour les dates dynamiques (J0, J1...)
                 const entryDateValue = document.getElementById('patient-entry-date').value;
                 if (entryDateValue) {
                     const entryDate = new Date(entryDateValue);
@@ -763,6 +853,8 @@
                         updateDynamicDates(entryDate);
                     }
                 }
+                
+                // 8. Charger l'état des boutons de verrouillage
                 if (state.lockButtonStates) {
                     Object.keys(state.lockButtonStates).forEach(buttonId => {
                         if (state.lockButtonStates[buttonId]) {
@@ -778,14 +870,18 @@
                     });
                 }
             }
+            
+            // Mettre à jour le nom de la chambre (non sauvegardé dans le JSON)
             const roomDisplay = document.querySelector(`#patient-list button[data-patient-id="${patientId}"] .patient-room`);
             if (roomDisplay) {
                 const patientRoomEl = document.getElementById('patient-room');
                 if (patientRoomEl) patientRoomEl.value = roomDisplay.textContent;
             }
+            
             updateAgeDisplay();
             updateJourHosp(); 
         }
+
         function clearCurrentPatientData() {
             const message = `Êtes-vous sûr de vouloir effacer le dossier du patient dans la chambre ${activePatientId.split('_')[1]} ? Cette action est irréversible.`;
             showDeleteConfirmation(message, () => {
@@ -944,6 +1040,8 @@
                 html += generateBioRows('Bilan Hépatique', hepatiqueData);
                 html += generateBioRows('Bilan Lipidique', lipidiqueData);
                 html += generateBioRows('Gaz du Sang (artériel)', gdsData);
+                // MODIFICATION : Ajout de la ligne CRP
+                html += generateBioRows('Marqueurs Inflammation', inflammationData);
                 bioTbody.innerHTML = html;
             }
 
@@ -1459,7 +1557,7 @@
         }
         function handleIVMouseUp(e) {
             if (!ivInteraction.active) return;
-            document.body.className = document.body.className.replace(/is-(drawing|resizing|moving)-iv/g, '').trim();
+            document.body.className = document.body.className.replace(/is-(drawing|resizing|moving)-iv/g, '').trim().trim();
             ivInteraction = { active: false, mode: null, targetBar: null, targetCell: null, startX: 0, startLeft: 0, startWidth: 0 };
             saveData(activePatientId);
         }
@@ -1700,8 +1798,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
