@@ -290,6 +290,8 @@
         }
 
     </style>
+<!-- UMAMI script de stat -->
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="a33bd886-5e06-4a52-b1d6-1c3181d1214f"></script>
 </head>
 <body class="flex h-screen bg-gray-100">
     <aside id="sidebar" class="w-64 bg-white shadow-xl flex flex-col flex-shrink-0 m-4 rounded-2xl h-[calc(100vh-2rem)] transition-all duration-300 ease-in-out">
@@ -299,8 +301,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
                 </svg>
                 <div>
-                    <!-- Le H1 ici utilisera la nouvelle police "Parkinsans" -->
-                    <h1 class="text-2xl font-bold">EIdos</h1>
+
+
+
+                     <!-- MODIFICATION : Ajout d'un conteneur flex pour aligner le titre et le badge "Beta" -->
+                    <div class="flex items-center space-x-4">
+                        <!-- Le H1 ici utilisera la nouvelle police "Parkinsans" -->
+                        <h1 class="text-2xl font-bold">EIdos</h1>
+                        <!-- AJOUT : Badge "Beta" -->
+                        <span class="bg-white text-teal-700 text-xs font-bold uppercase px-2 py-0,5 rounded-full">V1</span>
+                    </div>
                     <p class="text-xs text-cyan-100">Simulation de Dossier Patient</p>
                 </div>
             </div>
@@ -1798,3 +1808,4 @@
     </script>
 </body>
 </html>
+
