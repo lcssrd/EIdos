@@ -1024,7 +1024,7 @@
 
             const prescriptionThead = document.getElementById('prescription-thead');
             if (prescriptionThead) {
-                html = '<tr><th class="p-2 text-left align-bottom" rowspan="2">Médicament / Soin</th><th class="p-2 text-left align-bottom" rowspan="2">Posologie</th><th class="p-2 text-left align-bottom" rowspan="2">Voie</th><th class="p-2 text-left align-bottom" rowspan="2">Date de début</th>';
+                html = '<tr><th class="p-2 text-left align-bottom min-w-[220px]" rowspan="2">Médicament / Soin</th><th class="p-2 text-left align-bottom min-w-[180px]" rowspan="2">Posologie</th><th class="p-2 text-left align-bottom min-w-[120px]" rowspan="2">Voie</th><th class="p-2 text-left align-bottom" rowspan="2" style="min-width: 100px;">Date de début</th>';
                 for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="4">Jour ${i}</th>`;}
                 html += '</tr><tr>';
                 for(let i=0; i<11; i++) { html += `<th class="p-1 text-center w-8">M</th><th class="p-1 text-center w-8">Mi</th><th class="p-1 text-center w-8">S</th><th class="p-1 text-center w-8">N</th>`;}
