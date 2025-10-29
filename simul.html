@@ -289,9 +289,25 @@
             background-color: white;
         }
 
+        /* colonnes petites et centrées pour M / Mi / S / N */
+        .small-col {
+        min-width: 44px;   /* largeur minimale utile : augmente si besoin (ex : 56px) */
+        width: 44px;       /* force une largeur cohérente */
+        text-align: center;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+        }
+        .small-col input[type="checkbox"] {
+        display: block;
+        margin: 0.35rem auto; /* centre la checkbox dans la cellule */
+        }
     </style>
+
+
 <!-- UMAMI script de stat -->
     <script defer src="https://cloud.umami.is/script.js" data-website-id="a33bd886-5e06-4a52-b1d6-1c3181d1214f"></script>
+
+
 </head>
 <body class="flex h-screen bg-gray-100">
     <aside id="sidebar" class="w-64 bg-white shadow-xl flex flex-col flex-shrink-0 m-4 rounded-2xl h-[calc(100vh-2rem)] transition-all duration-300 ease-in-out">
@@ -1027,7 +1043,7 @@
                 html = '<tr><th class="p-2 text-left align-bottom min-w-[220px]" rowspan="2">Médicament / Soin</th><th class="p-2 text-left align-bottom min-w-[180px]" rowspan="2">Posologie</th><th class="p-2 text-left align-bottom min-w-[120px]" rowspan="2">Voie</th><th class="p-2 text-left align-bottom" rowspan="2" style="min-width: 100px;">Date de début</th>';
                 for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="4">Jour ${i}</th>`;}
                 html += '</tr><tr>';
-                for(let i=0; i<11; i++) { html += `<th class="p-1 text-center w-8">M</th><th class="p-1 text-center w-8">Mi</th><th class="p-1 text-center w-8">S</th><th class="p-1 text-center w-8">N</th>`;}
+                for(let i=0; i<11; i++) { html += `<th class="p-1 text-center small-col">M</th><th class="p-1 text-center small-col">Mi</th><th class="p-1 text-center small-col">S</th><th class="p-1 text-center small-col">N</th>`;}
                 html += '</tr>';
                 prescriptionThead.innerHTML = html;
             }
@@ -1455,7 +1471,7 @@
                     for (let j = 0; j < 4; j++) {
                         const cbIndex = i * 4 + j;
                         const isChecked = fromLoad && checkboxes && checkboxes[cbIndex];
-                        checkboxCellsHTML += `<td class="p-0"><input type="checkbox" ${isChecked ? 'checked' : ''}></td>`;
+                        checkboxCellsHTML += `<td class="p-0 small-col"><input type="checkbox" ${isChecked ? 'checked' : ''}></td>`;
                     }
                 }
                 newRow.innerHTML = baseCellsHTML + checkboxCellsHTML;
