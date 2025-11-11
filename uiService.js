@@ -216,13 +216,16 @@
         const careDiagramThead = document.getElementById('care-diagram-thead');
         if (careDiagramThead) {
             html = '<tr><th class="p-2 text-left min-w-[220px]">Soin / Surveillance</th>';
-            for(let i=0; i<11; i++) { html += `<th colspan="8" class="border-l">Jour ${i}</th>`;}
+            // MODIFIÉ : colspan="3" au lieu de "8"
+            for(let i=0; i<11; i++) { html += `<th colspan="3" class="border-l">Jour ${i}</th>`;}
             html += '</tr><tr><th class="min-w-[220px]"></th>';
-            const hours = ['0h', '3h', '6h', '9h', '12h', '15h', '18h', '21h'];
+            // MODIFIÉ : "Matin", "Soir", "Nuit" au lieu des heures
+            const msn = ['Matin', 'Soir', 'Nuit'];
             for(let i=0; i<11; i++) { 
-                for (let j = 0; j < hours.length; j++) {
+                for (let j = 0; j < msn.length; j++) { // MODIFIÉ : boucle 3 fois
                     const borderClass = (j === 0) ? 'border-l' : '';
-                    html += `<th class="${borderClass} p-1 text-center small-col">${hours[j]}</th>`;
+                    // MODIFIÉ : Suppression de "small-col" et ajout d'un style pour centrer
+                    html += `<th class="${borderClass} p-1 text-center" style="min-width: 70px;">${msn[j]}</th>`;
                 }
             }
             html += '</tr>';
@@ -366,8 +369,9 @@
      * Réinitialise l'ensemble du formulaire principal.
      */
     function resetForm() {
-        document.querySelectorAll('#patient-header-form input, #patient-header-form textarea, main input, main textarea').forEach(el => {
+        document.querySelectorAll('#patient-header-form input, #patient-header-form textarea, main input, main textarea, main select').forEach(el => {
             if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
+            else if (el.tagName.toLowerCase() === 'select') el.selectedIndex = 0; // Réinitialise les listes déroulantes
             else if (el.type !== 'file') el.value = '';
         });
         ['observations-list', 'transmissions-list-ide', 'prescription-tbody'].forEach(id => {
@@ -512,7 +516,11 @@
                     dateOffset = utils.calculateDaysOffset(entryDateStr, oldStartDate);
                 }
                 
-                addPrescription({ ...pData, dateOffset: dateOffset }, true);
+                // Rétro-compatibilité pour l'ancien 'type'
+                if (pData.type === 'iv') pData.voie = 'IV';
+                if (pData.type === 'checkbox') pData.voie = 'Per Os';
+                
+                addPrescription({ ...pData, dateOffset: dateOffset, type: pData.voie }, true); // Le type est la voie
             });
         }
     }
@@ -685,7 +693,7 @@
         updateHeaders('#prescription-table thead tr:first-child th[colspan="8"]');
         updateHeaders('#pancarte-table thead tr:first-child th[colspan="3"]');
         updateHeaders('#glycemie-table thead tr:first-child th[colspan="3"]');
-        updateHeaders('#care-diagram-table thead tr:first-child th[colspan="8"]');
+        updateHeaders('#care-diagram-table thead tr:first-child th[colspan="3"]');
         
         if (pancarteChartInstance) updatePancarteChart();
     }
@@ -1053,10 +1061,11 @@
         }
     }
 
+    // MODIFIÉ
     function readPrescriptionForm() {
         const name = document.getElementById('med-name').value.trim();
         const posologie = document.getElementById('med-posologie').value.trim();
-        const voie = document.getElementById('med-voie').value.trim();
+        const voie = document.getElementById('med-voie').value; // Lit la valeur du <select>
         const startDateValue = document.getElementById('med-start-date').value;
         const entryDateStr = document.getElementById('patient-entry-date').value;
         
@@ -1066,13 +1075,16 @@
         }
 
         const dateOffset = utils.calculateDaysOffset(entryDateStr, startDateValue);
-        const type = voie.trim().toUpperCase() === 'IV' ? 'iv' : 'checkbox';
+        
+        // Le 'type' est maintenant la 'voie' elle-même (ex: "IV", "Per Os", "Respiratoire")
+        const type = voie; 
         
         document.getElementById('new-prescription-form').reset();
         
         return { name, posologie, voie, type, bars: [], dateOffset };
     }
 
+    // MODIFIÉ
     function addPrescription(data, fromLoad = false) {
         let { name, posologie, voie, type, bars, dateOffset } = data;
         const entryDateStr = document.getElementById('patient-entry-date').value;
@@ -1084,7 +1096,7 @@
         
         const tbody = document.getElementById("prescription-tbody");
         const newRow = tbody.insertRow();
-        newRow.dataset.type = type;
+        newRow.dataset.type = type; // Sera "IV", "Per Os" ou "Respiratoire"
         newRow.dataset.dateOffset = dateOffset;
 
         newRow.innerHTML = `
@@ -1105,7 +1117,8 @@
         timelineCell.colSpan = 88; 
         timelineCell.className = 'iv-bar-container';
 
-        if (type !== 'iv') {
+        // Seul "Per Os" est un "marker-container" (losange)
+        if (type === 'Per Os') {
             timelineCell.classList.add('marker-container');
         }
         
@@ -1118,8 +1131,15 @@
             if (barData && barData.left && (barData.width || barData.width === 0)) {
                 const bar = document.createElement('div');
                 bar.className = 'iv-bar';
-                if (type !== 'iv') bar.classList.add('marker-bar');
                 
+                // Ajoute la classe correcte en fonction du type
+                if (type === 'Per Os') {
+                    bar.classList.add('marker-bar');
+                } else if (type === 'Respiratoire') {
+                    bar.classList.add('iv-bar-respi'); // Nouvelle classe pour l'orange
+                }
+                // 'IV' garde la classe 'iv-bar' de base (bleue)
+
                 bar.style.left = barData.left;
                 bar.style.width = barData.width;
                 bar.title = barData.title || '';
@@ -1158,10 +1178,15 @@
             </td>
         `;
         
+        // MODIFIÉ : 11 jours
         for(let i=0; i<11; i++) {
-            for (let j = 0; j < 8; j++) {
+            // MODIFIÉ : 3 colonnes (Matin, Soir, Nuit)
+            for (let j = 0; j < 3; j++) {
                 const borderClass = (j === 0) ? 'border-l' : '';
-                cellsHTML += `<td class="${borderClass} p-0 small-col"><input type="checkbox"></td>`;
+                // MODIFIÉ : Suppression de "small-col" et ajout de classes pour centrer la checkbox
+                cellsHTML += `<td class="${borderClass} p-0" style="min-width: 70px;">
+                                <input type="checkbox" class="block mx-auto">
+                            </td>`;
             }
         }
         newRow.innerHTML = cellsHTML;
@@ -1249,7 +1274,7 @@
     function handleIVDblClick(e) {
         // TODO: Vérifier permissions
         const bar = e.currentTarget;
-        showDeleteConfirmation("Effacer cette barre de perfusion IV ?", () => {
+        showDeleteConfirmation("Effacer cette administration ?", () => {
             const cell = bar.parentElement;
             if(cell) {
                 const barId = bar.dataset.barId;
@@ -1263,6 +1288,7 @@
         });
     }
 
+    // MODIFIÉ
     function handleIVMouseDown(e) {
         // TODO: Vérifier permissions
         
@@ -1281,9 +1307,14 @@
             const newBar = document.createElement('div');
             newBar.className = 'iv-bar';
             
-            if (cell.classList.contains('marker-container')) {
+            // Détermine la classe de la barre (losange, orange, ou bleu)
+            const rowType = cell.closest('tr').dataset.type;
+            if (rowType === 'Per Os') {
                 newBar.classList.add('marker-bar');
+            } else if (rowType === 'Respiratoire') {
+                newBar.classList.add('iv-bar-respi');
             }
+            // 'IV' garde la classe par défaut
             
             newBar.style.left = `${(startX / rect.width) * 100}%`;
             newBar.style.width = '0px';
@@ -1557,6 +1588,7 @@
         { element: '#import-json-btn', text: "Ce bouton vous permet d'importer un fichier JSON.", position: 'bottom-left' },
         { element: '#export-json-btn', text: "Et celui-ci vous permet d'exporter le dossier actuel en fichier .json.", position: 'bottom-left' },
         { element: '#clear-current-patient-btn', text: "Ce bouton efface les données de la chambre actuelle.", position: 'bottom-left' },
+        { element: '#account-management-btn', text: "C'est ici que le formateur gère son compte, peut créer des comptes étudiants et définir leurs permissions.", position: 'top' },
         { element: 'button[id="clear-all-data-btn"]', text: "ATTENTION : Ce bouton réinitialise les 10 chambres du service.", position: 'top' },
         { element: 'button[id="start-tutorial-btn"]', text: "Vous avez terminé ! Vous pouvez relancer ce tutoriel à tout moment.", position: 'top' }
     ];
