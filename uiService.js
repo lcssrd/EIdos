@@ -1122,8 +1122,10 @@
             timelineCell.classList.add('marker-container');
         }
         
-        // TODO: Gérer les permissions ici
-        timelineCell.addEventListener('mousedown', handleIVMouseDown);
+        // *** CORRECTION DU BUG DES DOUBLES ÉVÉNEMENTS ***
+        // La ligne ci-dessous a été SUPPRIMÉE car elle était redondante
+        // avec l'écouteur global défini dans app.js
+        // timelineCell.addEventListener('mousedown', handleIVMouseDown);
         
         const barsToCreate = (fromLoad && bars && Array.isArray(bars)) ? bars : [];
         
