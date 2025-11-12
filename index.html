@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="fr">
+﻿<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,34 +8,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            color: #333333; /* Gris foncé pour le texte */
+            color: #333333;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            background-color: #f7fafc; /* Fond clair pour la base */
+            background-color: #f7fafc;
         }
 
-        /* Dégradé animé positionné en 'absolute' pour être placé derrière les cartes */
+        .font-logo {
+            font-family: 'Parkinsans', sans-serif;
+            font-weight: 600;
+        }
+
         .animated-gradient-bg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(45deg, #FF8C42, #A06CD5, #00A693, #FFD700); /* Orange, Violet, Vert, Or */
+            background: linear-gradient(45deg, #FF8C42, #A06CD5, #00A693, #FFD700);
             background-size: 400% 400%;
             animation: gradient-animation 15s ease infinite;
-            z-index: 0; /* Placé derrière les cartes (qui auront z-10) */
-            border-radius: 24px; /* Coins arrondis pour correspondre aux cartes */
-            filter: blur(80px); /* Flou pour un effet doux */
-            opacity: 0.3; /* Transparence pour un effet subtil */
-            overflow: hidden; /* S'assure que le flou ne déborde pas trop */
+            z-index: 0;
+            border-radius: 24px;
+            filter: blur(80px);
+            opacity: 0.3;
+            overflow: hidden;
         }
 
         @keyframes gradient-animation {
@@ -44,17 +47,75 @@
             100% { background-position: 0% 50%; }
         }
 
+        /* --- MODIFIÉ : Animation des cartes de tarifs (300ms) --- */
+        .pricing-card {
+            transition-property: transform, box-shadow;
+            transition-duration: 300ms; /* Durée réduite à 300ms */
+            transition-timing-function: ease-in-out;
+        }
+
+        .pricing-card:not(.recommended):hover {
+            transform: scale(1.05);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+        }
+        
+        .pricing-card.recommended:hover {
+            transform: scale(1.10);
+            box-shadow: 0 35px 60px -15px rgb(0 0 0 / 0.3);
+        }
+        /* --- FIN MODIFIÉ --- */
+
+
+        /* --- MODIFIÉ : Animation de la FAQ (300ms) --- */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        details > summary::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            float: right;
+            transition: transform 300ms ease-in-out; /* Durée réduite à 300ms */
+        }
+        details[open] > summary::after {
+            transform: rotate(180deg);
+        }
+
+        details .faq-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 300ms ease-in-out; /* Durée réduite à 300ms */
+        }
+        
+        details[open] .faq-content {
+            grid-template-rows: 1fr;
+        }
+
+        details .faq-content > div {
+            overflow: hidden;
+        }
+        /* --- FIN MODIFIÉ --- */
+
     </style>
 </head>
 <body class="bg-gray-50">
 
-    <header class="absolute top-0 left-0 right-0 z-20 p-6"> <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-2">
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-50 py-4 px-6 transition-all duration-300">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#accueil" class="flex items-center gap-2">
                 <svg class="h-8 w-8 text-[#00A693]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
                 </svg>
-                <span class="text-2xl font-bold text-gray-800">EIdos</span>
-            </div>
+                <span class="text-2xl font-bold text-gray-800 font-logo">EIdos</span>
+            </a>
+            
+            <nav class="hidden lg:flex items-center gap-6">
+                <a href="#fonctionnalites" class="text-gray-600 font-medium hover:text-[#00A693] transition-colors">Fonctionnalités</a>
+                <a href="#cas-usage" class="text-gray-600 font-medium hover:text-[#00A693] transition-colors">Cas d'usage</a>
+                <a href="#tarifs" class="text-gray-600 font-medium hover:text-[#00A693] transition-colors">Tarifs</a>
+                <a href="#faq" class="text-gray-600 font-medium hover:text-[#00A693] transition-colors">FAQ</a>
+            </nav>
+
             <div class="space-x-2">
                 <a href="simul.html" class="px-5 py-2 text-sm font-medium text-[#00A693] hover:bg-[#E0F2F1] rounded-full transition-colors">
                     Connexion
@@ -66,196 +127,360 @@
         </div>
     </header>
 
-    <section class="bg-gray-50 pt-40 pb-24 px-6 text-center overflow-hidden">
-        <div data-aos="fade-down">
-            
-            <h1 class="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight mb-6">
-                Arrêtez de <span class="text-[#FF8C42]">décrire</span> le raisonnement clinique.
-                <br>Faites-le <span class="text-[#00A693]">pratiquer</span>.
-            </h1>
-            <p class="text-xl md:text-2xl font-light text-gray-600 max-w-3xl mx-auto mb-10">
-                EIdos est le simulateur de Dossier Patient Informatisé (DPI) conçu pour les formateurs en santé.
-            </p>
-            
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
-                <a href="auth.html#signup" class="w-full sm:w-auto inline-block px-8 py-3 text-lg font-medium text-white bg-[#00A693] rounded-full shadow-sm hover:bg-[#008F7E] transition-colors transform hover:scale-105">
-                    <i class="fas fa-user-plus mr-2"></i> Créer un compte
+    <main>
+        <section id="accueil" class="bg-gray-50 pt-40 pb-24 px-6 text-center overflow-hidden">
+            <div data-aos="fade-down">
+                <h1 class="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight mb-6">
+                    Arrêtez de <span class="text-[#FF8C42]">décrire</span> le raisonnement clinique.
+                    <br>Faites-le <span class="text-[#00A693]">pratiquer</span>.
+                </h1>
+                <p class="text-xl md:text-2xl font-light text-gray-600 max-w-3xl mx-auto mb-10">
+                    EIdos est le simulateur de Dossier Patient Informatisé (DPI) conçu pour les formateurs en santé.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
+                    <a href="auth.html#signup" class="w-full sm:w-auto inline-block px-8 py-3 text-lg font-medium text-white bg-[#00A693] rounded-full shadow-sm hover:bg-[#008F7E] transition-colors transform hover:scale-105">
+                        <i class="fas fa-user-plus mr-2"></i> Créer un compte
+                    </a>
+                    <a href="simul.html" class="w-full sm:w-auto inline-block px-8 py-3 text-lg font-medium text-[#00A693] bg-[#E0F2F1] rounded-full hover:bg-[#CCEEED] transition-colors transform hover:scale-105">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Connexion
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-gray-50 py-24 sm:py-32" data-aos="fade-up">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <h2 class="text-center text-lg font-semibold leading-7 text-[#FF8C42]">Conçu par un soignant, pour les soignants</h2>
+                <p class="mt-2 text-center text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+                    Le pont entre la théorie et le stage
+                </p>
+                
+                <div class="mt-16 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:grid-rows-3 relative">
+                    <div class="animated-gradient-bg"></div>
+
+                    <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm lg:col-span-2 lg:row-span-2 relative z-10" data-aos="fade-up">
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="flex items-center justify-center h-12 w-12 bg-[#E0F2F1] text-[#00A693] rounded-full text-2xl">
+                                <i class="fas fa-user-md"></i> 
+                            </span>
+                            <h3 class="text-2xl font-semibold text-gray-900">L'origine d'EIdos</h3>
+                        </div>
+                        <p class="text-lg text-gray-700 leading-relaxed">
+                            En tant que <strong>cadre de santé infirmier</strong>, j'ai passé des années à l'hôpital. J'y ai vu la complexité et l'importance cruciale de la bonne tenue du Dossier Patient Informatisé (DPI). En devenant formateur en IFSI, j'ai été interpelé par un manque critique : nos étudiants connaissaient la théorie, mais n'avaient aucun outil pour simuler un vrai DPI.
+                        </p>
+                        <p class="text-lg text-gray-700 leading-relaxed mt-4">
+                            Ils découvraient cet outil vital, stressant et complexe, directement en stage. Les cas papier sont statiques ; ils n'enseignent pas la <strong>dynamique</strong> d'un dossier qui évolue d'heure en heure.
+                        </p>
+                        <p class="text-lg text-gray-700 leading-relaxed mt-4">
+                            EIdos est né de ce constat. J'ai développé cette plateforme pour permettre aux étudiants de <strong>pratiquer le raisonnement clinique</strong>, de faire des erreurs en toute sécurité, et d'analyser des données réalistes, dynamiques et évolutives ; identiques à celles qu'ils géreront demain.
+                        </p>
+                        <div class="mt-6 pt-6 border-t border-gray-200 flex items-center gap-4">
+                            <img src="https://via.placeholder.com/60" alt="Photo de L. Séraudie" class="h-14 w-14 rounded-full object-cover">
+                            <div>
+                                <p class="font-semibold text-gray-900">L. Séraudie</p>
+                                <p class="text-sm text-gray-600">Cadre de Santé Formateur & Fondateur d'EIdos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm relative z-10" data-aos="fade-up" data-aos-delay="100">
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="flex items-center justify-center h-12 w-12 bg-[#F1E0F2] text-[#A06CD5] rounded-full text-2xl">
+                                <i class="fas fa-rocket"></i>
+                            </span>
+                            <h3 class="text-2xl font-semibold text-gray-900">Comment ça marche ?</h3>
+                        </div>
+                        <ol class="list-decimal list-inside space-y-3 text-gray-700">
+                            <li class="font-medium"><strong class="font-semibold">Créez vos scénarios :</strong> Importez vos cas cliniques ou utilisez nos modèles.</li>
+                            <li class="font-medium"><strong class="font-semibold">Invitez vos étudiants :</strong> Partagez un lien simple pour la simulation.</li>
+                            <li class="font-medium"><strong class="font-semibold">Analysez & Débriefez :</strong> Suivez leurs actions en direct et guidez la discussion.</li>
+                        </ol>
+                    </div>
+
+                    <div class="relative rounded-3xl bg-gray-800 border border-gray-700 shadow-lg lg:row-span-1 overflow-hidden z-10 p-4" data-aos="fade-up" data-aos-delay="200">
+                        <div class="flex items-center gap-1.5 mb-3">
+                            <div class="h-3 w-3 rounded-full bg-red-500"></div>
+                            <div class="h-3 w-3 rounded-full bg-yellow-500"></div>
+                            <div class="h-3 w-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="relative bg-gray-900 rounded-lg aspect-video flex items-center justify-center cursor-pointer group">
+                            <img src="simulation.jpg" alt="Aperçu de l'interface EIdos" class="object-cover h-full w-full opacity-60 rounded-lg">
+                            <i class="fas fa-play-circle text-white text-6xl absolute transition-transform group-hover:scale-110"></i>
+                            <p class="absolute bottom-3 left-3 text-white font-semibold text-lg bg-black/50 px-3 py-1 rounded-lg">Voir la démo (1 min)</p>
+                        </div>
+                    </div>
+
+                    <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm relative z-10" data-aos="fade-up" data-aos-delay="300">
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="flex items-center justify-center h-12 w-12 bg-red-100 text-red-600 rounded-full text-2xl">
+                                <i class="fas fa-file-alt"></i>
+                            </span>
+                            <h3 class="text-2xl font-semibold text-gray-900">Le Problème</h3>
+                        </div>
+                        <p class="text-gray-700">Les cas papier sont statiques et ne reflètent pas la complexité d'un DPI. Les vrais dossiers en stage sont complexes, chronophages et présentent un risque pour la sécurité des données.</p>
+                    </div>
+                    
+                    <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm relative z-10" data-aos="fade-up" data-aos-delay="400">
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="flex items-center justify-center h-12 w-12 bg-green-100 text-green-600 rounded-full text-2xl">
+                                <i class="fas fa-desktop"></i>
+                            </span>
+                            <h3 class="text-2xl font-semibold text-gray-900">La Solution</h3>
+                        </div>
+                        <p class="text-gray-700">Un simulateur réaliste qui imite l'interface et les fonctionnalités d'un vrai DPI. Vos étudiants pratiquent les transmissions, les prescriptions et l'analyse de données dans un environnement contrôlé.</p>
+                    </div>
+                    
+                    <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm relative z-10" data-aos="fade-up" data-aos-delay="500">
+                        <div class="flex items-center gap-4 mb-4">
+                            <span class="flex items-center justify-center h-12 w-12 bg-[#E0F2F1] text-[#00A693] rounded-full text-2xl">
+                                <i class="fas fa-users-cog"></i>
+                            </span>
+                            <h3 class="text-2xl font-semibold text-gray-900">Votre Contrôle</h3>
+                        </div>
+                        <p class="text-gray-700">Avec EIdos, vous préparez des cas patients et définissez les permissions pour les étudiants. Comme dans un vrai DPI, vous pouvez restreindre les permissions en fonctions des rôles. Ainsi cela permet de guider l'apprentissage.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="cas-usage" class="bg-gray-100 py-20" data-aos="fade-up">
+            <div class="container mx-auto px-6 max-w-6xl">
+                <h2 class="mt-2 text-center text-4xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                    Des possibilités pédagogiques infinies...
+                </h2>
+                <br>
+                <div class="grid md:grid-cols-2 gap-8 relative">
+                    <div class="animated-gradient-bg"></div>
+
+                    <div class="p-8 rounded-3xl shadow-sm border border-gray-200 bg-white relative z-10" data-aos="fade-up" data-aos-delay="100">
+                        <div class="flex items-center mb-5">
+                            <span class="flex items-center justify-center h-12 w-12 bg-[#F1E0F2] text-[#A06CD5] rounded-full text-2xl mr-4">
+                                <i class="fas fa-chart-line"></i>
+                            </span>
+                            <h3 class="text-3xl font-semibold text-gray-800">Cas 1 : Le Scénario Évolutif</h3>
+                        </div>
+                        <p class="text-gray-700 mb-4">
+                            Évaluez la capacité d'adaptation de vos étudiants face à une situation qui se dégrade ou s'améliore.
+                        </p>
+                        <ul class="list-decimal list-inside space-y-3 text-gray-700">
+                            <li>
+                                <strong class="font-semibold">Jour 1 :</strong> L'étudiant accueille M. Dupont pour "Douleur abdominale". Il analyse les antécédents, les allergies et les observations d'entrée.
+                            </li>
+                            <li>
+                                <strong class="font-semibold">Jour 2 :</strong> Vous ajoutez un bilan biologique perturbé (CRP élevée) et une nouvelle prescription d'antalgique IV.
+                            </li>
+                            <li>
+                                <strong class="font-semibold">Mission :</strong> L'étudiant doit consulter les nouveaux résultats, administrer la prescription au bon moment dans le diagramme de soins, et tracer une surveillance adaptée dans les transmissions.
+                            </li>
+                        </ul>
+                        <p class="mt-5 text-[#A06CD5] font-semibold bg-[#F1E0F2] p-3 rounded-lg"><i class="fas fa-lightbulb mr-2"></i>Idéal pour travailler la réévaluation clinique et la priorisation des actions.</p>
+                    </div>
+
+                    <div class="p-8 rounded-3xl shadow-sm border border-gray-200 bg-white relative z-10" data-aos="fade-up" data-aos-delay="200">
+                        <div class="flex items-center mb-5">
+                            <span class="flex items-center justify-center h-12 w-12 bg-[#FFF3E6] text-[#FF8C42] rounded-full text-2xl mr-4">
+                                <i class="fas fa-users"></i>
+                            </span>
+                            <h3 class="text-3xl font-semibold text-gray-800">Cas 2 : La Continuité des Soins</h3>
+                        </div>
+                        <p class="text-gray-700 mb-4">
+                            Travaillez la communication interprofessionnelle et la traçabilité des informations.
+                        </p>
+                        <ul class="list-decimal list-inside space-y-3 text-gray-700">
+                            <li>
+                                <strong class="font-semibold">Équipe 1 (Jour) :</strong> Un groupe d'étudiants gère Mme. Durand. Ils administrent les soins, notent une observation (ex: "Patiente algique") et préparent le dossier pour la nuit.
+                            </li>
+                            <li>
+                                <strong class="font-semibold">Équipe 2 (Nuit) :</strong> Un second groupe prend la relève. Il doit se baser <strong>uniquement</strong> sur les informations tracées dans EIdos (transmissions, diagramme) pour comprendre la situation.
+                            </li>
+                            <li>
+                                <strong class="font-semibold">Mission :</strong> L'équipe 2 doit identifier les actions en attente, répondre aux problèmes (ex: douleur) et rédiger à son tour une transmission pertinente pour l'équipe du matin.
+                            </li>
+                        </ul>
+                        <p class="mt-5 text-[#FF8C42] font-semibold bg-[#FFF3E6] p-3 rounded-lg"><i class="fas fa-lightbulb mr-2"></i>Parfait pour simuler une relève et insister sur la qualité des transmissions écrites.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="fonctionnalites" class="bg-gray-50 py-20" data-aos="fade-up">
+            <div class="container mx-auto px-6 max-w-6xl">
+                <h2 class="mt-2 text-center text-4xl font-bold tracking-tight text-gray-900 md:text-4xl">
+                    Un outil complet à votre service
+                </h2>
+                <br>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 text-center max-w-4xl mx-auto">
+                    
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="50"><i class="fas fa-user-friends text-[#00A693] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Gestion d'étudiants</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="100"><i class="fas fa-pills text-[#A06CD5] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Prescriptions (IV, PO...)</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="150"><i class="fas fa-notes-medical text-[#FF8C42] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Observations Médicales</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="200"><i class="fas fa-calendar-alt text-[#FFD700] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Diagramme de Soins</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="250"><i class="fas fa-exchange-alt text-[#00A693] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Transmissions Ciblées</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="300"><i class="fas fa-vial text-[#A06CD5] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Résultats de Biologie</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="350"><i class="fas fa-chart-line text-[#FF8C42] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Pancarte de Constantes</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="400"><i class="fas fa-lock text-gray-600 text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Gestion des Permissions</h4></div>
+                    <div class="p-4" data-aos="fade-up" data-aos-delay="450"><i class="fas fa-file-alt text-[#1E40AF] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Comptes Rendus</h4></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tarifs" class="bg-gray-100 py-24 sm:py-32" data-aos="fade-up">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <h2 class="text-center text-4xl font-bold tracking-tight text-gray-900 md:text-5xl mb-6">
+                    Une offre adaptée à chaque besoin
+                </h2>
+                <p class="text-center text-xl text-gray-600 max-w-2xl mx-auto mb-16">
+                    Commencez gratuitement et évoluez selon vos besoins pédagogiques.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+                    
+                    <div class="relative bg-white p-8 flex flex-col rounded-3xl shadow-lg h-full pricing-card" data-aos="fade-up" data-aos-delay="100">
+                        <h3 class="text-2xl font-semibold text-yellow-700">Free</h3>
+                        <p class="text-4xl font-extrabold my-4">Gratuit</p>
+                        <p class="text-gray-500 mb-6 min-h-[4rem] flex-grow">Pour la découverte et l'utilisation basique.</p>
+                        <ul class="space-y-3 text-gray-600 mb-8">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Découverte du logiciel</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Import / Export de cas</span></li>
+                            <li class="flex items-start"><i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i><span>Pas de sauvegarde en ligne</span></li>
+                            <li class="flex items-start"><i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i><span>Pas de comptes étudiants</span></li>
+                        </ul>
+                        <a href="auth.html#signup" class="mt-auto w-full text-center py-3 px-4 rounded-lg font-semibold text-yellow-700 bg-yellow-50 hover:bg-yellow-100 transition-all">
+                            Commencer
+                        </a>
+                    </div>
+
+                    <div class="relative bg-white p-8 flex flex-col rounded-3xl shadow-lg h-full pricing-card" data-aos="fade-up" data-aos-delay="200">
+                        <h3 class="text-2xl font-semibold text-teal-700">Indépendant</h3>
+                        <p class="text-4xl font-extrabold my-4 text-gray-900">__€ <span class="text-lg font-normal text-gray-500">/ mois</span></p>
+                        <p class="text-gray-500 mb-6 min-h-[4rem] flex-grow">Pour formateurs solo ou en test.</p>
+                        <ul class="space-y-3 text-gray-600 mb-8">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients (20)</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Jusqu'à 5 comptes étudiants</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                        </ul>
+                        <a href="auth.html#signup" class="mt-auto w-full text-center py-3 px-4 rounded-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-all">
+                            Choisir ce plan
+                        </a>
+                    </div>
+                    
+                    <div class="relative bg-white p-8 flex flex-col rounded-3xl shadow-2xl scale-105 h-full pricing-card recommended" data-aos="fade-up" data-aos-delay="300">
+                        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-sm font-bold px-4 py-1 rounded-full">RECOMMANDÉ</span>
+                        <h3 class="text-2xl font-semibold text-blue-700">Promo</h3>
+                        <p class="text-4xl font-extrabold my-4 text-gray-900">__€ <span class="text-lg font-normal text-gray-500">/ mois</span></p>
+                        <p class="text-gray-500 mb-6 min-h-[4rem] flex-grow">Pour gérer une promotion ou classe complète.</p>
+                        <ul class="space-y-3 text-gray-600 mb-8">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients (50)</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Jusqu'à 40 comptes étudiants</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                        </ul>
+                        <a href="auth.html#signup" class="mt-auto w-full text-center py-3 px-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl">
+                            Choisir ce plan
+                        </a>
+                    </div>
+
+                    <div class="relative bg-white p-8 flex flex-col rounded-3xl shadow-lg h-full pricing-card" data-aos="fade-up" data-aos-delay="400">
+                        <h3 class="text-2xl font-semibold text-indigo-700">Centre</h3>
+                        <p class="text-4xl font-extrabold my-4 text-gray-900">Sur devis</p>
+                        <p class="text-gray-500 mb-6 min-h-[4rem] flex-grow">Pour les centres de formation (IFSI, etc).</p>
+                        <ul class="space-y-3 text-gray-600 mb-8">
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Comptes multi-formateurs</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients illimitées</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Étudiants illimités</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                            <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Support prioritaire</span></li>
+                        </ul>
+                        <a href="#faq" class="mt-auto w-full text-center py-3 px-4 rounded-lg font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all">
+                            Nous contacter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="faq" class="bg-gray-100 py-24 sm:py-32" data-aos="fade-up">
+            <div class="mx-auto max-w-3xl px-6 lg:px-8">
+                <h2 class="text-center text-4xl font-bold tracking-tight text-gray-900 md:text-5xl mb-16">
+                    Questions Fréquentes
+                </h2>
+                <div class="space-y-6">
+                    
+                    <details class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" data-aos="fade-up">
+                        <summary class="font-semibold text-lg text-gray-800 cursor-pointer">
+                            Faut-il installer quelque chose ?
+                        </summary>
+                        <div class="faq-content">
+                            <div>
+                                <p class="text-gray-700 mt-4 leading-relaxed">
+                                    Non. EIdos est une application web 100% en ligne. Elle fonctionne sur n'importe quel navigateur moderne (Chrome, Firefox, Safari, Edge) sur ordinateur et tablette, sans aucune installation requise ni pour vous, ni pour vos étudiants.
+                                </p>
+                            </div>
+                        </div>
+                    </details>
+                    
+                    <details class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                        <summary class="font-semibold text-lg text-gray-800 cursor-pointer">
+                            EIdos imite-t-il un logiciel DPI spécifique (Orbis, Sillage...) ?
+                        </summary>
+                        <div class="faq-content">
+                            <div>
+                                <p class="text-gray-700 mt-4 leading-relaxed">
+                                    Non, et c'est volontaire. EIdos simule la <strong>logique métier</strong> et les <strong>fonctionnalités universelles</strong> d'un DPI (prescriptions, diagramme de soins, transmissions, biologie...). Il n'imite aucun logiciel propriétaire en particulier, ce qui le rend universel et pertinent, quel que soit le logiciel utilisé dans les futurs lieux de stage de vos étudiants. L'accent est mis sur le raisonnement clinique, pas sur l'apprentissage d'une interface spécifique.
+                                </p>
+                            </div>
+                        </div>
+                    </details>
+                    
+                    <details class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+                        <summary class="font-semibold text-lg text-gray-800 cursor-pointer">
+                            Qu'en est-il de la sécurité des données (RGPD) ?
+                        </summary>
+                        <div class="faq-content">
+                            <div>
+                                <p class="text-gray-700 mt-4 leading-relaxed">
+                                    La sécurité est notre priorité. Toutes les données patients que vous créez dans EIdos sont <strong>fictives</strong>. Aucune donnée patient réelle ne doit y être saisie. Les comptes étudiants sont anonymisables (vous pouvez les identifier par un numéro). Nos serveurs sont hébergés en Europe (France) et sont conformes aux normes RGPD.
+                                </p>
+                            </div>
+                        </div>
+                    </details>
+                    
+                    <details class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" data-aos="fade-up" data-aos-delay="300">
+                        <summary class="font-semibold text-lg text-gray-800 cursor-pointer">
+                            Comment fonctionne le plan "Centre" (Sur devis) ?
+                        </summary>
+                        <div class="faq-content">
+                            <div>
+                                <p class="text-gray-700 mt-4 leading-relaxed">
+                                    Le plan "Centre" est conçu pour les institutions (IFSI, universités, centres de simulation). Il permet de créer plusieurs comptes "Formateur" rattachés à un compte "Propriétaire" qui gère l'abonnement. Tous les formateurs bénéficient alors des fonctionnalités complètes (étudiants et archives illimités). Contactez-nous pour discuter de vos besoins et obtenir un devis adapté.
+                                </p>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-20 bg-[#00A693] text-white" data-aos="fade-up">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl font-bold mb-6">Prêt à transformer votre pédagogie ?</h2>
+                <p class="text-xl text-[#CCEEED] mb-10 max-w-2xl mx-auto">Créez votre compte gratuit pour commencer à explorer le simulateur dès aujourd'hui.</p>
+                
+                <a href="auth.html#signup" class="inline-block px-10 py-4 text-xl font-semibold text-[#00A693] bg-white rounded-full shadow-lg hover:bg-[#E0F2F1] transition-all duration-300 transform hover:scale-105">
+                    Commencer gratuitement
                 </a>
-                <a href="simul.html" class="w-full sm:w-auto inline-block px-8 py-3 text-lg font-medium text-[#00A693] bg-[#E0F2F1] rounded-full hover:bg-[#CCEEED] transition-colors transform hover:scale-105">
-                    <i class="fas fa-sign-in-alt mr-2"></i> Connexion
-                </a>
             </div>
-            </div>
-    </section>
-
-    <section class="bg-gray-50 py-24 sm:py-32" data-aos="fade-up">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <h2 class="text-center text-lg font-semibold leading-7 text-[#FF8C42]">Conçu par un soignant, pour les soignants</h2>
-            
-            <p class="mt-2 text-center text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
-                Le pont entre la théorie et le stage
-            </p>
-            
-            <div class="mt-16 grid grid-cols-1 gap-6 lg:grid-cols-3 lg:grid-rows-3 relative">
-                <div class="animated-gradient-bg"></div>
-
-                <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm lg:col-span-2 lg:row-span-2 relative z-10" data-aos="fade-up">
-                    <div class="flex items-center gap-4 mb-4">
-                        <span class="flex items-center justify-center h-12 w-12 bg-[#E0F2F1] text-[#00A693] rounded-full text-2xl">
-                            <i class="fas fa-user-md"></i> 
-                        </span>
-                        <h3 class="text-2xl font-semibold text-gray-900">L'origine d'EIdos</h3>
-                    </div>
-                    <p class="text-lg text-gray-700 leading-relaxed">
-                        En tant que <strong>cadre de santé infirmier</strong>, j'ai passé des années à l'hôpital. J'y ai vu la complexité et l'importance cruciale de la bonne tenue du Dossier Patient Informatisé (DPI). En devenant formateur en IFSI, j'ai été interpelé par un manque critique : nos étudiants connaissaient la théorie, mais n'avaient aucun outil pour simuler un vrai DPI.
-                    </p>
-                    <p class="text-lg text-gray-700 leading-relaxed mt-4">
-                        Ils découvraient cet outil vital, stressant et complexe, directement en stage. Les cas papier sont statiques ; ils n'enseignent pas la <strong>dynamique</strong> d'un dossier qui évolue d'heure en heure.
-                    </p>
-                    <p class="text-lg text-gray-700 leading-relaxed mt-4">
-                        EIdos est né de ce constat. J'ai développé cette plateforme pour permettre aux étudiants de <strong>pratiquer le raisonnement clinique</strong>, de faire des erreurs en toute sécurité, et d'analyser des données réalistes, dynamiques et évolutives ; identiques à celles qu'ils géreront demain.
-                    </p>
-                </div>
-
-                <div class="rounded-3xl bg-white border border-gray-200 shadow-sm flex items-center justify-center p-8 lg:row-span-1 relative z-10" data-aos="fade-up" data-aos-delay="100">
-                    <svg class="h-32 w-32 text-[#A06CD5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
-                    </svg>
-                </div>
-
-                <div class="relative rounded-3xl bg-white border border-gray-200 shadow-sm lg:row-span-1 overflow-hidden z-10" data-aos="fade-up" data-aos-delay="200">
-                    <img src="simulation.jpg" alt="Aperçu de l'interface EIdos" class="object-cover h-full w-full">
-                    <p class="absolute bottom-4 left-4 text-gray-900 font-semibold text-lg bg-white/70 px-3 py-1 rounded-lg">Interface de simulation</p>
-                </div>
-
-                <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm relative z-10" data-aos="fade-up" data-aos-delay="300">
-                    <div class="flex items-center gap-4 mb-4">
-                        <span class="flex items-center justify-center h-12 w-12 bg-red-100 text-red-600 rounded-full text-2xl">
-                            <i class="fas fa-file-alt"></i>
-                        </span>
-                        <h3 class="text-2xl font-semibold text-gray-900">Le Problème</h3>
-                    </div>
-                    <p class="text-gray-700">Les cas papier sont statiques et ne reflètent pas la complexité d'un DPI. Les vrais dossiers en stage sont complexes, chronophages et présentent un risque pour la sécurité des données.</p>
-                </div>
-                
-                <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm relative z-10" data-aos="fade-up" data-aos-delay="400">
-                    <div class="flex items-center gap-4 mb-4">
-                        <span class="flex items-center justify-center h-12 w-12 bg-green-100 text-green-600 rounded-full text-2xl">
-                            <i class="fas fa-desktop"></i>
-                        </span>
-                        <h3 class="text-2xl font-semibold text-gray-900">La Solution</h3>
-                    </div>
-                    <p class="text-gray-700">Un simulateur réaliste qui imite l'interface et les fonctionnalités d'un vrai DPI. Vos étudiants pratiquent les transmissions, les prescriptions et l'analyse de données dans un environnement contrôlé.</p>
-                </div>
-                
-                <div class="p-8 rounded-3xl bg-white border border-gray-200 shadow-sm relative z-10" data-aos="fade-up" data-aos-delay="500">
-                    <div class="flex items-center gap-4 mb-4">
-                        <span class="flex items-center justify-center h-12 w-12 bg-[#E0F2F1] text-[#00A693] rounded-full text-2xl">
-                            <i class="fas fa-users-cog"></i>
-                        </span>
-                        <h3 class="text-2xl font-semibold text-gray-900">Votre Contrôle</h3>
-                    </div>
-                    <p class="text-gray-700">Avec EIdos, vous préparez des cas patients et définissez les permissions pour les étudiants. Comme dans un vrai DPI, vous pouvez restreindre les permissions en fonctions des rôles. Ainsi cela permet de guider l'apprentissage.</p>
-                </div>
-
-            </div>
-        </div>
-    </section>
-    
-    <section class="bg-gray-50 py-20" data-aos="fade-up">
-        <div class="container mx-auto px-6 max-w-6xl">
-
-            <h2 class="mt-2 text-center text-4xl font-bold tracking-tight text-gray-900 md:text-4xl">
-                Des possibilités pédagogiques infinies...</h2><br>
-            
-            <div class="grid md:grid-cols-2 gap-8 relative">
-                <div class="animated-gradient-bg"></div>
-
-                <div class="p-8 rounded-3xl shadow-sm border border-gray-200 bg-white relative z-10" data-aos="fade-up" data-aos-delay="100">
-                    <div class="flex items-center mb-5">
-                        <span class="flex items-center justify-center h-12 w-12 bg-[#F1E0F2] text-[#A06CD5] rounded-full text-2xl mr-4">
-                            <i class="fas fa-chart-line"></i>
-                        </span>
-                        <h3 class="text-3xl font-semibold text-gray-800">Cas 1 : Le Scénario Évolutif</h3>
-                    </div>
-                    <p class="text-gray-700 mb-4">
-                        Évaluez la capacité d'adaptation de vos étudiants face à une situation qui se dégrade ou s'améliore.
-                    </p>
-                    <ul class="list-decimal list-inside space-y-3 text-gray-700">
-                        <li>
-                            <strong class="font-semibold">Jour 1 :</strong> L'étudiant accueille M. Dupont pour "Douleur abdominale". Il analyse les antécédents, les allergies et les observations d'entrée.
-                        </li>
-                        <li>
-                            <strong class="font-semibold">Jour 2 :</strong> Vous ajoutez un bilan biologique perturbé (CRP élevée) et une nouvelle prescription d'antalgique IV.
-                        </li>
-                        <li>
-                            <strong class="font-semibold">Mission :</strong> L'étudiant doit consulter les nouveaux résultats, administrer la prescription au bon moment dans le diagramme de soins, et tracer une surveillance adaptée dans les transmissions.
-                        </li>
-                    </ul>
-                    <p class="mt-5 text-[#A06CD5] font-semibold bg-[#F1E0F2] p-3 rounded-lg"><i class="fas fa-lightbulb mr-2"></i>Idéal pour travailler la réévaluation clinique et la priorisation des actions.</p>
-                </div>
-
-                <div class="p-8 rounded-3xl shadow-sm border border-gray-200 bg-white relative z-10" data-aos="fade-up" data-aos-delay="200">
-                    <div class="flex items-center mb-5">
-                        <span class="flex items-center justify-center h-12 w-12 bg-[#FFF3E6] text-[#FF8C42] rounded-full text-2xl mr-4">
-                            <i class="fas fa-users"></i>
-                        </span>
-                        <h3 class="text-3xl font-semibold text-gray-800">Cas 2 : La Continuité des Soins</h3>
-                    </div>
-                    <p class="text-gray-700 mb-4">
-                        Travaillez la communication interprofessionnelle et la traçabilité des informations.
-                    </p>
-                    <ul class="list-decimal list-inside space-y-3 text-gray-700">
-                        <li>
-                            <strong class="font-semibold">Équipe 1 (Jour) :</strong> Un groupe d'étudiants gère Mme. Durand. Ils administrent les soins, notent une observation (ex: "Patiente algique") et préparent le dossier pour la nuit.
-                        </li>
-                        <li>
-                            <strong class="font-semibold">Équipe 2 (Nuit) :</strong> Un second groupe prend la relève. Il doit se baser <strong>uniquement</strong> sur les informations tracées dans EIdos (transmissions, diagramme) pour comprendre la situation.
-                        </li>
-                        <li>
-                            <strong class="font-semibold">Mission :</strong> L'équipe 2 doit identifier les actions en attente, répondre aux problèmes (ex: douleur) et rédiger à son tour une transmission pertinente pour l'équipe du matin.
-                        </li>
-                    </ul>
-                    <p class="mt-5 text-[#FF8C42] font-semibold bg-[#FFF3E6] p-3 rounded-lg"><i class="fas fa-lightbulb mr-2"></i>Parfait pour simuler une relève et insister sur la qualité des transmissions écrites.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <section class="bg-gray-50 py-20" data-aos="fade-up">
-        <div class="container mx-auto px-6 max-w-6xl">
-            <h2 class="mt-2 text-center text-4xl font-bold tracking-tight text-gray-900 md:text-4xl">
-                Un outil complet à votre service</h2><br>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 text-center">
-                
-                <div class="p-4" data-aos="fade-up" data-aos-delay="50"><i class="fas fa-user-friends text-[#00A693] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Gestion d'étudiants</h4></div>
-                <div class="p-4" data-aos="fade-up" data-aos-delay="100"><i class="fas fa-pills text-[#A06CD5] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Prescriptions (IV, PO...)</h4></div>
-                <div class="p-4" data-aos="fade-up" data-aos-delay="150"><i class="fas fa-notes-medical text-[#FF8C42] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Observations Médicales</h4></div>
-                <div class="p-4" data-aos="fade-up" data-aos-delay="200"><i class="fas fa-calendar-alt text-[#FFD700] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Diagramme de Soins</h4></div>
-                <div class="p-4" data-aos="fade-up" data-aos-delay="250"><i class="fas fa-exchange-alt text-[#00A693] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Transmissions Ciblées</h4></div>
-                <div class="p-4" data-aos="fade-up" data-aos-delay="300"><i class="fas fa-vial text-[#A06CD5] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Résultats de Biologie</h4></div>
-                <div class="p-4" data-aos="fade-up" data-aos-delay="350"><i class="fas fa-chart-line text-[#FF8C42] text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Pancarte de Constantes</h4></div>
-                <div class="p-4" data-aos="fade-up" data-aos-delay="400"><i class="fas fa-lock text-gray-600 text-4xl mb-3"></i><h4 class="text-lg font-semibold text-gray-800">Gestion des Permissions</h4></div>
-            </div>
-        </div>
-    </section>
-
-    <section class="py-20 bg-[#00A693] text-white" data-aos="fade-up">
-        <div class="container mx-auto px-6 text-center">
-            <h2 class="text-4xl font-bold mb-6">Prêt à transformer votre pédagogie ?</h2>
-            <p class="text-xl text-[#CCEEED] mb-10 max-w-2xl mx-auto">Créez votre compte formateur pour commencer à sauvegarder vos scénarios et à gérer vos étudiants.</p>
-            
-            <a href="auth.html#signup" class="inline-block px-10 py-4 text-xl font-semibold text-[#00A693] bg-white rounded-full shadow-lg hover:bg-[#E0F2F1] transition-all duration-300 transform hover:scale-105">
-                Commencer
-            </a>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <footer class="bg-white text-gray-500 py-10 border-t border-gray-200">
         <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
             <p class="text-center md:text-left text-sm">&copy; 2025 EIdos. Créé par L. Séraudie.</p>
             <div class="space-x-6 mt-4 md:mt-0 text-sm">
-                <a href="index.html" class="hover:text-gray-900">Accueil</a>
+                <a href="#accueil" class="hover:text-gray-900">Accueil</a>
+                <a href="#fonctionnalites" class="hover:text-gray-900">Fonctionnalités</a>
+                <a href="#tarifs" class="hover:text-gray-900">Tarifs</a>
                 <a href="simul.html" class="hover:text-gray-900">Simulateur</a>
                 <a href="auth.html" class="hover:text-gray-900">Connexion</a>
             </div>
@@ -265,8 +490,17 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init({
-            duration: 800, // Durée des animations
-            once: true, // L'animation ne se joue qu'une fois
+            duration: 800,
+            once: true,
+        });
+
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('main-header');
+            if (window.scrollY > 50) {
+                header.classList.add('bg-white/95', 'backdrop-blur-sm', 'shadow-lg');
+            } else {
+                header.classList.remove('bg-white/95', 'backdrop-blur-sm', 'shadow-lg');
+            }
         });
     </script>
 
