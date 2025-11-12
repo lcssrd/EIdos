@@ -121,6 +121,10 @@
         document.getElementById('admin-dob').addEventListener('input', uiService.updateAgeDisplay);
         document.getElementById('vie-poids').addEventListener('input', uiService.calculateAndDisplayIMC);
         document.getElementById('vie-taille').addEventListener('input', uiService.calculateAndDisplayIMC);
+        
+        // --- NOUVEAU : Écouteur pour la case Allergies ---
+        document.getElementById('atcd-allergies').addEventListener('input', uiService.updateAllergyWarning);
+
 
         // --- Ajout d'entrées (Observations, Transmissions, etc.) ---
         document.getElementById('add-observation-btn').addEventListener('click', () => {
