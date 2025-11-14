@@ -364,25 +364,6 @@
     }
 
     // --- Fonctions de Gestion de l'UI (Formulaires & Données) ---
-    
-    // --- NOUVEAU : Fonction pour styliser la case allergie ---
-    /**
-     * Vérifie le contenu de la case "Allergies" et applique/retire le style orange.
-     */
-    function updateAllergyWarning() {
-        const allergyInput = document.getElementById('atcd-allergies');
-        if (!allergyInput) return;
-        
-        const infoItem = allergyInput.closest('.info-item');
-        if (!infoItem) return;
-
-        if (allergyInput.value && allergyInput.value.trim() !== '') {
-            infoItem.classList.add('allergy-warning');
-        } else {
-            infoItem.classList.remove('allergy-warning');
-        }
-    }
-    // --- FIN NOUVEAU ---
 
     /**
      * Réinitialise l'ensemble du formulaire principal.
@@ -416,8 +397,7 @@
         document.getElementById('pancarte-tbody').innerHTML = '';
         
         initializeDynamicTables();
-        
-        updateAllergyWarning(); // MODIFIÉ : Ajout de l'appel
+
         calculateAndDisplayIMC();
         if (pancarteChartInstance) pancarteChartInstance.destroy();
     }
@@ -438,9 +418,6 @@
                 else { el.value = state[id]; }
             }
         });
-        
-        updateAllergyWarning(); // MODIFIÉ : Ajout de l'appel
-
         // Redimensionner les textareas après remplissage
         setTimeout(() => {
             document.querySelectorAll('textarea.info-value').forEach(autoResize);
@@ -1435,8 +1412,8 @@
         const { targetBar, targetCell } = ivInteraction;
         if (targetBar && targetCell) {
             const cellRect = targetCell.getBoundingClientRect();
-            const totalTimelineMinutes = 11 * 24 * 4;
-            const intervalWidthPx = cellRect.width / totalTimelineMinutes;
+            const totalIntervals = 11 * 24 * 4;
+            const intervalWidthPx = cellRect.width / totalIntervals;
 
             const rawLeftPx = targetBar.offsetLeft;
             const snappedLeftInterval = Math.round(rawLeftPx / intervalWidthPx);
@@ -1755,7 +1732,6 @@
         setupSync,
         updateDynamicDates,
         refreshAllRelativeDates,
-        updateAllergyWarning, // MODIFIÉ : Ajout de l'export
         
         // Navigation & Modales
         changeTab,
