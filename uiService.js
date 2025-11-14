@@ -297,7 +297,9 @@
         }
 
         // --- Ce qui suit ne s'applique QU'AUX ÉTUDIANTS ---
-        if (saveStatusButton) saveStatusButton.style.display = 'none';
+        
+        // ***** MODIFICATION : LIGNE SUPPRIMÉE *****
+        // if (saveStatusButton) saveStatusButton.style.display = 'none';
 
         const studentForbiddenButtons = [
             '#save-patient-btn', '#load-patient-btn', '#import-json-btn',

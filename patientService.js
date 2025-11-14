@@ -269,9 +269,16 @@
     }
     
     async function saveCurrentPatientData() {
-        if (isLoadingData || !activePatientId || userPermissions.subscription === 'free') {
+        // ***** MODIFICATION : CONDITION MISE À JOUR *****
+        if (isLoadingData || !activePatientId) {
             return;
         }
+        // Cette logique permet aux étudiants (isStudent) de sauvegarder,
+        // mais bloque les utilisateurs du plan "Free" qui ne sont pas étudiants.
+        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
+            return;
+        }
+        // ***** FIN DE LA MODIFICATION *****
 
         uiService.updateSaveStatus('saving');
         
