@@ -114,14 +114,6 @@
         const mainContent = document.querySelector('main');
         mainContent.addEventListener('input', patientService.debouncedSave);
         mainContent.addEventListener('change', patientService.debouncedSave);
-        
-        // --- MODIFIÉ : Ajout de l'écouteur pour le header patient ---
-        const headerForm = document.getElementById('patient-header-form');
-        if (headerForm) {
-            headerForm.addEventListener('input', patientService.debouncedSave);
-            headerForm.addEventListener('change', patientService.debouncedSave);
-        }
-        // --- FIN MODIFICATION ---
 
         // --- Mises à jour auto de l'UI (Header & Vie) ---
         document.getElementById('patient-entry-date').addEventListener('input', () => {
@@ -138,38 +130,21 @@
         document.getElementById('vie-taille').addEventListener('input', uiService.calculateAndDisplayIMC);
 
         // --- Ajout d'entrées (Observations, Transmissions, etc.) ---
-        
-        // --- MODIFIÉ : Ajout de saveCurrentPatientData() ---
         document.getElementById('add-observation-btn').addEventListener('click', () => {
             const data = uiService.readObservationForm();
-            if (data) {
-                uiService.addObservation(data, false);
-                patientService.saveCurrentPatientData(); // Déclenche la sauvegarde immédiate
-            }
+            if (data) uiService.addObservation(data, false);
         });
-        // --- MODIFIÉ : Ajout de saveCurrentPatientData() ---
         document.getElementById('add-transmission-btn').addEventListener('click', () => {
             const data = uiService.readTransmissionForm();
-            if (data) {
-                uiService.addTransmission(data, false);
-                patientService.saveCurrentPatientData(); // Déclenche la sauvegarde immédiate
-            }
+            if (data) uiService.addTransmission(data, false);
         });
-        // --- MODIFIÉ : Ajout de saveCurrentPatientData() ---
         document.getElementById('add-prescription-btn').addEventListener('click', () => {
             const data = uiService.readPrescriptionForm();
-            if (data) {
-                uiService.addPrescription(data, false);
-                patientService.saveCurrentPatientData(); // Déclenche la sauvegarde immédiate
-            }
+            if (data) uiService.addPrescription(data, false);
         });
-        // --- MODIFIÉ : Ajout de saveCurrentPatientData() ---
         document.getElementById('add-care-diagram-btn').addEventListener('click', () => {
             const data = uiService.readCareDiagramForm();
-            if (data) {
-                uiService.addCareDiagramRow(data);
-                patientService.saveCurrentPatientData(); // Déclenche la sauvegarde immédiate
-            }
+            if (data) uiService.addCareDiagramRow(data);
         });
         
         // --- Boutons de tri ---
@@ -181,7 +156,7 @@
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
             if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette entrée ?", () => {
-                    if (uiService.deleteEntry(deleteBtn)) patientService.saveCurrentPatientData(); // MODIFIÉ
+                    if (uiService.deleteEntry(deleteBtn)) patientService.debouncedSave();
                 });
             }
         });
@@ -189,7 +164,7 @@
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
             if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette entrée ?", () => {
-                    if (uiService.deleteEntry(deleteBtn)) patientService.saveCurrentPatientData(); // MODIFIÉ
+                    if (uiService.deleteEntry(deleteBtn)) patientService.debouncedSave();
                 });
             }
         });
@@ -199,7 +174,7 @@
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
             if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette prescription ?", () => {
-                    if (uiService.deletePrescription(deleteBtn)) patientService.saveCurrentPatientData(); // MODIFIÉ
+                    if (uiService.deletePrescription(deleteBtn)) patientService.debouncedSave();
                 });
             }
         });
@@ -207,7 +182,7 @@
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
             if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer ce soin ?", () => {
-                    if (uiService.deleteCareDiagramRow(deleteBtn)) patientService.saveCurrentPatientData(); // MODIFIÉ
+                    if (uiService.deleteCareDiagramRow(deleteBtn)) patientService.debouncedSave();
                 });
             }
         });
