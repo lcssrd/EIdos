@@ -20,6 +20,9 @@
     
     // Pour la sauvegarde automatique
     let saveTimeout;
+    
+    // NOUVEAU : Référence au socket
+    let socket = null;
 
     /**
      * Lit TOUS les champs de l'interface utilisateur et les assemble
@@ -162,6 +165,60 @@
 
     // --- Fonctions de Service (exposées) ---
 
+    // NOUVEAU : Initialise et écoute le socket
+    function initializeSocket() {
+        socket = apiService.connectSocket();
+        if (!socket) {
+            console.error("Échec de la connexion au socket, le temps réel est désactivé.");
+            return;
+        }
+
+        socket.on('patient_updated', (data) => {
+            console.log("Événement 'patient_updated' reçu :", data);
+
+            // 1. Vérifier si la mise à jour concerne le patient actuel
+            if (data.patientId !== activePatientId) {
+                console.log("Mise à jour pour un autre patient, ignorée.");
+                // Mettre à jour le nom dans la sidebar si nécessaire
+                if (data.dossierData.sidebar_patient_name) {
+                     uiService.updateSidebarEntryName(data.patientId, data.dossierData.sidebar_patient_name);
+                }
+                return;
+            }
+            
+            // 2. Vérifier si nous sommes l'expéditeur (normalement géré par le serveur, mais double sécurité)
+            if (data.sender === socket.id) {
+                console.log("Mise à jour de notre propre envoi, ignorée.");
+                return;
+            }
+
+            // --- C'est une mise à jour pour nous ! ---
+            console.log("Application de la mise à jour en temps réel...");
+            
+            // Mettre à jour l'état local
+            currentPatientState = data.dossierData;
+            
+            // Mettre en pause la sauvegarde automatique
+            isLoadingData = true;
+            
+            // Appliquer les changements à l'interface
+            loadPatientDataIntoUI(currentPatientState);
+            
+            // Mettre à jour le nom dans la sidebar
+            uiService.updateSidebarEntryName(activePatientId, currentPatientState.sidebar_patient_name);
+            
+            // Indiquer que les données sont à jour
+            uiService.updateSaveStatus('saved');
+            uiService.showToast("Dossier mis à jour en temps réel.", 'success');
+            
+            // Réactiver la sauvegarde auto après un court délai
+            setTimeout(() => {
+                isLoadingData = false;
+            }, 500);
+        });
+    }
+
+
     async function initialize() {
         try {
             const userData = await apiService.fetchUserPermissions();
@@ -197,7 +254,13 @@
             console.error("Échec critique de l'initialisation des permissions.", error);
             // MODIFIÉ : Garde l'alerte bloquante pour une erreur critique
             uiService.showCustomAlert("Erreur critique", "Impossible de charger les permissions utilisateur. L'application ne peut pas démarrer.");
-            return;
+            return; // MODIFIÉ : Retourne false au lieu de rien
+        }
+
+        // NOUVEAU : Initialiser le socket APRÈS avoir eu les permissions
+        // Le plan 'free' n'a pas besoin de temps réel (car pas de sauvegarde)
+        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
+            initializeSocket();
         }
 
         uiService.applyPermissions(userPermissions);
@@ -206,7 +269,7 @@
             document.getElementById('patient-list').innerHTML = '<li class="p-2 text-sm text-gray-500">Aucune chambre ne vous a été assignée.</li>';
             document.getElementById('main-content-wrapper').innerHTML = '<div class="p-8 text-center text-gray-600">Aucune chambre ne vous a été assignée. Veuillez contacter votre formateur.</div>';
             document.querySelectorAll('#main-header button').forEach(btn => btn.disabled = true);
-            return; 
+            return false; // MODIFIÉ : Retourne false
         }
 
         const storedPatientId = localStorage.getItem('activePatientId');
@@ -224,7 +287,8 @@
     
     async function loadPatientList() {
         let patientMap = new Map();
-        if (userPermissions.subscription !== 'free') {
+        // MODIFIÉ : Vérifie si l'utilisateur n'est pas 'free' OU s'il est étudiant
+        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
             try {
                 const allPatients = await apiService.fetchPatientList();
                 allPatients.forEach(p => {
@@ -311,7 +375,12 @@
     }
     
     async function forceSaveAndRefresh() {
-        if (isLoadingData || !activePatientId) return;
+        // ***** MODIFICATION : '!activePatientId' est la SEULE condition bloquante *****
+        if (!activePatientId) return;
+
+        // Force l'état de chargement à false pour "débloquer"
+        isLoadingData = false; 
+        // ***** FIN DE LA MODIFICATION *****
 
         console.log('Forçage de la sauvegarde et du rafraîchissement...');
         clearTimeout(saveTimeout); 
@@ -383,6 +452,7 @@
                 }
 
                 const patientName = dossierToLoad.sidebar_patient_name;
+                // MODIFIÉ : La sauvegarde déclenchera l'événement socket pour les autres
                 await apiService.saveChamberData(activePatientId, dossierToLoad, patientName);
 
                 uiService.hideLoadPatientModal();
@@ -418,6 +488,7 @@
         
         try {
             const patientName = jsonData.sidebar_patient_name || `Chambre ${activePatientId.split('_')[1]}`;
+            // MODIFIÉ : La sauvegarde déclenchera l'événement socket pour les autres
             await apiService.saveChamberData(activePatientId, jsonData, patientName);
             
             await switchPatient(activePatientId, true); 
@@ -476,6 +547,7 @@
             
             try {
                 uiService.updateSaveStatus('saving');
+                // MODIFIÉ : La sauvegarde déclenchera l'événement socket pour les autres
                 await apiService.saveChamberData(activePatientId, {}, `Chambre ${activePatientId.split('_')[1]}`);
                 uiService.updateSidebarEntryName(activePatientId, `Chambre ${activePatientId.split('_')[1]}`);
                 uiService.updateSaveStatus('saved');
@@ -504,6 +576,7 @@
             try {
                 uiService.updateSaveStatus('saving');
                 const allChamberIds = patientList.map(p => p.id);
+                // MODIFIÉ : Ceci déclenchera 10 événements socket
                 await apiService.clearAllChamberData(allChamberIds);
                 await loadPatientList(); 
                 // MODIFIÉ : Remplacé showCustomAlert par showToast

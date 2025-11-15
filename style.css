@@ -558,7 +558,8 @@ margin: 0.35rem auto;
 .status-saving {
     background-color: #3b82f6; 
     color: white;
-    cursor: not-allowed;
+    /* ***** MODIFICATION : Ligne supprimée ***** */
+    /* cursor: not-allowed; */
 }
 .status-saving #save-status-icon {
     animation: spin 1s linear infinite;

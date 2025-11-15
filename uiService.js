@@ -647,14 +647,16 @@
                     saveStatusIcon.classList.remove('fa-spin');
                 }
 
-                saveStatusButton.disabled = (status === 'saving');
+                // ***** MODIFICATION : Le bouton n'est JAMAIS désactivé *****
+                saveStatusButton.disabled = false;
 
             }, 200); // Correspond à la moitié de la transition/animation
         } else {
              // Si le texte est le même, juste mettre à jour la classe
              saveStatusButton.classList.remove('status-saved', 'status-dirty', 'status-saving');
              saveStatusButton.classList.add(newButtonClasses);
-             saveStatusButton.disabled = (status === 'saving');
+             // ***** MODIFICATION : Le bouton n'est JAMAIS désactivé *****
+             saveStatusButton.disabled = false;
              if (status === 'saving') {
                 saveStatusIcon.classList.add('fa-spin');
              } else {

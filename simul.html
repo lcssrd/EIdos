@@ -465,10 +465,13 @@
         </div>
     </div>
 
-    <div id="toast-notification" class="fixed top-24 right-4 w-full max-w-xs p-4 rounded-lg shadow-lg bg-white border border-gray-200 flex items-center space-x-3" style="z-index: 9999; transform: translateX(120%); transition: transform 0.4s ease-in-out;">
+    <div id="toast-notification" class="fixed top-24 right-4 w-full max-w-xs p-4 rounded-lg shadow-lg bg-white border border-gray-200 flex items-center space-x-3" style="z-index: 9999; transition: transform 0.4s ease-in-out;">
         <i id="toast-icon" class="fas fa-check-circle text-green-500 text-xl"></i>
         <p id="toast-text" class="text-sm font-medium text-gray-700">Action réussie !</p>
     </div>
+    
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
     <script src="apiService.js"></script>
     <script src="utils.js"></script>
     <script src="uiService.js"></script>
