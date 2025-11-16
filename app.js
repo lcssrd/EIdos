@@ -115,6 +115,15 @@
         mainContent.addEventListener('input', patientService.debouncedSave);
         mainContent.addEventListener('change', patientService.debouncedSave);
 
+        // --- NOUVELLE MODIFICATION ---
+        // Ajoute la sauvegarde automatique pour l'en-tête patient
+        const headerForm = document.getElementById('patient-header-form');
+        if (headerForm) {
+            headerForm.addEventListener('input', patientService.debouncedSave);
+            headerForm.addEventListener('change', patientService.debouncedSave);
+        }
+        // --- FIN MODIFICATION ---
+
         // --- Mises à jour auto de l'UI (Header & Vie) ---
         document.getElementById('patient-entry-date').addEventListener('input', () => {
             uiService.updateJourHosp();
@@ -143,21 +152,21 @@
             const data = uiService.readTransmissionForm();
             if (data) {
                 uiService.addTransmission(data, false);
-                patientService.debouncedSave(); // <-- MODIFIÉ
+                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
             }
         });
         document.getElementById('add-prescription-btn').addEventListener('click', () => {
             const data = uiService.readPrescriptionForm();
             if (data) {
                 uiService.addPrescription(data, false);
-                patientService.debouncedSave(); // <-- MODIFIÉ
+                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
             }
         });
         document.getElementById('add-care-diagram-btn').addEventListener('click', () => {
             const data = uiService.readCareDiagramForm();
             if (data) {
                 uiService.addCareDiagramRow(data);
-                patientService.debouncedSave(); // <-- MODIFIÉ
+                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
             }
         });
         
