@@ -132,19 +132,33 @@
         // --- Ajout d'entrées (Observations, Transmissions, etc.) ---
         document.getElementById('add-observation-btn').addEventListener('click', () => {
             const data = uiService.readObservationForm();
-            if (data) uiService.addObservation(data, false);
+            if (data) {
+                uiService.addObservation(data, false);
+                // Note: L'observation est le seul qui ne sauvegarde pas, car c'est souvent médical.
+                // Si vous voulez qu'il sauvegarde, ajoutez la ligne ci-dessous.
+                // patientService.debouncedSave(); 
+            }
         });
         document.getElementById('add-transmission-btn').addEventListener('click', () => {
             const data = uiService.readTransmissionForm();
-            if (data) uiService.addTransmission(data, false);
+            if (data) {
+                uiService.addTransmission(data, false);
+                patientService.debouncedSave(); // <-- MODIFIÉ
+            }
         });
         document.getElementById('add-prescription-btn').addEventListener('click', () => {
             const data = uiService.readPrescriptionForm();
-            if (data) uiService.addPrescription(data, false);
+            if (data) {
+                uiService.addPrescription(data, false);
+                patientService.debouncedSave(); // <-- MODIFIÉ
+            }
         });
         document.getElementById('add-care-diagram-btn').addEventListener('click', () => {
             const data = uiService.readCareDiagramForm();
-            if (data) uiService.addCareDiagramRow(data);
+            if (data) {
+                uiService.addCareDiagramRow(data);
+                patientService.debouncedSave(); // <-- MODIFIÉ
+            }
         });
         
         // --- Boutons de tri ---
