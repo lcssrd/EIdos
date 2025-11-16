@@ -170,6 +170,16 @@
             }
         });
         
+        // --- AJOUT : LISTENER POUR SURVEILLANCE PERSO ---
+        document.getElementById('add-surv-perso-btn').addEventListener('click', () => {
+            const data = uiService.readSurvPersoForm();
+            if (data) {
+                uiService.addSurvPersoRow(data, false); // fromLoad = false
+                patientService.debouncedSave(); 
+            }
+        });
+        // --- FIN AJOUT ---
+        
         // --- Boutons de tri ---
         document.getElementById('sort-observations-btn').addEventListener('click', () => uiService.toggleSort('observations'));
         document.getElementById('sort-transmissions-btn').addEventListener('click', () => uiService.toggleSort('transmissions'));
@@ -209,6 +219,17 @@
                 });
             }
         });
+        
+        // --- AJOUT : LISTENER DE SUPPRESSION POUR SURVEILLANCE PERSO ---
+        document.getElementById('surv-perso-tbody').addEventListener('click', (e) => {
+            const deleteBtn = e.target.closest('.delete-surv-perso-btn');
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
+                uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer ce paramètre ?", () => {
+                    if (uiService.deleteSurvPersoRow(deleteBtn)) patientService.debouncedSave();
+                });
+            }
+        });
+        // --- FIN AJOUT ---
         
         // --- Pancarte (Graphique) ---
         document.getElementById('pancarte-tbody').addEventListener('change', (e) => {

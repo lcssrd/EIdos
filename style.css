@@ -441,7 +441,9 @@ margin: 0.35rem auto;
 #pancarte-table th:first-child,
 #pancarte-table td:first-child,
 #glycemie-table th:first-child,
-#glycemie-table td:first-child {
+#glycemie-table td:first-child,
+#surv-perso-table th:first-child, /* AJOUT */
+#surv-perso-table td:first-child { /* AJOUT */
     position: -webkit-sticky;
     position: sticky;
     left: 0;
@@ -449,22 +451,26 @@ margin: 0.35rem auto;
 }
 
 #pancarte-table thead th,
-#glycemie-table thead th {
+#glycemie-table thead th,
+#surv-perso-table thead th { /* AJOUT */
     z-index: 11;
 }
 
 #pancarte-table thead tr:first-child th:first-child,
-#glycemie-table thead tr:first-child th:first-child {
+#glycemie-table thead tr:first-child th:first-child,
+#surv-perso-table thead tr:first-child th:first-child { /* AJOUT */
     z-index: 12;
 }
 
 #pancarte-table td:first-child,
-#glycemie-table td:first-child {
+#glycemie-table td:first-child,
+#surv-perso-table td:first-child { /* AJOUT */
     background-color: white;
 }
 
 #pancarte-table thead th:first-child,
-#glycemie-table thead th:first-child {
+#glycemie-table thead th:first-child,
+#surv-perso-table thead th:first-child { /* AJOUT */
     background-color: #f9fafb; 
 }
 
