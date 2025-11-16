@@ -229,26 +229,6 @@
             glycemieTbody.innerHTML = html;
         }
 
-        // --- AJOUT : SURVEILLANCE PERSONNALISÉE ---
-        const survPersoThead = document.getElementById('surv-perso-thead');
-        if (survPersoThead) {
-            html = '<tr><th class="p-2 text-left sticky-col" rowspan="2">Paramètres</th>';
-            for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="3">Jour ${i}</th>`;}
-            html += '</tr><tr>';
-            for(let i=0; i<11; i++) { 
-                html += `<th class="p-1" style="min-width: 70px;">Matin</th>`;
-                html += `<th class="p-1" style="min-width: 70px;">Soir</th>`;
-                html += `<th class="p-1" style="min-width: 70px;">Nuit</th>`;
-            }
-            html += '</tr>';
-            survPersoThead.innerHTML = html;
-        }
-        const survPersoTbody = document.getElementById('surv-perso-tbody');
-        if (survPersoTbody) {
-            survPersoTbody.innerHTML = ''; // Initialement vide
-        }
-        // --- FIN AJOUT ---
-
         // --- DIAGRAMME DE SOINS ---
         const careDiagramThead = document.getElementById('care-diagram-thead');
         if (careDiagramThead) {
@@ -355,9 +335,7 @@
             if (form) form.style.display = 'none';
         }
         if (!userPermissions.pancarte) {
-            document.querySelectorAll('#pancarte-table input, #glycemie-table input, #surv-perso-table input').forEach(el => el.disabled = true); // MODIFIÉ
-            const survForm = document.getElementById('new-surv-perso-form'); // AJOUT
-            if (survForm) survForm.style.display = 'none'; // AJOUT
+            document.querySelectorAll('#pancarte-table input, #glycemie-table input').forEach(el => el.disabled = true);
         }
         if (!userPermissions.biologie) {
             document.querySelectorAll('#bio-table input').forEach(el => el.disabled = true);
@@ -428,7 +406,6 @@
         
         document.getElementById('glycemie-tbody').innerHTML = '';
         document.getElementById('pancarte-tbody').innerHTML = '';
-        document.getElementById('surv-perso-tbody').innerHTML = ''; // AJOUT
         
         initializeDynamicTables();
 
@@ -439,7 +416,7 @@
 
     function fillFormFromState(state) {
         Object.keys(state).forEach(id => {
-            if (['observations', 'transmissions', 'comptesRendus', 'biologie', 'pancarte', 'glycemie', 'prescriptions', 'lockButtonStates', 'careDiagramCheckboxes', 'survPerso'].includes(id) || id.endsWith('_html')) { // MODIFIÉ
+            if (['observations', 'transmissions', 'comptesRendus', 'biologie', 'pancarte', 'glycemie', 'prescriptions', 'lockButtonStates', 'careDiagramCheckboxes'].includes(id) || id.endsWith('_html')) {
                 return;
             }
             const el = document.getElementById(id);
@@ -591,19 +568,6 @@
         }
     }
     
-    // --- AJOUT : NOUVELLE FONCTION ---
-    function fillSurvPersoFromState(state) {
-        const tbody = document.getElementById('surv-perso-tbody');
-        if (!tbody) return;
-        tbody.innerHTML = ''; // Toujours vider avant de remplir
-        if (state.survPerso && Array.isArray(state.survPerso)) {
-            state.survPerso.forEach(item => {
-                addSurvPersoRow(item, true); // fromLoad = true
-            });
-        }
-    }
-    // --- FIN AJOUT ---
-
     function fillCrCardsFromState(crData) {
         document.querySelectorAll('#cr-card-grid .cr-check-icon').forEach(icon => {
             icon.classList.add('hidden');
@@ -766,7 +730,6 @@
         updateHeaders('#prescription-table thead tr:first-child th[colspan="8"]');
         updateHeaders('#pancarte-table thead tr:first-child th[colspan="3"]');
         updateHeaders('#glycemie-table thead tr:first-child th[colspan="3"]');
-        updateHeaders('#surv-perso-table thead tr:first-child th[colspan="3"]'); // AJOUT
         updateHeaders('#care-diagram-table thead tr:first-child th[colspan="3"]');
         
         if (pancarteChartInstance) updatePancarteChart();
@@ -1274,44 +1237,6 @@
         newRow.innerHTML = cellsHTML;
     }
 
-    // --- AJOUT : NOUVELLES FONCTIONS ---
-    function readSurvPersoForm() {
-        const nameEl = document.getElementById('surv-perso-name');
-        const name = nameEl.value.trim();
-        if (!name) return null;
-        
-        nameEl.value = ''; // Réinitialiser le champ
-        return { name, values: [] }; // Renvoyer avec un tableau de valeurs vide
-    }
-
-    function addSurvPersoRow(data, fromLoad = false) {
-        const { name, values = [] } = data;
-        if (!name) return;
-
-        const tbody = document.getElementById('surv-perso-tbody');
-        if (!tbody) return;
-        const newRow = tbody.insertRow();
-        
-        let cellsHTML = `
-            <td class="p-2 text-left font-semibold sticky-col">
-                <div class="flex items-start justify-between">
-                    <span>${name}</span>
-                    <button type="button" class="delete-surv-perso-btn ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer ce paramètre">
-                        <i class="fas fa-times-circle"></i>
-                    </button>
-                </div>
-            </td>
-        `;
-        
-        for(let i=0; i<33; i++) {
-            const value = (fromLoad && values[i]) ? values[i] : '';
-            cellsHTML += `<td class="p-0" style="min-width: 70px;"><input type="text" value="${value}"></td>`;
-        }
-        
-        newRow.innerHTML = cellsHTML;
-    }
-    // --- FIN AJOUT ---
-
     function deleteEntry(button) {
         const entry = button.closest('.timeline-item');
         if (entry) {
@@ -1336,17 +1261,6 @@
         }
         return false;
     }
-    
-    // --- AJOUT : NOUVELLE FONCTION ---
-    function deleteSurvPersoRow(button) {
-        const row = button.closest('tr');
-        if (row) {
-            row.remove();
-            return true; 
-        }
-        return false;
-    }
-    // --- FIN AJOUT ---
 
     // --- Fonctions UI : Logique des Comptes Rendus (NOUVEAU) ---
 
@@ -1829,7 +1743,6 @@
         fillPrescriptionsFromState,
         fillBioFromState,
         fillPancarteFromState,
-        fillSurvPersoFromState, // AJOUT
         fillCrCardsFromState,
         
         // Mises à jour UI
@@ -1865,16 +1778,10 @@
         readCareDiagramForm,
         addCareDiagramRow,
         
-        // AJOUTS
-        readSurvPersoForm,
-        addSurvPersoRow,
-        // FIN AJOUTS
-        
         // Suppression d'entrées
         deleteEntry,
         deletePrescription,
         deleteCareDiagramRow,
-        deleteSurvPersoRow, // AJOUT
         
         // Logique Comptes Rendus (CR)
         openCrModal,

@@ -36,7 +36,7 @@
         // 1. Inputs simples (Header, Admin, Vie, ATCD)
         document.querySelectorAll('input[id], textarea[id]').forEach(el => {
             // Exclure les champs de formulaire qui ne font pas partie de l'état
-            if (el.id.startsWith('new-') || el.id.startsWith('cr-modal-') || el.type === 'file' || el.id.startsWith('surv-perso-name')) { // MODIFIÉ
+            if (el.id.startsWith('new-') || el.id.startsWith('cr-modal-') || el.type === 'file') {
                 return;
             }
             const id = el.id;
@@ -129,19 +129,7 @@
             });
         });
         
-        // --- AJOUT : 9. Surveillance Personnalisée ---
-        state.survPerso = [];
-        document.querySelectorAll('#surv-perso-tbody tr').forEach(row => {
-            const nameEl = row.cells[0].querySelector('span');
-            if (nameEl) {
-                const name = nameEl.textContent.trim();
-                const values = Array.from(row.querySelectorAll('input[type="text"]')).map(input => input.value);
-                state.survPerso.push({ name, values });
-            }
-        });
-        // --- FIN AJOUT ---
-
-        // 10. Nom (pour la sidebar)
+        // 9. Nom (pour la sidebar)
         const nomUsage = document.getElementById('patient-nom-usage').value.trim();
         const prenom = document.getElementById('patient-prenom').value.trim();
         state['sidebar_patient_name'] = `${nomUsage} ${prenom}`.trim();
@@ -162,7 +150,6 @@
         uiService.fillPrescriptionsFromState(state, entryDateStr);
         uiService.fillBioFromState(state, entryDateStr);
         uiService.fillPancarteFromState(state);
-        uiService.fillSurvPersoFromState(state); // AJOUT
         uiService.fillCrCardsFromState(state.comptesRendus); 
         
         uiService.updateAgeDisplay();
