@@ -1,2 +1,2 @@
-# IFSImulation
+# EIdos
 DPI Simulé
