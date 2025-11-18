@@ -1,9 +1,9 @@
-(function() {
+(function () {
     "use strict";
 
     // --- Variables d'état de l'UI ---
     let pancarteChartInstance;
-    
+
     // Références pour les modales
     let loadPatientModal, loadPatientBox, loadPatientListContainer;
     let confirmModal, confirmModalBox, confirmTitle, confirmMessage, confirmCancelBtn, confirmOkBtn;
@@ -17,7 +17,7 @@
     let toastTimeout = null;
 
     let confirmCallback = null; // Pour la modale de confirmation
-    
+
     // Références pour le tutoriel
     let tutorialOverlay, tutorialStepBox, tutorialText, tutorialSkipBtn, tutorialNextBtn;
     let currentStepIndex = 0;
@@ -38,10 +38,10 @@
     const gdsData = { "pH": "7.35-7.45", "PaCO2 (mmHg)": "35-45", "PaO2 (mmHg)": "80-100", "HCO3- (mmol/L)": "22-26", "SaO2 (%)": "> 95" };
     const inflammationData = { "CRP (mg/L)": "< 5" };
     const pancarteData = {
-        'Pouls (/min)': [], 
-        'Tension (mmHg)': [], 
-        'Température (°C)': [], 
-        'SpO2 (%)': [], 
+        'Pouls (/min)': [],
+        'Tension (mmHg)': [],
+        'Température (°C)': [],
+        'SpO2 (%)': [],
         'Douleur (EVA /10)': [],
         'Poids (kg)': [],
         'Diurèse (L)': []
@@ -49,7 +49,7 @@
     const glycemieData = {
         'Glycémie (g/L)': []
     };
-    
+
     // --- Fonctions d'initialisation de l'UI ---
 
     /**
@@ -63,12 +63,12 @@
         confirmMessage = document.getElementById('custom-confirm-message');
         confirmCancelBtn = document.getElementById('custom-confirm-cancel');
         confirmOkBtn = document.getElementById('custom-confirm-ok');
-        
+
         // Modale de chargement de patient
         loadPatientModal = document.getElementById('load-patient-modal');
         loadPatientBox = document.getElementById('load-patient-box');
         loadPatientListContainer = document.getElementById('load-patient-list-container');
-        
+
         // Modale des comptes rendus (CR)
         crModal = document.getElementById('cr-modal');
         crModalBox = document.getElementById('cr-modal-box');
@@ -128,10 +128,10 @@
         const prescriptionThead = document.getElementById('prescription-thead');
         if (prescriptionThead) {
             html = '<tr><th class="p-2 text-left align-bottom min-w-[220px]" rowspan="2">Médicament / Soin</th><th class="p-2 text-left align-bottom min-w-[144px]" rowspan="2">Posologie</th><th class="p-2 text-left align-bottom min-w-[96px]" rowspan="2">Voie</th><th class="p-2 text-left align-bottom" rowspan="2" style="min-width: 100px;">Date de début</th>';
-            for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="8">Jour ${i}</th>`;}
+            for (let i = 0; i < 11; i++) { html += `<th class="p-2 text-center" colspan="8">Jour ${i}</th>`; }
             html += '</tr><tr>';
             const hours = ['0h', '3h', '6h', '9h', '12h', '15h', '18h', '21h'];
-            for(let i=0; i<11; i++) { 
+            for (let i = 0; i < 11; i++) {
                 for (const hour of hours) {
                     html += `<th class="p-1 text-center small-col">${hour}</th>`;
                 }
@@ -144,7 +144,7 @@
         const bioThead = document.getElementById('bio-thead');
         if (bioThead) {
             html = '<tr><th class="p-2 text-left w-1/4">Analyse</th><th class="p-2 text-left w-1/4">Valeurs de référence</th>';
-            for(let i=0; i<6; i++) {
+            for (let i = 0; i < 6; i++) {
                 html += `<th class="p-1"><input type="date" placeholder="JJ/MM/AA" class="font-semibold text-center w-24 bg-transparent"></th>`;
             }
             html += '</tr>';
@@ -166,9 +166,9 @@
         const pancarteThead = document.getElementById('pancarte-thead');
         if (pancarteThead) {
             html = '<tr><th class="p-2 text-left sticky-col" rowspan="2">Paramètres</th>';
-            for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="3">Jour ${i}</th>`;}
+            for (let i = 0; i < 11; i++) { html += `<th class="p-2 text-center" colspan="3">Jour ${i}</th>`; }
             html += '</tr><tr>';
-            for(let i=0; i<11; i++) { 
+            for (let i = 0; i < 11; i++) {
                 html += `<th class="p-1" style="min-width: 70px;">Matin</th>`;
                 html += `<th class="p-1" style="min-width: 70px;">Soir</th>`;
                 html += `<th class="p-1" style="min-width: 70px;">Nuit</th>`;
@@ -187,12 +187,12 @@
                 }
 
                 if (param === 'Poids (kg)' || param === 'Diurèse (L)') {
-                    for(let i=0; i<11; i++) {
+                    for (let i = 0; i < 11; i++) {
                         html += `<td class="p-0" style="min-width: 70px;">${inputHtml}</td>`;
                         html += `<td class="p-0 bg-gray-100" colspan="2"></td>`;
                     }
                 } else {
-                    for(let i=0; i<33; i++) {
+                    for (let i = 0; i < 33; i++) {
                         html += `<td class="p-0" style="min-width: 70px;">${inputHtml}</td>`;
                     }
                 }
@@ -200,14 +200,14 @@
             }
             pancarteTbody.innerHTML = html;
         }
-        
+
         // --- GLYCEMIE ---
         const glycemieThead = document.getElementById('glycemie-thead');
         if (glycemieThead) {
             html = '<tr><th class="p-2 text-left sticky-col" rowspan="2">Paramètres</th>';
-            for(let i=0; i<11; i++) { html += `<th class="p-2 text-center" colspan="3">Jour ${i}</th>`;}
+            for (let i = 0; i < 11; i++) { html += `<th class="p-2 text-center" colspan="3">Jour ${i}</th>`; }
             html += '</tr><tr>';
-            for(let i=0; i<11; i++) { 
+            for (let i = 0; i < 11; i++) {
                 html += `<th class="p-1" style="min-width: 70px;">Matin</th>`;
                 html += `<th class="p-1" style="min-width: 70px;">Midi</th>`;
                 html += `<th class="p-1" style="min-width: 70px;">Soir</th>`;
@@ -221,7 +221,7 @@
             for (const param in glycemieData) {
                 html += `<tr><td class="p-2 text-left font-semibold sticky-col">${param}</td>`;
                 let inputHtml = '<input type="number" step="0.1" value="">';
-                for(let i=0; i<33; i++) {
+                for (let i = 0; i < 33; i++) {
                     html += `<td class="p-0" style="min-width: 70px;">${inputHtml}</td>`;
                 }
                 html += `</tr>`;
@@ -233,11 +233,11 @@
         const careDiagramThead = document.getElementById('care-diagram-thead');
         if (careDiagramThead) {
             html = '<tr><th class="p-2 text-left min-w-[220px]">Soin / Surveillance</th>';
-            for(let i=0; i<11; i++) { html += `<th colspan="3" class="border-l">Jour ${i}</th>`;}
+            for (let i = 0; i < 11; i++) { html += `<th colspan="3" class="border-l">Jour ${i}</th>`; }
             html += '</tr><tr><th class="min-w-[220px]"></th>';
             const msn = ['Matin', 'Soir', 'Nuit'];
-            for(let i=0; i<11; i++) { 
-                for (let j = 0; j < msn.length; j++) { 
+            for (let i = 0; i < 11; i++) {
+                for (let j = 0; j < msn.length; j++) {
                     const borderClass = (j === 0) ? 'border-l' : '';
                     html += `<th class="${borderClass} p-1 text-center" style="min-width: 70px;">${msn[j]}</th>`;
                 }
@@ -263,7 +263,7 @@
         // Modale de chargement de patient
         document.getElementById('load-patient-close-btn').addEventListener('click', hideLoadPatientModal);
         document.getElementById('load-patient-cancel-btn').addEventListener('click', hideLoadPatientModal);
-        
+
         // Modale des comptes rendus
         crModalCloseBtn.addEventListener('click', closeCrModal);
     }
@@ -274,17 +274,17 @@
     function disableSectionInputs(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
-        
+
         const inputs = container.querySelectorAll('.info-value, input[type=text], input[type=date]');
         inputs.forEach(input => {
-            if (input.id !== 'vie-imc') { 
+            if (input.id !== 'vie-imc') {
                 input.disabled = true;
             }
         });
     }
 
     function applyPermissions(userPermissions) {
-        
+
         if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
@@ -297,7 +297,7 @@
         }
 
         // --- Ce qui suit ne s'applique QU'AUX ÉTUDIANTS ---
-        
+
         // ***** MODIFICATION : LIGNE SUPPRIMÉE *****
         // if (saveStatusButton) saveStatusButton.style.display = 'none';
 
@@ -314,7 +314,7 @@
         if (!userPermissions.header) disableSectionInputs('patient-header-form');
         if (!userPermissions.admin) disableSectionInputs('administratif');
         if (!userPermissions.vie) disableSectionInputs('mode-de-vie');
-        
+
         if (!userPermissions.observations) {
             const form = document.getElementById('new-observation-form');
             if (form) form.style.display = 'none';
@@ -347,7 +347,7 @@
     function initSidebar(patients, patientMap) {
         const list = document.getElementById('patient-list');
         let listHTML = '';
-        
+
         patients.forEach(patient => {
             const patientName = patientMap.get(patient.id) || `Chambre ${patient.room}`;
             listHTML += `
@@ -383,14 +383,14 @@
     function resetForm() {
         document.querySelectorAll('#patient-header-form input, #patient-header-form textarea, main input, main textarea, main select').forEach(el => {
             if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
-            else if (el.tagName.toLowerCase() === 'select') el.selectedIndex = 0; 
+            else if (el.tagName.toLowerCase() === 'select') el.selectedIndex = 0;
             else if (el.type !== 'file') el.value = '';
         });
         ['observations-list', 'transmissions-list-ide', 'prescription-tbody'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.innerHTML = '';
         });
-        
+
         document.querySelectorAll('#cr-card-grid .cr-check-icon').forEach(icon => {
             icon.classList.add('hidden');
         });
@@ -403,10 +403,10 @@
             input.value = '';
             delete input.dataset.dateOffset;
         });
-        
+
         document.getElementById('glycemie-tbody').innerHTML = '';
         document.getElementById('pancarte-tbody').innerHTML = '';
-        
+
         initializeDynamicTables();
 
         calculateAndDisplayIMC();
@@ -421,7 +421,7 @@
             }
             const el = document.getElementById(id);
             if (el) {
-                if (el.type === 'checkbox' || el.type === 'radio') { el.checked = state[id]; } 
+                if (el.type === 'checkbox' || el.type === 'radio') { el.checked = state[id]; }
                 else { el.value = state[id]; }
             }
         });
@@ -432,7 +432,7 @@
 
     function fillListsFromState(state, entryDateStr) {
         const obsList = document.getElementById('observations-list');
-        obsList.innerHTML = ''; 
+        obsList.innerHTML = '';
         if (state.observations) {
             state.observations.forEach(obsData => {
                 let dateOffset = obsData.dateOffset;
@@ -445,88 +445,16 @@
                     const targetDate = utils.calculateDateFromOffset(entryDateStr, dateOffset);
                     formattedDate = utils.formatDate(targetDate);
                 }
-                
-                addObservation({ ...obsData, dateOffset: dateOffset, formattedDate: formattedDate }, true);
-            });
-            applySort('observations');
-        }
 
-        const transList = document.getElementById('transmissions-list-ide');
-        transList.innerHTML = ''; 
-        if (state.transmissions) {
-            state.transmissions.forEach(transData => {
-                let dateOffset = transData.dateOffset;
-                let formattedDate;
 
-                if (dateOffset === undefined && transData.date) {
-                    dateOffset = utils.calculateDaysOffset(entryDateStr, transData.date);
-                    formattedDate = utils.formatDate(new Date(transData.date + 'T00:00:00'));
-                } else {
-                    const targetDate = utils.calculateDateFromOffset(entryDateStr, dateOffset);
-                    formattedDate = utils.formatDate(targetDate);
-                }
-                
-                addTransmission({ ...transData, dateOffset: dateOffset, formattedDate: formattedDate }, true);
-            });
-            applySort('transmissions');
-        }
-    }
-
-    function fillCareDiagramFromState(state) {
-        const careDiagramTbody = document.getElementById('care-diagram-tbody');
-        if (careDiagramTbody && state['care-diagram-tbody_html']) {
-            careDiagramTbody.innerHTML = state['care-diagram-tbody_html'];
-        } else if (careDiagramTbody) {
-            careDiagramTbody.innerHTML = getDefaultForCareDiagramTbody();
-        }
-        if (state.careDiagramCheckboxes) {
-            document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
-                if (state.careDiagramCheckboxes[index] !== undefined) {
-                    cb.checked = state.careDiagramCheckboxes[index];
-                }
-            });
-        }
-    }
-
-    function fillPrescriptionsFromState(state, entryDateStr) {
-        const prescrTbody = document.getElementById('prescription-tbody');
-        prescrTbody.innerHTML = ''; 
-        if (state.prescriptions) {
-            state.prescriptions.forEach(pData => {
-                let dateOffset = pData.dateOffset;
-
-                if (dateOffset === undefined && pData.startDate) { 
-                     let oldStartDate = pData.startDate;
-                     if (oldStartDate.includes('/')) {
-                         const parts = oldStartDate.split('/');
-                         if (parts.length === 3) {
-                             oldStartDate = `20${parts[2]}-${parts[1]}-${parts[0]}`;
-                         }
-                     }
-                    dateOffset = utils.calculateDaysOffset(entryDateStr, oldStartDate);
-                }
-                
-                if (pData.type === 'iv') pData.voie = 'IV';
-                if (pData.type === 'checkbox') pData.voie = 'Per Os';
-                
-                addPrescription({ ...pData, dateOffset: dateOffset, type: pData.voie }, true); 
-            });
-        }
-    }
-
-    function fillBioFromState(state, entryDateStr) {
-        if (state.biologie) {
-            document.querySelectorAll('#bio-table thead input[type="date"]').forEach((input, index) => {
-                let offset = undefined;
-                
                 if (state.biologie.dateOffsets && state.biologie.dateOffsets[index] !== undefined) {
                     offset = state.biologie.dateOffsets[index];
-                } 
+                }
                 else if (state.biologie.dates && state.biologie.dates[index]) {
-                     const oldDateStr = state.biologie.dates[index];
-                     if (oldDateStr) {
+                    const oldDateStr = state.biologie.dates[index];
+                    if (oldDateStr) {
                         offset = utils.calculateDaysOffset(entryDateStr, oldDateStr);
-                     }
+                    }
                 }
 
                 if (offset !== undefined) {
@@ -535,7 +463,7 @@
                     input.dataset.dateOffset = offset;
                 }
             });
-            
+
             document.querySelectorAll('#bio-table tbody tr').forEach(row => {
                 if (row.cells.length > 1 && row.cells[0].classList.contains('font-semibold')) {
                     const analyseName = row.cells[0].textContent.trim();
@@ -548,7 +476,7 @@
             });
         }
     }
-    
+
     function fillPancarteFromState(state) {
         if (state.pancarte) {
             document.querySelectorAll('#pancarte-table tbody tr').forEach(row => {
@@ -567,12 +495,12 @@
             });
         }
     }
-    
+
     function fillCrCardsFromState(crData) {
         document.querySelectorAll('#cr-card-grid .cr-check-icon').forEach(icon => {
             icon.classList.add('hidden');
         });
-        
+
         if (!crData) return;
 
         for (const crId in crData) {
@@ -592,23 +520,23 @@
         // Stocker l'ancien texte et l'ancienne icône pour l'animation
         const oldText = saveStatusText.textContent;
         const oldIconClasses = Array.from(saveStatusIcon.classList);
-        
+
         let newText, newIconClasses, newButtonClasses;
 
         switch (status) {
-            case 'dirty': 
+            case 'dirty':
                 newText = 'Modifications';
                 newIconClasses = ['fas', 'fa-exclamation-triangle'];
                 newButtonClasses = 'status-dirty';
                 break;
-                
-            case 'saving': 
+
+            case 'saving':
                 newText = 'Enregistrement...';
                 newIconClasses = ['fas', 'fa-spinner'];
                 newButtonClasses = 'status-saving';
                 break;
-                
-            case 'saved': 
+
+            case 'saved':
             default:
                 newText = 'Enregistré';
                 newIconClasses = ['fas', 'fa-check-circle'];
@@ -618,25 +546,25 @@
 
         // Ne rien faire si l'état est déjà le bon (évite les animations inutiles)
         if (saveStatusButton.classList.contains(newButtonClasses)) {
-             // Sauf si on force un "Enregistré" (pour le feedback visuel après sauvegarde)
-             if (status !== 'saved') {
+            // Sauf si on force un "Enregistré" (pour le feedback visuel après sauvegarde)
+            if (status !== 'saved') {
                 return;
-             }
+            }
         }
 
         // Gérer l'animation de fondu pour le texte et l'icône
         if (oldText !== newText) {
             saveStatusIcon.style.opacity = '0';
             saveStatusText.style.opacity = '0';
-            
+
             setTimeout(() => {
                 saveStatusButton.classList.remove('status-saved', 'status-dirty', 'status-saving');
                 saveStatusIcon.classList.remove(...oldIconClasses);
-                
+
                 saveStatusButton.classList.add(newButtonClasses);
                 saveStatusIcon.classList.add(...newIconClasses);
                 saveStatusText.textContent = newText;
-                
+
                 saveStatusIcon.style.opacity = '1';
                 saveStatusText.style.opacity = '1';
 
@@ -652,16 +580,16 @@
 
             }, 200); // Correspond à la moitié de la transition/animation
         } else {
-             // Si le texte est le même, juste mettre à jour la classe
-             saveStatusButton.classList.remove('status-saved', 'status-dirty', 'status-saving');
-             saveStatusButton.classList.add(newButtonClasses);
-             // ***** MODIFICATION : Le bouton n'est JAMAIS désactivé *****
-             saveStatusButton.disabled = false;
-             if (status === 'saving') {
+            // Si le texte est le même, juste mettre à jour la classe
+            saveStatusButton.classList.remove('status-saved', 'status-dirty', 'status-saving');
+            saveStatusButton.classList.add(newButtonClasses);
+            // ***** MODIFICATION : Le bouton n'est JAMAIS désactivé *****
+            saveStatusButton.disabled = false;
+            if (status === 'saving') {
                 saveStatusIcon.classList.add('fa-spin');
-             } else {
+            } else {
                 saveStatusIcon.classList.remove('fa-spin');
-             }
+            }
         }
     }
 
@@ -671,13 +599,13 @@
         const dobAdmin = document.getElementById('admin-dob').value;
         document.getElementById('admin-age').textContent = utils.calculateAge(dobAdmin);
     }
-    
+
     function updateJourHosp() {
         const entryDateEl = document.getElementById('patient-entry-date');
         const jourHospEl = document.getElementById('patient-jour-hosp');
         jourHospEl.textContent = utils.calculateJourHosp(entryDateEl.value);
     }
-    
+
     function calculateAndDisplayIMC() {
         const poidsEl = document.getElementById('vie-poids');
         const tailleEl = document.getElementById('vie-taille');
@@ -702,14 +630,14 @@
                     if (!el2.disabled) {
                         el2.value = el1.value;
                         if (el2.tagName.toLowerCase() === 'textarea') autoResize(el2);
-                        if(id1.includes('dob')) updateAgeDisplay();
+                        if (id1.includes('dob')) updateAgeDisplay();
                     }
                 });
                 el2.addEventListener('input', () => {
                     if (!el1.disabled) {
-                        el1.value = el2.value; 
+                        el1.value = el2.value;
                         if (el1.tagName.toLowerCase() === 'textarea') autoResize(el1);
-                        if(id2.includes('dob')) updateAgeDisplay();
+                        if (id2.includes('dob')) updateAgeDisplay();
                     }
                 });
             }
@@ -726,19 +654,19 @@
                 th.innerHTML = `Jour ${index}<br><span class="text-xs font-normal">${day}/${month}</span>`;
             });
         };
-        
+
         updateHeaders('#prescription-table thead tr:first-child th[colspan="8"]');
         updateHeaders('#pancarte-table thead tr:first-child th[colspan="3"]');
         updateHeaders('#glycemie-table thead tr:first-child th[colspan="3"]');
         updateHeaders('#care-diagram-table thead tr:first-child th[colspan="3"]');
-        
+
         if (pancarteChartInstance) updatePancarteChart();
     }
-    
+
     function refreshAllRelativeDates() {
         const entryDateStr = document.getElementById('patient-entry-date').value;
-        if (!entryDateStr) return; 
-        
+        if (!entryDateStr) return;
+
         document.querySelectorAll('#observations-list .timeline-item').forEach(item => {
             const offset = parseInt(item.dataset.dateOffset, 10);
             if (!isNaN(offset)) {
@@ -747,7 +675,7 @@
                 item.querySelector('h3').textContent = `${formattedDate} - ${item.dataset.author.toUpperCase()}`;
             }
         });
-        
+
         document.querySelectorAll('#transmissions-list-ide .timeline-item').forEach(item => {
             const offset = parseInt(item.dataset.dateOffset, 10);
             if (!isNaN(offset)) {
@@ -756,7 +684,7 @@
                 item.querySelector('h3').textContent = `${formattedDate} - ${item.dataset.author.toUpperCase()}`;
             }
         });
-        
+
         document.querySelectorAll('#prescription-tbody tr').forEach(row => {
             const offset = parseInt(row.dataset.dateOffset, 10);
             if (!isNaN(offset)) {
@@ -768,12 +696,12 @@
 
         document.querySelectorAll('#bio-table thead input[type="date"]').forEach(input => {
             const offset = parseInt(input.dataset.dateOffset, 10);
-             if (!isNaN(offset)) {
+            if (!isNaN(offset)) {
                 const targetDate = utils.calculateDateFromOffset(entryDateStr, offset);
                 input.value = utils.formatDateForInput(targetDate);
             }
         });
-        
+
         document.querySelectorAll('#prescription-tbody .iv-bar').forEach(bar => {
             updateIVBarDetails(bar, bar.closest('.iv-bar-container'));
         });
@@ -786,7 +714,7 @@
 
 
     // --- Fonctions de Gestion de l'UI (Navigation & Modales) ---
-    
+
     function changeTab(tabId) {
         const clickedTab = document.querySelector(`nav button[data-tab-id="${tabId}"]`);
         if (!clickedTab) return;
@@ -796,33 +724,33 @@
 
         const baseClasses = "min-h-[4rem] py-2 px-2 text-sm font-medium rounded-lg border focus:outline-none transition-all ease-in-out duration-300 flex-1 flex items-center justify-center text-center";
         const inactiveClasses = "text-gray-600 bg-white border-gray-200 hover:bg-gray-100";
-        const activeClasses = { 
-            blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner", 
-            teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner", 
-            rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner", 
-            indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner", 
-            green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner", 
-            purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner", 
+        const activeClasses = {
+            blue: "text-blue-900 border-blue-300 bg-gradient-to-br from-blue-200 to-cyan-200 shadow-inner",
+            teal: "text-teal-900 border-teal-300 bg-gradient-to-br from-teal-200 to-green-200 shadow-inner",
+            rose: "text-rose-900 border-rose-300 bg-gradient-to-br from-rose-200 to-pink-200 shadow-inner",
+            indigo: "text-indigo-900 border-indigo-300 bg-gradient-to-br from-indigo-200 to-violet-200 shadow-inner",
+            green: "text-green-900 border-green-300 bg-gradient-to-br from-green-200 to-lime-200 shadow-inner",
+            purple: "text-purple-900 border-purple-300 bg-gradient-to-br from-purple-200 to-pink-200 shadow-inner",
             orange: "text-orange-900 border-orange-300 bg-gradient-to-br from-amber-200 to-orange-200 shadow-inner"
         };
-        
+
         document.querySelectorAll('nav[aria-label="Tabs"] button').forEach(tab => tab.className = `${baseClasses} ${inactiveClasses}`);
-        
+
         const color = clickedTab.dataset.color;
         clickedTab.className = `${baseClasses} ${activeClasses[color]}`;
-        
+
         document.querySelectorAll('.card-header').forEach(h => Object.keys(activeClasses).forEach(c => h.classList.remove(`header-${c}`)));
         document.getElementById(tabId)?.querySelectorAll('.card-header').forEach(h => h.classList.add(`header-${color}`));
-        
+
         localStorage.setItem('activeTab', tabId);
-        
+
         setTimeout(() => {
             document.getElementById(tabId)?.querySelectorAll('textarea.info-value').forEach(autoResize);
         }, 0);
-        
+
         if (tabId === 'pancarte') setTimeout(() => updatePancarteChart(), 50);
     }
-    
+
     function autoResize(textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
@@ -891,7 +819,7 @@
             confirmModalBox.classList.remove('scale-95', 'opacity-0');
         }, 10);
     }
-    
+
     function hideConfirmation() {
         confirmModalBox.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
@@ -899,7 +827,7 @@
             confirmCallback = null;
         }, 200);
     }
-    
+
     function showCustomAlert(title, message) {
         // Cette fonction reste pour les alertes bloquantes (erreurs critiques, etc.)
         confirmTitle.textContent = title;
@@ -911,13 +839,13 @@
         confirmOkBtn.textContent = 'Fermer';
 
         confirmCallback = null;
-        
+
         confirmModal.classList.remove('hidden');
         setTimeout(() => {
             confirmModalBox.classList.remove('scale-95', 'opacity-0');
         }, 10);
     }
-    
+
     function hideLoadPatientModal() {
         loadPatientBox.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
@@ -957,7 +885,7 @@
     }
 
     // --- Fonctions de tri ---
-    
+
     function applySort(type) {
         const btnId = `sort-${type}-btn`;
         const listIdMap = {
@@ -969,12 +897,12 @@
 
         const button = document.getElementById(btnId);
         const list = document.getElementById(listId);
-        
+
         if (!button || !list) return;
 
         const sortOrder = button.dataset.sortOrder;
         const items = Array.from(list.querySelectorAll('.timeline-item'));
-        
+
         items.sort((a, b) => {
             const offsetA = parseInt(a.dataset.dateOffset, 10);
             const offsetB = parseInt(b.dataset.dateOffset, 10);
@@ -983,7 +911,7 @@
 
         items.forEach(item => list.appendChild(item));
     }
-    
+
     function toggleSort(type) {
         const btnId = `sort-${type}-btn`;
         const button = document.getElementById(btnId);
@@ -992,7 +920,7 @@
 
         const currentOrder = button.dataset.sortOrder;
         const newOrder = (currentOrder === 'desc') ? 'asc' : 'desc';
-        
+
         button.dataset.sortOrder = newOrder;
         if (newOrder === 'desc') {
             button.title = "Trier (Plus récent en haut)";
@@ -1013,18 +941,18 @@
         const text = document.getElementById('new-observation-text').value.trim();
         const dateValue = document.getElementById('new-observation-date').value;
         const entryDateStr = document.getElementById('patient-entry-date').value;
-        
+
         if (!text || !author || !dateValue || !entryDateStr) {
-             if(!entryDateStr) showCustomAlert("Action impossible", "Veuillez d'abord définir une date d'entrée pour le patient.");
+            if (!entryDateStr) showCustomAlert("Action impossible", "Veuillez d'abord définir une date d'entrée pour le patient.");
             return null;
         }
 
         const eventDate = new Date(dateValue + 'T00:00:00');
         const formattedDate = utils.formatDate(eventDate);
         const dateOffset = utils.calculateDaysOffset(entryDateStr, dateValue);
-        
+
         document.getElementById('new-observation-form').reset();
-        
+
         return { author, text, formattedDate, dateOffset };
     }
 
@@ -1036,7 +964,7 @@
         item.dataset.author = author;
         item.dataset.text = text;
         item.dataset.dateOffset = dateOffset;
-        
+
         item.innerHTML = `
             <div class="timeline-dot dot-rose"></div>
             <div class="flex justify-between items-start">
@@ -1048,37 +976,37 @@
             <p class="text-gray-600 preserve-whitespace"></p>
         `;
         item.querySelector('p').textContent = text;
-        
+
         const list = document.getElementById('observations-list');
         if (fromLoad) {
-            list.appendChild(item); 
+            list.appendChild(item);
         } else {
             const sortOrder = document.getElementById('sort-observations-btn')?.dataset.sortOrder || 'desc';
             if (sortOrder === 'desc') list.prepend(item);
             else list.appendChild(item);
         }
     }
-    
+
     function readTransmissionForm() {
         const author = document.getElementById('new-transmission-author-2').value.trim();
         const text = document.getElementById('new-transmission-text-2').value.trim();
         const dateValue = document.getElementById('new-transmission-date').value;
         const entryDateStr = document.getElementById('patient-entry-date').value;
-        
+
         if (!text || !author || !dateValue || !entryDateStr) {
-             if(!entryDateStr) showCustomAlert("Action impossible", "Veuillez d'abord définir une date d'entrée pour le patient.");
+            if (!entryDateStr) showCustomAlert("Action impossible", "Veuillez d'abord définir une date d'entrée pour le patient.");
             return null;
         }
 
         const eventDate = new Date(dateValue + 'T00:00:00');
         const formattedDate = utils.formatDate(eventDate);
         const dateOffset = utils.calculateDaysOffset(entryDateStr, dateValue);
-        
+
         document.getElementById('new-transmission-form-2').reset();
-        
+
         return { author, text, formattedDate, dateOffset };
     }
-    
+
     function addTransmission(data, fromLoad = false) {
         const { author, text, formattedDate, dateOffset } = data;
 
@@ -1087,7 +1015,7 @@
         item.dataset.author = author;
         item.dataset.text = text;
         item.dataset.dateOffset = dateOffset;
-        
+
         item.innerHTML = `
             <div class="timeline-dot dot-green"></div>
             <div class="flex justify-between items-start">
@@ -1108,7 +1036,7 @@
             .replace(/Actions :/g, '<br><strong class="text-gray-900">Actions :</strong>')
             .replace(/Résultat :/g, '<br><strong class="text-gray-900">Résultat :</strong>');
         item.querySelector('p').innerHTML = formattedText;
-        
+
         const list = document.getElementById('transmissions-list-ide');
         if (fromLoad) {
             list.appendChild(item);
@@ -1122,35 +1050,35 @@
     function readPrescriptionForm() {
         const name = document.getElementById('med-name').value.trim();
         const posologie = document.getElementById('med-posologie').value.trim();
-        const voie = document.getElementById('med-voie').value; 
+        const voie = document.getElementById('med-voie').value;
         const startDateValue = document.getElementById('med-start-date').value;
         const entryDateStr = document.getElementById('patient-entry-date').value;
-        
+
         if (!name || !startDateValue || !entryDateStr) {
-            if(!entryDateStr) showCustomAlert("Action impossible", "Veuillez d'abord définir une date d'entrée pour le patient.");
+            if (!entryDateStr) showCustomAlert("Action impossible", "Veuillez d'abord définir une date d'entrée pour le patient.");
             return null;
         }
 
         const dateOffset = utils.calculateDaysOffset(entryDateStr, startDateValue);
-        const type = voie; 
-        
+        const type = voie;
+
         document.getElementById('new-prescription-form').reset();
-        
+
         return { name, posologie, voie, type, bars: [], dateOffset };
     }
 
     function addPrescription(data, fromLoad = false) {
         let { name, posologie, voie, type, bars, dateOffset } = data;
         const entryDateStr = document.getElementById('patient-entry-date').value;
-        
+
         if (isNaN(parseInt(dateOffset, 10))) dateOffset = 0;
 
         const targetDate = utils.calculateDateFromOffset(entryDateStr, dateOffset);
-        const formattedStartDate = utils.formatDate(targetDate).slice(0, 8); 
-        
+        const formattedStartDate = utils.formatDate(targetDate).slice(0, 8);
+
         const tbody = document.getElementById("prescription-tbody");
         const newRow = tbody.insertRow();
-        newRow.dataset.type = type; 
+        newRow.dataset.type = type;
         newRow.dataset.dateOffset = dateOffset;
 
         newRow.innerHTML = `
@@ -1168,24 +1096,24 @@
         `;
 
         const timelineCell = newRow.insertCell();
-        timelineCell.colSpan = 88; 
+        timelineCell.colSpan = 88;
         timelineCell.className = 'iv-bar-container';
 
         if (type === 'Per Os') {
             timelineCell.classList.add('marker-container');
         }
-        
+
         const barsToCreate = (fromLoad && bars && Array.isArray(bars)) ? bars : [];
-        
+
         barsToCreate.forEach(barData => {
             if (barData && barData.left && (barData.width || barData.width === 0)) {
                 const bar = document.createElement('div');
                 bar.className = 'iv-bar';
-                
+
                 if (type === 'Per Os') {
                     bar.classList.add('marker-bar');
                 } else if (type === 'Respiratoire') {
-                    bar.classList.add('iv-bar-respi'); 
+                    bar.classList.add('iv-bar-respi');
                 }
 
                 bar.style.left = barData.left;
@@ -1202,19 +1130,19 @@
             }
         });
     }
-    
+
     function readCareDiagramForm() {
         const name = document.getElementById('care-name').value.trim();
         if (!name) return null;
-        
+
         document.getElementById('new-care-form').reset();
         return { name };
     }
-    
+
     function addCareDiagramRow(data) {
         const { name } = data;
         const newRow = document.getElementById('care-diagram-tbody').insertRow();
-        
+
         let cellsHTML = `
             <td class="p-2 text-left align-top">
                 <div class="flex items-start justify-between">
@@ -1225,8 +1153,8 @@
                 </div>
             </td>
         `;
-        
-        for(let i=0; i<11; i++) {
+
+        for (let i = 0; i < 11; i++) {
             for (let j = 0; j < 3; j++) {
                 const borderClass = (j === 0) ? 'border-l' : '';
                 cellsHTML += `<td class="${borderClass} p-0" style="min-width: 70px;">
@@ -1241,7 +1169,7 @@
         const entry = button.closest('.timeline-item');
         if (entry) {
             entry.remove();
-            return true; 
+            return true;
         }
         return false;
     }
@@ -1249,7 +1177,7 @@
         const row = button.closest('tr');
         if (row) {
             row.remove();
-            return true; 
+            return true;
         }
         return false;
     }
@@ -1257,7 +1185,7 @@
         const row = button.closest('tr');
         if (row) {
             row.remove();
-            return true; 
+            return true;
         }
         return false;
     }
@@ -1268,14 +1196,14 @@
         crModalTitle.textContent = crTitle;
         crModalActiveIdInput.value = crId;
         crModalTextarea.value = crText || '';
-        
+
         crModal.classList.remove('hidden');
         setTimeout(() => {
             crModalBox.classList.remove('scale-95', 'opacity-0');
             crModalTextarea.focus();
         }, 10);
     }
-    
+
     function closeCrModal() {
         crModalBox.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
@@ -1284,11 +1212,11 @@
             crModalTextarea.value = '';
         }, 200);
     }
-    
+
     function updateCrCardCheckmark(crId, hasData) {
         const card = document.querySelector(`.cr-card[data-cr-id="${crId}"]`);
         if (!card) return;
-        
+
         const icon = card.querySelector('.cr-check-icon');
         if (icon) {
             if (hasData) {
@@ -1306,7 +1234,7 @@
         const bar = e.currentTarget;
         showDeleteConfirmation("Effacer cette administration ?", () => {
             const cell = bar.parentElement;
-            if(cell) {
+            if (cell) {
                 const barId = bar.dataset.barId;
                 if (barId) {
                     cell.querySelectorAll(`.iv-time-label[data-bar-id="${barId}"]`).forEach(label => label.remove());
@@ -1322,34 +1250,34 @@
             ivInteraction.mode = 'draw';
             const cell = e.target;
             const rect = cell.getBoundingClientRect();
-            
+
             const totalIntervals = 11 * 24 * 4;
             const intervalWidthPx = rect.width / totalIntervals;
             const rawStartXPx = e.clientX - rect.left;
-            
+
             const snappedInterval = Math.round(rawStartXPx / intervalWidthPx);
             const startX = snappedInterval * intervalWidthPx;
 
             const newBar = document.createElement('div');
             newBar.className = 'iv-bar';
-            
+
             const rowType = cell.closest('tr').dataset.type;
             if (rowType === 'Per Os') {
                 newBar.classList.add('marker-bar');
             } else if (rowType === 'Respiratoire') {
                 newBar.classList.add('iv-bar-respi');
             }
-            
+
             newBar.style.left = `${(startX / rect.width) * 100}%`;
             newBar.style.width = '0px';
-            newBar.dataset.barId = `bar-${Date.now()}`; 
+            newBar.dataset.barId = `bar-${Date.now()}`;
 
             newBar.addEventListener('dblclick', handleIVDblClick);
             const handle = document.createElement('div');
             handle.className = 'resize-handle';
             newBar.appendChild(handle);
             cell.appendChild(newBar);
-            
+
             ivInteraction = {
                 ...ivInteraction,
                 active: true,
@@ -1359,7 +1287,7 @@
                 startLeftPx: startX,
             };
             document.body.classList.add('is-drawing-iv');
-        
+
         } else if (e.target.classList.contains('resize-handle')) {
             const bar = e.target.parentElement;
             if (bar.classList.contains('marker-bar')) {
@@ -1407,11 +1335,11 @@
                 let rawLeftPx = startLeftPx + dx;
                 const snappedInterval = Math.round(rawLeftPx / intervalWidthPx);
                 let newLeft = snappedInterval * intervalWidthPx;
-                
+
                 newLeft = Math.max(0, newLeft);
-                newLeft = Math.min(newLeft, cellRect.width - targetBar.offsetWidth); 
+                newLeft = Math.min(newLeft, cellRect.width - targetBar.offsetWidth);
                 targetBar.style.left = `${(newLeft / cellRect.width) * 100}%`;
-            } else { 
+            } else {
                 let rawWidthPx = startWidth + dx;
                 const snappedIntervals = Math.max(1, Math.round(rawWidthPx / intervalWidthPx));
                 let newWidth = snappedIntervals * intervalWidthPx;
@@ -1440,11 +1368,11 @@
             const rawLeftPx = targetBar.offsetLeft;
             const snappedLeftInterval = Math.round(rawLeftPx / intervalWidthPx);
             let finalLeftPx = snappedLeftInterval * intervalWidthPx;
-            
+
             let finalWidthPx;
-            
+
             if (targetCell.classList.contains('marker-container')) {
-                finalWidthPx = 0; 
+                finalWidthPx = 0;
             } else {
                 const rawWidthPx = targetBar.offsetWidth;
                 const snappedWidthIntervals = Math.max(1, Math.round(rawWidthPx / intervalWidthPx));
@@ -1452,8 +1380,8 @@
             }
 
             finalLeftPx = Math.max(0, finalLeftPx);
-            finalLeftPx = Math.min(finalLeftPx, cellRect.width - finalWidthPx); 
-            
+            finalLeftPx = Math.min(finalLeftPx, cellRect.width - finalWidthPx);
+
             targetBar.style.left = `${(finalLeftPx / cellRect.width) * 100}%`;
             targetBar.style.width = `${(finalWidthPx / cellRect.width) * 100}%`;
 
@@ -1463,14 +1391,14 @@
         ivInteraction = { active: false, mode: null, targetBar: null, targetCell: null, startX: 0, startLeft: 0, startWidth: 0, startLeftPx: 0 };
         document.dispatchEvent(new CustomEvent('uiNeedsSave'));
     }
-    
+
     function updateIVBarDetails(bar, cell) {
         if (!bar || !cell) return;
         const tableStartDateStr = document.getElementById('patient-entry-date').value;
         if (!tableStartDateStr) return;
-        
+
         const barId = bar.dataset.barId;
-        if (!barId) return; 
+        if (!barId) return;
 
         const tableStartDate = new Date(tableStartDateStr + 'T00:00:00');
         const totalTimelineMinutes = 11 * 24 * 60;
@@ -1478,38 +1406,38 @@
         const widthPercent = parseFloat(bar.style.width);
         const startOffsetMinutes = (startPercent / 100) * totalTimelineMinutes;
         const durationMinutes = (widthPercent / 100) * totalTimelineMinutes;
-        
+
         const rawStartDateTime = new Date(tableStartDate.getTime());
         rawStartDateTime.setMinutes(rawStartDateTime.getMinutes() + startOffsetMinutes);
         const rawEndDateTime = new Date(rawStartDateTime.getTime());
         rawEndDateTime.setMinutes(rawEndDateTime.getMinutes() + durationMinutes);
-        
+
         const startDateTime = utils.roundDateTo15Min(rawStartDateTime);
         const endDateTime = utils.roundDateTo15Min(rawEndDateTime);
-        
+
         const formatTime = (date) => date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-        
+
         if (cell.classList.contains('marker-container')) {
-            bar.title = `Prise: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
+            bar.title = `Prise: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}`;
         } else {
-            bar.title = `Début: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}\nFin: ${endDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
+            bar.title = `Début: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}\nFin: ${endDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}`;
         }
-        
+
         let startLabel = cell.querySelector(`.iv-time-label.start[data-bar-id="${barId}"]`);
         if (!startLabel) {
             startLabel = document.createElement('span');
             startLabel.className = 'iv-time-label start';
-            startLabel.dataset.barId = barId; 
-            cell.appendChild(startLabel); 
+            startLabel.dataset.barId = barId;
+            cell.appendChild(startLabel);
         }
         let endLabel = cell.querySelector(`.iv-time-label.end[data-bar-id="${barId}"]`);
         if (!endLabel) {
             endLabel = document.createElement('span');
             endLabel.className = 'iv-time-label end';
-            endLabel.dataset.barId = barId; 
-            cell.appendChild(endLabel); 
+            endLabel.dataset.barId = barId;
+            cell.appendChild(endLabel);
         }
-        
+
         startLabel.textContent = formatTime(startDateTime);
         endLabel.textContent = formatTime(endDateTime);
 
@@ -1518,32 +1446,32 @@
     }
 
     // --- Fonctions UI : Graphique Pancarte ---
-    
+
     function updatePancarteChart() {
         const table = document.getElementById('pancarte-table');
         const entryDateVal = document.getElementById('patient-entry-date').value;
         const startDate = entryDateVal ? new Date(entryDateVal) : new Date();
-        
+
         const labels = Array.from({ length: 33 }).map((_, i) => {
             const dayOffset = Math.floor(i / 3);
-            const timeOfDay = ['Matin', 'Soir', 'Nuit'][i % 3]; 
+            const timeOfDay = ['Matin', 'Soir', 'Nuit'][i % 3];
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + dayOffset);
-            return `${currentDate.toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit'})} ${timeOfDay}`;
+            return `${currentDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} ${timeOfDay}`;
         });
 
-        const dataSetsConfig = { 
-            'Pouls (/min)': { yAxisID: 'y1', borderColor: '#ef4444' }, 
-            'Tension (mmHg)': { type: 'bar', yAxisID: 'y', backgroundColor: '#f9731640' }, 
-            'Température (°C)': { yAxisID: 'y3', borderColor: '#3b82f6' }, 
-            'SpO2 (%)': { yAxisID: 'y4', borderColor: '#10b981' }, 
+        const dataSetsConfig = {
+            'Pouls (/min)': { yAxisID: 'y1', borderColor: '#ef4444' },
+            'Tension (mmHg)': { type: 'bar', yAxisID: 'y', backgroundColor: '#f9731640' },
+            'Température (°C)': { yAxisID: 'y3', borderColor: '#3b82f6' },
+            'SpO2 (%)': { yAxisID: 'y4', borderColor: '#10b981' },
             'Douleur (EVA /10)': { yAxisID: 'y2', borderColor: '#8b5cf6' },
         };
 
         const datasets = Array.from(table.querySelectorAll('tbody tr')).map(row => {
             const paramName = row.cells[0].textContent.trim();
             if (!dataSetsConfig[paramName]) return null;
-            
+
             const inputs = Array.from(row.querySelectorAll('input'));
             let data;
 
@@ -1564,24 +1492,24 @@
                     return isNaN(value) ? null : value;
                 });
             }
-             
-            return { 
-                label: paramName, 
-                data, 
-                type: 'line', 
-                tension: 0.2, 
-                borderWidth: 2, 
-                spanGaps: true, 
-                pointBackgroundColor: dataSetsConfig[paramName].borderColor || '#000', 
+
+            return {
+                label: paramName,
+                data,
+                type: 'line',
+                tension: 0.2,
+                borderWidth: 2,
+                spanGaps: true,
+                pointBackgroundColor: dataSetsConfig[paramName].borderColor || '#000',
                 ...dataSetsConfig[paramName]
             };
         }).filter(ds => ds !== null);
 
         const ctx = document.getElementById('pancarteChart').getContext('2d');
         if (pancarteChartInstance) pancarteChartInstance.destroy();
-        
+
         pancarteChartInstance = new Chart(ctx, {
-            type: 'bar', 
+            type: 'bar',
             data: { labels, datasets },
             options: {
                 responsive: true, maintainAspectRatio: false,
@@ -1594,14 +1522,14 @@
                 },
                 plugins: {
                     legend: { position: 'bottom' },
-                    tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }}
+                    tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` } }
                 }
             }
         });
     }
 
     // --- Fonctions UI : Tutoriel ---
-    
+
     // MODIFICATION : Mise à jour du texte du tutoriel
     const tutorialSteps = [
         { element: '#patient-list li:first-child button', text: "Bienvenue ! Voici la liste des patients. Cliquez sur un patient pour ouvrir son dossier.", position: 'right' },
@@ -1621,7 +1549,7 @@
 
     function startTutorial() {
         currentStepIndex = 0;
-        
+
         const firstPatientButton = document.querySelector('#patient-list li:first-child button');
         if (!firstPatientButton) {
             tutorialSteps[0].element = '#sidebar';
@@ -1630,7 +1558,7 @@
             tutorialSteps[0].element = '#patient-list li:first-child button';
             tutorialSteps[0].text = "Bienvenue ! Voici la liste des patients. Cliquez sur un patient pour ouvrir son dossier.";
         }
-        
+
         tutorialOverlay.classList.remove('hidden');
         showTutorialStep(currentStepIndex);
     }
@@ -1639,7 +1567,7 @@
         tutorialOverlay.classList.add('hidden');
         if (highlightedElement) {
             highlightedElement.classList.remove('tutorial-highlight');
-            if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') { 
+            if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
                 highlightedElement.style = '';
             }
             highlightedElement = null;
@@ -1652,7 +1580,7 @@
     function showTutorialStep(index) {
         if (highlightedElement) {
             highlightedElement.classList.remove('tutorial-highlight');
-            if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') { 
+            if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
                 highlightedElement.style = '';
             }
         }
@@ -1673,11 +1601,11 @@
 
         tutorialText.textContent = step.text;
         tutorialNextBtn.textContent = (index === tutorialSteps.length - 1) ? "Terminer" : "Suivant";
-        
+
         element.classList.add('tutorial-highlight');
         highlightedElement = element;
 
-        if (element.closest('#header-buttons') || element.id === 'save-status-button') { 
+        if (element.closest('#header-buttons') || element.id === 'save-status-button') {
             element.style.setProperty('z-index', '9997', 'important');
             element.style.setProperty('position', 'relative', 'important');
         }
@@ -1687,7 +1615,7 @@
         const margin = 15;
         let top, left;
 
-        switch(step.position) {
+        switch (step.position) {
             case 'right':
                 top = rect.top + (rect.height / 2) - (boxRect.height / 2);
                 left = rect.right + margin;
@@ -1720,21 +1648,21 @@
 
 
     // --- Exposition du service ---
-    
+
     window.uiService = {
         // Initialisation
         initUIComponents,
         initializeDynamicTables,
         setupModalListeners,
-        
+
         // Permissions
         applyPermissions,
-        
+
         // Sidebar
         initSidebar,
         updateSidebarActiveState,
         updateSidebarEntryName,
-        
+
         // Remplissage de formulaire
         resetForm,
         fillFormFromState,
@@ -1744,7 +1672,7 @@
         fillBioFromState,
         fillPancarteFromState,
         fillCrCardsFromState,
-        
+
         // Mises à jour UI
         updateAgeDisplay,
         updateJourHosp,
@@ -1752,8 +1680,8 @@
         setupSync,
         updateDynamicDates,
         refreshAllRelativeDates,
-        updateSaveStatus, 
-        
+        updateSaveStatus,
+
         // Navigation & Modales
         changeTab,
         autoResize,
@@ -1764,10 +1692,10 @@
         hideConfirmation,
         openLoadPatientModal,
         hideLoadPatientModal,
-        
+
         // Tri
         toggleSort,
-        
+
         // Fonctions d'ajout/lecture de formulaire
         readObservationForm,
         addObservation,
@@ -1777,25 +1705,25 @@
         addPrescription,
         readCareDiagramForm,
         addCareDiagramRow,
-        
+
         // Suppression d'entrées
         deleteEntry,
         deletePrescription,
         deleteCareDiagramRow,
-        
+
         // Logique Comptes Rendus (CR)
         openCrModal,
         closeCrModal,
         updateCrCardCheckmark,
-        
+
         // Logique IV
         handleIVMouseDown,
         handleIVMouseMove,
         handleIVMouseUp,
-        
+
         // Graphique
         updatePancarteChart,
-        
+
         // Tutoriel
         startTutorial,
         endTutorial,
