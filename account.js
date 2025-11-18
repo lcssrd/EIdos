@@ -1,13 +1,13 @@
 // account.js (Modifié)
-(function() {
-    "use strict"; 
+(function () {
+    "use strict";
 
     // MODIFIÉ : L'URL de l'API est maintenant relative.
     // "http://localhost:3000" a été supprimé.
-    const API_URL = 'https://eidos-api.onrender.com'; 
+    const API_URL = 'https://eidos-api.onrender.com';
 
     // --- Fonctions utilitaires d'authentification (copiées de app.js) ---
-    
+
     /**
      * Récupère le token d'authentification depuis le localStorage.
      * Si le token n'est pas trouvé, redirige vers la page de connexion.
@@ -78,18 +78,18 @@
             modalBox.classList.remove('scale-95', 'opacity-0');
         }, 10);
     }
-    
+
     function hideConfirmation() {
         const modal = document.getElementById('custom-confirm-modal');
         const modalBox = document.getElementById('custom-confirm-box');
-        
+
         modalBox.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
             modal.classList.add('hidden');
             confirmCallback = null;
         }, 200);
     }
-    
+
     function showCustomAlert(title, message) {
         const modal = document.getElementById('custom-confirm-modal');
         const modalBox = document.getElementById('custom-confirm-box');
@@ -107,7 +107,7 @@
         messageEl.textContent = message;
 
         confirmCallback = null;
-        
+
         modal.classList.remove('hidden');
         setTimeout(() => {
             modalBox.classList.remove('scale-95', 'opacity-0');
@@ -129,8 +129,8 @@
     let tabButtons = {};
     let tabContents = {};
     let currentPlan = 'free';
-    let studentCount = 0; 
-    
+    let studentCount = 0;
+
     // NOUVEAU : Variables pour la modale des chambres
     let roomModal, roomModalBox, roomModalForm, roomModalList, roomModalTitle, roomModalLoginInput;
 
@@ -157,7 +157,7 @@
             'promo': document.getElementById('sub-btn-promo'),
             'centre': document.getElementById('sub-btn-centre')
         };
-        
+
         // Définition des styles pour chaque plan (actif et inactif)
         const planStyles = {
             'free': {
@@ -192,15 +192,15 @@
         for (const [plan, button] of Object.entries(planButtons)) {
             const card = button.closest('.card');
             const badge = card.querySelector('.js-active-plan-badge');
-            
+
             // Réinitialiser la carte
             card.classList.remove('shadow-xl', 'border-2', ...Object.values(planStyles).map(s => s.borderActive));
             card.classList.add('hover:scale-[1.02]', 'hover:shadow-xl');
-            
+
             // Cacher le badge
             badge.classList.add('hidden');
             badge.classList.remove(...Object.values(planStyles).flatMap(s => s.badgeActive)); // Retire toutes les couleurs de badge
-            
+
             // Réinitialiser le bouton
             button.disabled = false;
             button.innerHTML = 'Choisir ce plan';
@@ -227,7 +227,7 @@
                 button.classList.add(...planStyles[plan].btnInactive);
             }
         }
-        
+
         // --- 2. Appliquer le style ACTIF au plan sélectionné ---
         if (planButtons[activePlan]) {
             const styles = planStyles[activePlan];
@@ -242,16 +242,16 @@
             // Afficher et colorer le badge
             activeBadge.classList.remove('hidden');
             activeBadge.classList.add(...styles.badgeActive);
-            
+
             // Styliser le bouton comme "Actif"
             activeButton.disabled = true;
             activeButton.innerHTML = '<i class="fas fa-check mr-2"></i> Plan actuel';
             activeButton.classList.remove(...Object.values(planStyles).flatMap(s => s.btnInactive)); // Nettoyer
             activeButton.classList.add(...styles.btnActive, 'cursor-not-allowed');
-            
+
             // Le plan 'Centre' n'a pas besoin de .onclick_handler quand il est actif
             if (activePlan === 'centre') {
-                activeButton.onclick = null; 
+                activeButton.onclick = null;
             }
         }
     }
@@ -264,13 +264,13 @@
         // Cacher les onglets spécifiques par défaut
         const invitationsTab = document.getElementById('tab-invitations');
         const centreTab = document.getElementById('tab-centre');
-        invitationsTab.style.display = 'none'; 
+        invitationsTab.style.display = 'none';
         centreTab.style.display = 'none';
 
         try {
             const headers = getAuthHeaders();
             delete headers['Content-Type']; // GET request
-            
+
             // MODIFIÉ : Utilise API_URL
             const response = await fetch(`${API_URL}/api/account/details`, { headers });
 
@@ -302,17 +302,17 @@
             // --- Logique d'affichage générale ---
             const planNameEl = document.getElementById('current-plan-name');
             const planDescEl = document.getElementById('plan-description');
-            
+
             let displayPlan = data.plan;
-            
+
             // Si l'utilisateur est un 'formateur' rattaché, il hérite du plan de l'organisation
             if (data.role === 'formateur' && data.organisation) {
                 displayPlan = data.organisation.plan;
                 planNameEl.textContent = `Plan ${displayPlan} (via ${data.organisation.name})`;
                 planDescEl.textContent = `Vous êtes rattaché en tant que formateur.`;
-                
+
                 // Un formateur rattaché peut gérer ses étudiants
-                invitationsTab.style.display = 'flex'; 
+                invitationsTab.style.display = 'flex';
                 renderStudentTable(data.students || []);
 
             } else if (data.role === 'owner' && data.organisation) {
@@ -320,13 +320,13 @@
                 displayPlan = data.organisation.plan;
                 planNameEl.textContent = `Plan ${displayPlan} (Propriétaire)`;
                 planDescEl.textContent = `Vous gérez l'abonnement pour "${data.organisation.name}".`;
-                
+
                 // Le propriétaire gère les autres formateurs ET ses propres étudiants
                 invitationsTab.style.display = 'flex';
                 centreTab.style.display = 'flex';
                 renderStudentTable(data.students || []);
                 renderCentreDetails(data.organisation);
-            
+
             } else {
                 // C'est un utilisateur standard (free, independant, promo)
                 displayPlan = data.plan;
@@ -344,12 +344,12 @@
                     planNameEl.textContent = "Free";
                     planDescEl.textContent = "Fonctionnalités de base, aucune sauvegarde de données, pas de comptes étudiants.";
                 }
-                
+
                 if (displayPlan !== 'free') {
                     renderStudentTable(data.students || []);
                 }
             }
-            
+
             currentPlan = displayPlan; // Stocker le plan actif
 
             // Mettre à jour les boutons d'abonnement
@@ -364,23 +364,23 @@
             showCustomAlert("Erreur", "Impossible de joindre le serveur. " + err.message);
         }
     }
-    
+
     /**
      * NOUVEAU : Remplit la section "Gestion du Centre"
      */
     function renderCentreDetails(organisation) {
         document.getElementById('centre-plan-name').textContent = `Plan ${organisation.plan} ("${organisation.name}")`;
         document.getElementById('centre-plan-details').textContent = `Licences formateur utilisées : ${organisation.licences_utilisees} / ${organisation.licences_max || 'Illimitées'}`;
-        
+
         const listContainer = document.getElementById('formateurs-list-container');
-        
+
         // --- CORRECTION DU BUG DE NULL POINTER ---
         const loadingEl = document.getElementById('formateurs-loading');
         if (loadingEl) {
             loadingEl.style.display = 'none';
         }
         // ----------------------------------------
-        
+
         let html = '';
         if (!organisation.formateurs || organisation.formateurs.length === 0) {
             html = '<p class="text-sm text-gray-500">Vous n\'avez pas encore invité de formateur.</p>';
@@ -448,19 +448,19 @@
         }
 
         let html = '';
-        
+
         // MODIFICATION : Ajout de 'comptesRendus' à la liste
         const permissionsList = [
-            'header', 'admin', 'vie', 'observations', 
+            'header', 'admin', 'vie', 'observations',
             'comptesRendus',
             'prescriptions_add', 'prescriptions_delete', 'prescriptions_validate',
             'transmissions', 'pancarte', 'diagramme', 'biologie'
         ];
-        
+
         students.forEach(student => {
             html += `<tr>`;
             html += `<td class="p-2 font-medium">${student.login}</td>`;
-            
+
             permissionsList.forEach(perm => {
                 // S'assure que l'objet permissions existe avant d'essayer d'y accéder
                 const isChecked = student.permissions && student.permissions[perm];
@@ -468,7 +468,7 @@
                            <input type="checkbox" data-login="${student.login}" data-permission="${perm}" ${isChecked ? 'checked' : ''}>
                          </td>`;
             });
-            
+
             // NOUVEAU : Cellule pour le bouton de gestion des chambres
             const allowedRooms = student.allowedRooms || [];
             const roomCount = allowedRooms.length;
@@ -482,7 +482,7 @@
                        </button>
                      </td>`;
             // FIN NOUVEAU
-            
+
             html += `<td class="p-2 text-center">
                        <button title="Supprimer cet étudiant" data-login="${student.login}" class="delete-student-btn text-red-500 hover:text-red-700">
                          <i class="fas fa-trash"></i>
@@ -493,7 +493,7 @@
 
         tbody.innerHTML = html;
     }
-    
+
     /**
      * Génère une chaîne aléatoire (pour login/mdp)
      * @param {number} length - Longueur de la chaîne
@@ -516,7 +516,7 @@
         e.preventDefault();
         const email = document.getElementById('invite-email').value;
         const button = document.getElementById('invite-formateur-btn');
-        
+
         if (!email) {
             showCustomAlert("Erreur", "Veuillez saisir une adresse e-mail.");
             return;
@@ -540,7 +540,7 @@
                 const errorData = await response.json();
                 throw new Error(errorData.error || "Impossible d'envoyer l'invitation.");
             }
-            
+
             showCustomAlert("Invitation envoyée", `Un e-mail d'invitation a été envoyé à ${email}.`);
             document.getElementById('invite-formateur-form').reset();
             loadAccountDetails(); // Recharger les détails pour mettre à jour la liste
@@ -552,14 +552,14 @@
             button.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Envoyer l\'invitation';
         }
     }
-    
+
     /**
      * NOUVEAU : Gère le clic sur la liste des formateurs (suppression)
      */
     async function handleFormateursListClick(e) {
         const removeBtn = e.target.closest('.remove-formateur-btn');
         if (!removeBtn) return;
-        
+
         const email = removeBtn.dataset.email;
         showDeleteConfirmation(
             `Êtes-vous sûr de vouloir retirer le formateur "${email}" de votre centre ? Son compte ne sera pas supprimé, mais il perdra l'accès à l'abonnement du centre.`,
@@ -578,7 +578,7 @@
                         const errorData = await response.json();
                         throw new Error(errorData.error || "Impossible de retirer le formateur.");
                     }
-                    
+
                     showCustomAlert("Formateur retiré", `${email} a été retiré de votre centre.`);
                     loadAccountDetails(); // Recharger
 
@@ -626,18 +626,18 @@
      */
     async function handleCreateStudent(e) {
         e.preventDefault();
-        
+
         // MODIFIÉ : Vérification côté client
         if (currentPlan === 'independant' && studentCount >= 5) {
             showCustomAlert("Limite atteinte", "Vous avez atteint la limite de 5 étudiants pour le plan Indépendant.");
             return;
         }
-         if (currentPlan === 'promo' && studentCount >= 40) {
+        if (currentPlan === 'promo' && studentCount >= 40) {
             showCustomAlert("Limite atteinte", "Vous avez atteint la limite de 40 étudiants pour le plan Promo.");
             return;
         }
         // FIN MODIFICATION
-        
+
         const login = document.getElementById('student-login').value;
         const password = document.getElementById('student-password').value;
 
@@ -667,11 +667,11 @@
                 }
                 throw new Error(errorMsg);
             }
-            
+
             const data = await response.json();
-            
+
             showCustomAlert("Succès", `Le compte pour "${login}" a été créé.`);
-            
+
             // Réinitialiser le formulaire
             document.getElementById('create-student-form').reset();
 
@@ -705,7 +705,7 @@
                 headers: headers,
                 body: JSON.stringify({ currentPassword, newPassword })
             });
-            
+
             if (handleAuthError(response)) return;
 
             if (!response.ok) {
@@ -720,7 +720,7 @@
             }
 
             const data = await response.json();
-            
+
             showCustomAlert("Succès", "Votre mot de passe a été mis à jour.");
             document.getElementById('change-password-form').reset();
 
@@ -728,21 +728,21 @@
             showCustomAlert("Erreur", err.message);
         }
     }
-    
+
     /**
      * NOUVEAU : Gère la demande de changement d'e-mail
      */
     async function handleChangeEmail(e) {
         e.preventDefault();
-        
+
         const newEmail = document.getElementById('new-email').value;
         const password = document.getElementById('current-password-for-email').value;
-        
+
         if (!newEmail || !password) {
             showCustomAlert("Erreur", "Veuillez remplir tous les champs.");
             return;
         }
-        
+
         try {
             const headers = getAuthHeaders();
             const response = await fetch(`${API_URL}/api/account/request-change-email`, {
@@ -757,7 +757,7 @@
                 const errorData = await response.json();
                 throw new Error(errorData.error || "Impossible de traiter la demande.");
             }
-            
+
             showCustomAlert("Demande envoyée", `Un e-mail de vérification a été envoyé à ${newEmail}. Veuillez cliquer sur le lien pour confirmer le changement.`);
             document.getElementById('change-email-form').reset();
 
@@ -799,9 +799,9 @@
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('activePatientId');
                     localStorage.removeItem('activeTab');
-                    
+
                     showCustomAlert("Compte supprimé", "Votre compte a été supprimé. Vous allez être redirigé.");
-                    
+
                     setTimeout(() => {
                         window.location.href = 'auth.html';
                     }, 2000);
@@ -812,7 +812,7 @@
             }
         );
     }
-    
+
     // Gère le clic sur un bouton de changement d'abonnement
     async function handleChangeSubscription(newPlan) {
         // La logique du plan "Centre" est gérée par son propre bouton .onclick
@@ -842,11 +842,11 @@
                 }
                 throw new Error(errorMsg);
             }
-            
+
             const data = await response.json();
-            
+
             showCustomAlert("Abonnement mis à jour", `Vous êtes maintenant sur le plan ${newPlan}.`);
-            
+
             // Recharger tous les détails pour refléter le changement
             loadAccountDetails();
 
@@ -876,7 +876,7 @@
             });
 
             if (handleAuthError(response)) return;
-            
+
             if (!response.ok) {
                 let errorMsg = "Erreur de mise à jour";
                 try {
@@ -887,7 +887,7 @@
                 }
                 throw new Error(errorMsg);
             }
-            
+
             console.log(`Permission ${permission} pour ${login} mise à jour: ${value}`);
 
         } catch (err) {
@@ -916,9 +916,9 @@
                             headers: headers,
                             body: JSON.stringify({ login })
                         });
-                        
+
                         if (handleAuthError(response)) return;
-                        
+
                         if (!response.ok) {
                             let errorMsg = "Impossible de supprimer l'étudiant.";
                             try {
@@ -929,7 +929,7 @@
                             }
                             throw new Error(errorMsg);
                         }
-                        
+
                         showCustomAlert("Succès", `Le compte "${login}" a été supprimé.`);
                         loadAccountDetails(); // Recharger la liste
 
@@ -950,7 +950,7 @@
 
 
     // --- NOUVELLES FONCTIONS : Gestion Modale Chambres ---
-    
+
     function hideRoomModal() {
         roomModalBox.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
@@ -962,7 +962,7 @@
         const login = button.dataset.login;
         const name = button.dataset.name;
         const rooms = JSON.parse(button.dataset.rooms || '[]');
-        
+
         roomModalTitle.textContent = `Gérer les chambres pour ${name}`;
         roomModalLoginInput.value = login;
 
@@ -988,10 +988,10 @@
 
     async function handleSaveStudentRooms(e) {
         e.preventDefault();
-        
+
         const login = roomModalLoginInput.value;
         const selectedRooms = Array.from(roomModalForm.querySelectorAll('input[name="room"]:checked'))
-                                     .map(cb => cb.value);
+            .map(cb => cb.value);
 
         try {
             const headers = getAuthHeaders();
@@ -1016,7 +1016,7 @@
             }
 
             hideRoomModal();
-            
+
         } catch (err) {
             showCustomAlert("Erreur", err.message);
         }
@@ -1051,11 +1051,11 @@
         tabButtons.subscription.addEventListener('click', () => switchTab('subscription'));
         tabButtons.centre.addEventListener('click', () => switchTab('centre')); // NOUVEAU
         tabButtons.invitations.addEventListener('click', () => switchTab('invitations'));
-        tabButtons.contact.addEventListener('click', () => switchTab('contact')); 
+        tabButtons.contact.addEventListener('click', () => switchTab('contact'));
 
         // Listeners des modales
         setupModalListeners();
-        
+
         // NOUVEAU : Références modale chambres
         roomModal = document.getElementById('room-modal');
         roomModalBox = document.getElementById('room-modal-box');
@@ -1072,7 +1072,7 @@
         document.getElementById('change-password-form').addEventListener('submit', handleChangePassword);
         document.getElementById('change-email-form').addEventListener('submit', handleChangeEmail); // NOUVEAU
         document.getElementById('delete-account-btn').addEventListener('click', handleDeleteAccount);
-        
+
         // MODIFIÉ : Listeners de la section Abonnement
         document.getElementById('sub-btn-free').addEventListener('click', () => handleChangeSubscription('free'));
         document.getElementById('sub-btn-independant').addEventListener('click', () => handleChangeSubscription('independant'));
@@ -1086,18 +1086,18 @@
         // Listeners de la section Invitations (Étudiants)
         document.getElementById('create-student-form').addEventListener('submit', handleCreateStudent);
         document.getElementById('generate-credentials-btn').addEventListener('click', handleGenerateCredentials);
-        
+
         // Listeners délégués pour le tableau des permissions (Étudiants)
         const permissionsTbody = document.getElementById('permissions-tbody');
         permissionsTbody.addEventListener('change', handlePermissionChange);
-        permissionsTbody.addEventListener('click', handleTableClicks); 
-        
+        permissionsTbody.addEventListener('click', handleTableClicks);
+
         // NOUVEAU : Listener pour la page Contact
         document.getElementById('copy-email-btn').addEventListener('click', handleCopyEmail);
 
         // Charger les données initiales
         loadAccountDetails();
-        
+
         // Activer le premier onglet
         switchTab('security');
     }
