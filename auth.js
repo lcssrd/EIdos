@@ -2,7 +2,6 @@
     "use strict";
 
     // MODIFIÉ : L'URL de l'API est maintenant relative.
-    // "http://localhost:3000" a été supprimé.
     const API_URL = 'https://eidos-api.onrender.com'; 
 
     // Sélection des 3 sections principales
@@ -37,7 +36,7 @@
         });
     });
     
-    // --- NOUVEAU : Gestion du token d'invitation ---
+    // --- NOUVEAU : Gestion du token d'invitation (MODIFIÉ) ---
     let invitationToken = null;
     
     function checkForInvitationToken() {
@@ -48,15 +47,26 @@
             invitationToken = token;
             console.log("Token d'invitation détecté :", invitationToken);
             
-            // Basculer automatiquement vers l'inscription
+            // 1. Basculer automatiquement vers l'inscription
             showSection(signupSection);
             
-            // Optionnel : Masquer la sélection de plan si l'invitation la définit
-            // (Pour l'instant, on la laisse, mais on enverra le token)
-            // const planSelectionUI = document.getElementById('signup-form').querySelector('.grid.grid-cols-4.gap-3').parentNode;
-            // if (planSelectionUI) {
-            //     planSelectionUI.innerHTML = '<p class="text-center text-indigo-600 font-medium">Vous avez été invité à rejoindre un centre de formation.</p>';
-            // }
+            // 2. Masquer la sélection de plan et afficher un message d'invitation
+            // On cible le conteneur "div.pt-2" qui contient le titre "Choisissez votre forfait" et la grille des cartes
+            const planSelectionContainer = document.querySelector('#signup-form .pt-2');
+            
+            if (planSelectionContainer) {
+                planSelectionContainer.innerHTML = `
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 text-center">
+                        <p class="text-indigo-800 font-semibold text-lg">
+                            <i class="fas fa-building mr-2"></i> Invitation Centre acceptée
+                        </p>
+                        <p class="text-sm text-indigo-600 mt-2">
+                            Vous n'avez pas besoin de choisir d'abonnement.<br>
+                            Votre compte sera automatiquement rattaché au centre et bénéficiera des droits associés.
+                        </p>
+                    </div>
+                `;
+            }
         }
     }
     // --- FIN NOUVEAU ---
@@ -102,7 +112,7 @@
     }
 
     /**
-     * Gère la soumission du formulaire de connexion (Inchangé)
+     * Gère la soumission du formulaire de connexion
      */
     async function handleLogin(e) {
         e.preventDefault();
@@ -117,7 +127,6 @@
         loginBtn.textContent = 'Connexion en cours...';
 
         try {
-            // MODIFIÉ : Utilise API_URL (qui est vide, donc /auth/login)
             const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -147,7 +156,7 @@
     }
 
     /**
-     * Gère la soumission du formulaire d'inscription (MODIFIÉ)
+     * Gère la soumission du formulaire d'inscription
      */
     async function handleSignup(e) {
         e.preventDefault();
@@ -177,11 +186,9 @@
         // --- FIN NOUVEAU ---
 
         try {
-            // MODIFIÉ : Utilise API_URL (qui est vide, donc /auth/signup)
             const response = await fetch(`${API_URL}/auth/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // MODIFIÉ : Envoie le requestBody (qui contient le token si présent)
                 body: JSON.stringify(requestBody)
             });
 
@@ -195,7 +202,7 @@
             document.getElementById('verify-email').value = email;
             document.getElementById('verify-email-display').textContent = email;
             
-            // Affiche le code de test (pour la démo)
+            // Affiche le code de test (si renvoyé par l'API en mode dev)
             const testCodeDisplay = document.getElementById('test-code-display');
             if (data._test_code) {
                 testCodeDisplay.textContent = `(Code pour test : ${data._test_code})`;
@@ -227,7 +234,7 @@
     }
     
     /**
-     * Gère la soumission du formulaire de vérification (Inchangé)
+     * Gère la soumission du formulaire de vérification
      */
     async function handleVerify(e) {
         e.preventDefault();
@@ -244,7 +251,6 @@
         verifyBtn.textContent = 'Vérification...';
 
         try {
-            // MODIFIÉ : Utilise API_URL (qui est vide, donc /auth/verify)
             const response = await fetch(`${API_URL}/auth/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -289,6 +295,6 @@
 
     // Lancer les vérifications au chargement de la page
     checkForInvitationToken();
-    checkForHash(); // MODIFIÉ : Ajout de cette ligne
+    checkForHash();
 
 })();
