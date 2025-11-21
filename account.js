@@ -1,18 +1,11 @@
-// account.js (Modifié)
 (function () {
     "use strict";
 
-    // MODIFIÉ : L'URL de l'API est maintenant relative.
-    // "http://localhost:3000" a été supprimé.
+    // URL de l'API (Backend sur Render)
     const API_URL = 'https://eidos-api.onrender.com';
 
-    // --- Fonctions utilitaires d'authentification (copiées de app.js) ---
+    // --- Fonctions utilitaires d'authentification ---
 
-    /**
-     * Récupère le token d'authentification depuis le localStorage.
-     * Si le token n'est pas trouvé, redirige vers la page de connexion.
-     * @returns {string|null} Le token ou null si non trouvé.
-     */
     function getAuthToken() {
         const token = localStorage.getItem('authToken');
         if (!token) {
@@ -23,10 +16,6 @@
         return token;
     }
 
-    /**
-     * Crée l'objet "headers" requis pour les requêtes API authentifiées.
-     * @returns {Object} L'objet headers avec le token.
-     */
     function getAuthHeaders() {
         const token = getAuthToken();
         if (!token) {
@@ -38,10 +27,6 @@
         };
     }
 
-    /**
-     * Gère les réponses non autorisées (401) en redirigeant vers le login.
-     * @param {Response} response - La réponse de l'API.
-     */
     function handleAuthError(response) {
         if (response.status === 401) {
             console.error("Token invalide ou expiré, redirection vers login.");
@@ -52,7 +37,7 @@
         return false;
     }
 
-    // --- Fonctions de Modale (copiées de app.js) ---
+    // --- Fonctions de Modale ---
     let confirmCallback = null;
 
     function showDeleteConfirmation(message, callback) {
@@ -131,14 +116,9 @@
     let currentPlan = 'free';
     let studentCount = 0;
 
-    // NOUVEAU : Variables pour la modale des chambres
     let roomModal, roomModalBox, roomModalForm, roomModalList, roomModalTitle, roomModalLoginInput;
 
 
-    /**
-     * Gère le changement d'onglet
-     * @param {string} tabId - L'ID de l'onglet à activer (ex: 'security')
-     */
     function switchTab(tabId) {
         Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
         Object.values(tabContents).forEach(content => content.classList.remove('active'));
@@ -149,7 +129,6 @@
         }
     }
 
-    // MODIFIÉ : Logique complète pour la cohérence des couleurs et l'état actif
     function updateSubscriptionButtons(activePlan, quoteUrl, quotePrice) {
         const planButtons = {
             'free': document.getElementById('sub-btn-free'),
@@ -158,7 +137,6 @@
             'centre': document.getElementById('sub-btn-centre')
         };
 
-        // Définition des styles pour chaque plan (actif et inactif)
         const planStyles = {
             'free': {
                 borderActive: 'border-yellow-300',
@@ -182,26 +160,21 @@
                 borderActive: 'border-indigo-600',
                 badgeActive: ['bg-indigo-600', 'text-white'],
                 btnActive: ['bg-indigo-100', 'text-indigo-800', 'font-semibold'],
-                // 'centre' a une logique inactive spéciale (devis ou contact)
                 btnInactiveQuote: ['bg-green-600', 'hover:bg-green-700', 'text-white'],
                 btnInactiveContact: ['bg-indigo-600', 'hover:bg-indigo-700', 'text-white']
             }
         };
 
-        // --- 1. Réinitialiser TOUTES les cartes et TOUS les boutons ---
         for (const [plan, button] of Object.entries(planButtons)) {
             const card = button.closest('.card');
             const badge = card.querySelector('.js-active-plan-badge');
 
-            // Réinitialiser la carte
             card.classList.remove('shadow-xl', 'border-2', ...Object.values(planStyles).map(s => s.borderActive));
             card.classList.add('hover:scale-[1.02]', 'hover:shadow-xl');
 
-            // Cacher le badge
             badge.classList.add('hidden');
-            badge.classList.remove(...Object.values(planStyles).flatMap(s => s.badgeActive)); // Retire toutes les couleurs de badge
+            badge.classList.remove(...Object.values(planStyles).flatMap(s => s.badgeActive));
 
-            // Réinitialiser le bouton
             button.disabled = false;
             button.innerHTML = 'Choisir ce plan';
             button.classList.remove(
@@ -212,7 +185,6 @@
                 'cursor-not-allowed'
             );
 
-            // Appliquer le style INACTIF correct
             if (plan === 'centre') {
                 if (quoteUrl) {
                     button.innerHTML = `Activer votre devis (${quotePrice || 'Voir devis'})`;
@@ -228,28 +200,23 @@
             }
         }
 
-        // --- 2. Appliquer le style ACTIF au plan sélectionné ---
         if (planButtons[activePlan]) {
             const styles = planStyles[activePlan];
             const activeButton = planButtons[activePlan];
             const activeCard = activeButton.closest('.card');
             const activeBadge = activeCard.querySelector('.js-active-plan-badge');
 
-            // Mettre la carte en surbrillance
             activeCard.classList.add('shadow-xl', 'border-2', styles.borderActive);
-            activeCard.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl'); // Supprimer le hover
+            activeCard.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl');
 
-            // Afficher et colorer le badge
             activeBadge.classList.remove('hidden');
             activeBadge.classList.add(...styles.badgeActive);
 
-            // Styliser le bouton comme "Actif"
             activeButton.disabled = true;
             activeButton.innerHTML = '<i class="fas fa-check mr-2"></i> Plan actuel';
-            activeButton.classList.remove(...Object.values(planStyles).flatMap(s => s.btnInactive)); // Nettoyer
+            activeButton.classList.remove(...Object.values(planStyles).flatMap(s => s.btnInactive));
             activeButton.classList.add(...styles.btnActive, 'cursor-not-allowed');
 
-            // Le plan 'Centre' n'a pas besoin de .onclick_handler quand il est actif
             if (activePlan === 'centre') {
                 activeButton.onclick = null;
             }
@@ -257,11 +224,7 @@
     }
 
 
-    /**
-     * Charge les détails du compte (plan, étudiants, organisation) depuis l'API
-     */
     async function loadAccountDetails() {
-        // Cacher les onglets spécifiques par défaut
         const invitationsTab = document.getElementById('tab-invitations');
         const centreTab = document.getElementById('tab-centre');
         invitationsTab.style.display = 'none';
@@ -269,9 +232,8 @@
 
         try {
             const headers = getAuthHeaders();
-            delete headers['Content-Type']; // GET request
+            delete headers['Content-Type'];
 
-            // MODIFIÉ : Utilise API_URL
             const response = await fetch(`${API_URL}/api/account/details`, { headers });
 
             if (handleAuthError(response)) return;
@@ -280,55 +242,31 @@
             }
 
             const data = await response.json();
-            /*
-                data est supposé être : 
-                { 
-                    email: "user@email.com",
-                    plan: 'free'|'independant'|'promo'|'centre', 
-                    role: 'user' | 'owner' | 'formateur',
-                    students: [...], 
-                    organisation: {
-                        name: "IFSI du Centre",
-                        plan: "centre",
-                        licences_utilisees: 3,
-                        licences_max: 50,
-                        formateurs: [ { email: "collegue1@ifsi.fr" }, ... ],
-                        quote_url: "http://stripe.com/..." // (seulement si le compte est 'owner' et n'a pas payé)
-                        quote_price: "2000€/an"
-                    }
-                }
-            */
 
-            // --- Logique d'affichage générale ---
             const planNameEl = document.getElementById('current-plan-name');
             const planDescEl = document.getElementById('plan-description');
 
             let displayPlan = data.plan;
 
-            // Si l'utilisateur est un 'formateur' rattaché, il hérite du plan de l'organisation
             if (data.role === 'formateur' && data.organisation) {
                 displayPlan = data.organisation.plan;
                 planNameEl.textContent = `Plan ${displayPlan} (via ${data.organisation.name})`;
                 planDescEl.textContent = `Vous êtes rattaché en tant que formateur.`;
 
-                // Un formateur rattaché peut gérer ses étudiants
                 invitationsTab.style.display = 'flex';
                 renderStudentTable(data.students || []);
 
             } else if (data.role === 'owner' && data.organisation) {
-                // C'est le propriétaire du plan Centre
                 displayPlan = data.organisation.plan;
                 planNameEl.textContent = `Plan ${displayPlan} (Propriétaire)`;
                 planDescEl.textContent = `Vous gérez l'abonnement pour "${data.organisation.name}".`;
 
-                // Le propriétaire gère les autres formateurs ET ses propres étudiants
                 invitationsTab.style.display = 'flex';
                 centreTab.style.display = 'flex';
                 renderStudentTable(data.students || []);
                 renderCentreDetails(data.organisation);
 
             } else {
-                // C'est un utilisateur standard (free, independant, promo)
                 displayPlan = data.plan;
                 studentCount = data.students ? data.students.length : 0;
 
@@ -340,7 +278,7 @@
                     planNameEl.textContent = "Indépendant";
                     planDescEl.textContent = `Sauvegardes illimitées, et jusqu'à 5 étudiants (${studentCount} / 5).`;
                     invitationsTab.style.display = 'flex';
-                } else { // 'free'
+                } else {
                     planNameEl.textContent = "Free";
                     planDescEl.textContent = "Fonctionnalités de base, aucune sauvegarde de données, pas de comptes étudiants.";
                 }
@@ -350,10 +288,8 @@
                 }
             }
 
-            currentPlan = displayPlan; // Stocker le plan actif
+            currentPlan = displayPlan;
 
-            // Mettre à jour les boutons d'abonnement
-            // On passe les infos de devis (meme si elles sont null)
             const quoteUrl = data.organisation ? data.organisation.quote_url : null;
             const quotePrice = data.organisation ? data.organisation.quote_price : null;
             updateSubscriptionButtons(displayPlan, quoteUrl, quotePrice);
@@ -365,21 +301,16 @@
         }
     }
 
-    /**
-     * NOUVEAU : Remplit la section "Gestion du Centre"
-     */
     function renderCentreDetails(organisation) {
         document.getElementById('centre-plan-name').textContent = `Plan ${organisation.plan} ("${organisation.name}")`;
         document.getElementById('centre-plan-details').textContent = `Licences formateur utilisées : ${organisation.licences_utilisees} / ${organisation.licences_max || 'Illimitées'}`;
 
         const listContainer = document.getElementById('formateurs-list-container');
 
-        // --- CORRECTION DU BUG DE NULL POINTER ---
         const loadingEl = document.getElementById('formateurs-loading');
         if (loadingEl) {
             loadingEl.style.display = 'none';
         }
-        // ----------------------------------------
 
         let html = '';
         if (!organisation.formateurs || organisation.formateurs.length === 0) {
@@ -399,15 +330,13 @@
 
 
     /**
-     * Construit le tableau HTML des étudiants et de leurs permissions (MODIFIÉ)
-     * @param {Array} students - La liste des objets étudiants
+     * Construit le tableau HTML des étudiants et de leurs permissions (MODIFIÉ avec Toggles)
      */
     function renderStudentTable(students) {
         const tbody = document.getElementById('permissions-tbody');
         const title = document.getElementById('student-list-title');
         title.textContent = `Gestion des étudiants (${students.length})`;
 
-        // Gérer la limite d'étudiants
         const createBtn = document.getElementById('create-student-submit-btn');
         const loginInput = document.getElementById('student-login');
         const passwordInput = document.getElementById('student-password');
@@ -422,7 +351,6 @@
             limitReached = true;
             limitMessage = "Limite de 40 étudiants atteinte pour le plan Promo.";
         }
-        // Pour le plan 'centre', il n'y a pas de limite (ou elle est gérée par l'API)
 
         if (limitReached) {
             createBtn.disabled = true;
@@ -442,14 +370,12 @@
 
 
         if (students.length === 0) {
-            // MODIFICATION : Colspan mis à jour à 15
             tbody.innerHTML = `<tr><td colspan="15" class="p-4 text-center text-gray-500">Vous n'avez pas encore créé de compte étudiant.</td></tr>`;
             return;
         }
 
         let html = '';
 
-        // MODIFICATION : Ajout de 'comptesRendus' à la liste
         const permissionsList = [
             'header', 'admin', 'vie', 'observations',
             'comptesRendus',
@@ -459,20 +385,22 @@
 
         students.forEach(student => {
             html += `<tr>`;
-            html += `<td class="p-2 font-medium">${student.login}</td>`;
+            html += `<td class="p-2 font-medium align-middle">${student.login}</td>`;
 
             permissionsList.forEach(perm => {
-                // S'assure que l'objet permissions existe avant d'essayer d'y accéder
                 const isChecked = student.permissions && student.permissions[perm];
-                html += `<td class="p-2 text-center">
-                           <input type="checkbox" data-login="${student.login}" data-permission="${perm}" ${isChecked ? 'checked' : ''}>
+                // --- MODIFICATION : REMPLACEMENT DES CHECKBOXES PAR DES TOGGLES ---
+                html += `<td class="p-2 text-center align-middle">
+                           <label class="relative inline-flex items-center cursor-pointer">
+                             <input type="checkbox" class="sr-only peer" data-login="${student.login}" data-permission="${perm}" ${isChecked ? 'checked' : ''}>
+                             <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                           </label>
                          </td>`;
             });
 
-            // NOUVEAU : Cellule pour le bouton de gestion des chambres
             const allowedRooms = student.allowedRooms || [];
             const roomCount = allowedRooms.length;
-            html += `<td class="p-2 text-center">
+            html += `<td class="p-2 text-center align-middle">
                        <button type="button" 
                                class="manage-rooms-btn text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
                                data-login="${student.login}"
@@ -481,9 +409,8 @@
                          Gérer (${roomCount}/10)
                        </button>
                      </td>`;
-            // FIN NOUVEAU
 
-            html += `<td class="p-2 text-center">
+            html += `<td class="p-2 text-center align-middle">
                        <button title="Supprimer cet étudiant" data-login="${student.login}" class="delete-student-btn text-red-500 hover:text-red-700">
                          <i class="fas fa-trash"></i>
                        </button>
@@ -494,10 +421,6 @@
         tbody.innerHTML = html;
     }
 
-    /**
-     * Génère une chaîne aléatoire (pour login/mdp)
-     * @param {number} length - Longueur de la chaîne
-     */
     function generateRandomString(length) {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
@@ -509,9 +432,6 @@
 
     // --- Gestionnaires d'événements ---
 
-    /**
-     * NOUVEAU : Gère l'invitation d'un formateur
-     */
     async function handleInviteFormateur(e) {
         e.preventDefault();
         const email = document.getElementById('invite-email').value;
@@ -527,7 +447,6 @@
 
         try {
             const headers = getAuthHeaders();
-            // L'API devra gérer la logique d'invitation (vérifier limite de licences, etc.)
             const response = await fetch(`${API_URL}/api/organisation/invite`, {
                 method: 'POST',
                 headers: headers,
@@ -543,7 +462,7 @@
 
             showCustomAlert("Invitation envoyée", `Un e-mail d'invitation a été envoyé à ${email}.`);
             document.getElementById('invite-formateur-form').reset();
-            loadAccountDetails(); // Recharger les détails pour mettre à jour la liste
+            loadAccountDetails();
 
         } catch (err) {
             showCustomAlert("Erreur", err.message);
@@ -553,9 +472,6 @@
         }
     }
 
-    /**
-     * NOUVEAU : Gère le clic sur la liste des formateurs (suppression)
-     */
     async function handleFormateursListClick(e) {
         const removeBtn = e.target.closest('.remove-formateur-btn');
         if (!removeBtn) return;
@@ -567,7 +483,7 @@
                 try {
                     const headers = getAuthHeaders();
                     const response = await fetch(`${API_URL}/api/organisation/remove`, {
-                        method: 'POST', // Utiliser POST ou DELETE
+                        method: 'POST', 
                         headers: headers,
                         body: JSON.stringify({ email: email })
                     });
@@ -580,7 +496,7 @@
                     }
 
                     showCustomAlert("Formateur retiré", `${email} a été retiré de votre centre.`);
-                    loadAccountDetails(); // Recharger
+                    loadAccountDetails();
 
                 } catch (err) {
                     showCustomAlert("Erreur", err.message);
@@ -590,9 +506,6 @@
     }
 
 
-    /**
-     * NOUVEAU : Gère la copie de l'email dans le presse-papiers
-     */
     function handleCopyEmail() {
         const emailText = document.getElementById('contact-email').textContent;
 
@@ -609,9 +522,6 @@
         });
     }
 
-    /**
-     * Gère la suggestion de login/mot de passe
-     */
     function handleGenerateCredentials(e) {
         e.preventDefault();
         const generatedLogin = `etu${Math.floor(1000 + Math.random() * 9000)}`;
@@ -621,13 +531,9 @@
         document.getElementById('student-password').value = generatedPassword;
     }
 
-    /**
-     * Gère la création d'un compte étudiant (MODIFIÉ)
-     */
     async function handleCreateStudent(e) {
         e.preventDefault();
 
-        // MODIFIÉ : Vérification côté client
         if (currentPlan === 'independant' && studentCount >= 5) {
             showCustomAlert("Limite atteinte", "Vous avez atteint la limite de 5 étudiants pour le plan Indépendant.");
             return;
@@ -636,7 +542,6 @@
             showCustomAlert("Limite atteinte", "Vous avez atteint la limite de 40 étudiants pour le plan Promo.");
             return;
         }
-        // FIN MODIFICATION
 
         const login = document.getElementById('student-login').value;
         const password = document.getElementById('student-password').value;
@@ -648,7 +553,6 @@
 
         try {
             const headers = getAuthHeaders();
-            // MODIFIÉ : Utilise API_URL
             const response = await fetch(`${API_URL}/api/account/invite`, {
                 method: 'POST',
                 headers: headers,
@@ -672,10 +576,8 @@
 
             showCustomAlert("Succès", `Le compte pour "${login}" a été créé.`);
 
-            // Réinitialiser le formulaire
             document.getElementById('create-student-form').reset();
 
-            // Recharger la liste des étudiants (mettra à jour le compteur et l'état du bouton)
             loadAccountDetails();
 
         } catch (err) {
@@ -683,9 +585,6 @@
         }
     }
 
-    /**
-     * Gère la changement de mot de passe
-     */
     async function handleChangePassword(e) {
         e.preventDefault();
         const currentPassword = document.getElementById('current-password').value;
@@ -699,7 +598,6 @@
 
         try {
             const headers = getAuthHeaders();
-            // MODIFIÉ : Utilise API_URL
             const response = await fetch(`${API_URL}/api/account/change-password`, {
                 method: 'POST',
                 headers: headers,
@@ -729,9 +627,6 @@
         }
     }
 
-    /**
-     * NOUVEAU : Gère la demande de changement d'e-mail
-     */
     async function handleChangeEmail(e) {
         e.preventDefault();
 
@@ -767,16 +662,12 @@
     }
 
 
-    /**
-     * Gère la suppression du compte
-     */
     function handleDeleteAccount() {
         showDeleteConfirmation(
             "Êtes-vous absolument sûr ? Cette action est irréversible et supprimera toutes vos données.",
             async () => {
                 try {
                     const headers = getAuthHeaders();
-                    // MODIFIÉ : Utilise API_URL
                     const response = await fetch(`${API_URL}/api/account/delete`, {
                         method: 'DELETE',
                         headers: headers
@@ -795,7 +686,6 @@
                         throw new Error(errorMsg);
                     }
 
-                    // Déconnexion
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('activePatientId');
                     localStorage.removeItem('activeTab');
@@ -813,9 +703,7 @@
         );
     }
 
-    // Gère le clic sur un bouton de changement d'abonnement
     async function handleChangeSubscription(newPlan) {
-        // La logique du plan "Centre" est gérée par son propre bouton .onclick
         if (newPlan === 'centre') {
             switchTab('contact');
             return;
@@ -823,7 +711,6 @@
 
         try {
             const headers = getAuthHeaders();
-            // MODIFIÉ : Utilise API_URL
             const response = await fetch(`${API_URL}/api/account/change-subscription`, {
                 method: 'POST',
                 headers: headers,
@@ -847,7 +734,6 @@
 
             showCustomAlert("Abonnement mis à jour", `Vous êtes maintenant sur le plan ${newPlan}.`);
 
-            // Recharger tous les détails pour refléter le changement
             loadAccountDetails();
 
         } catch (err) {
@@ -855,9 +741,6 @@
         }
     }
 
-    /**
-     * Gère la mise à jour d'une permission (via délégation)
-     */
     async function handlePermissionChange(e) {
         if (!e.target.matches('input[type="checkbox"]')) return;
 
@@ -868,7 +751,6 @@
 
         try {
             const headers = getAuthHeaders();
-            // MODIFIÉ : Utilise API_URL
             const response = await fetch(`${API_URL}/api/account/permissions`, {
                 method: 'PUT',
                 headers: headers,
@@ -892,16 +774,11 @@
 
         } catch (err) {
             showCustomAlert("Erreur", err.message);
-            // Annuler le changement visuel
             checkbox.checked = !value;
         }
     }
 
-    /**
-     * Gère la suppression d'un étudiant ou l'ouverture de la modale chambre (via délégation)
-     */
     async function handleTableClicks(e) {
-        // Gestion suppression
         const deleteBtn = e.target.closest('.delete-student-btn');
         if (deleteBtn) {
             const login = deleteBtn.dataset.login;
@@ -910,7 +787,6 @@
                 async () => {
                     try {
                         const headers = getAuthHeaders();
-                        // MODIFIÉ : Utilise API_URL
                         const response = await fetch(`${API_URL}/api/account/student`, {
                             method: 'DELETE',
                             headers: headers,
@@ -931,17 +807,16 @@
                         }
 
                         showCustomAlert("Succès", `Le compte "${login}" a été supprimé.`);
-                        loadAccountDetails(); // Recharger la liste
+                        loadAccountDetails();
 
                     } catch (err) {
                         showCustomAlert("Erreur", err.message);
                     }
                 }
             );
-            return; // Stop ici si c'est un clic de suppression
+            return;
         }
 
-        // NOUVEAU : Gestion ouverture modale chambre
         const manageRoomsBtn = e.target.closest('.manage-rooms-btn');
         if (manageRoomsBtn) {
             handleOpenRoomModal(manageRoomsBtn);
@@ -995,7 +870,6 @@
 
         try {
             const headers = getAuthHeaders();
-            // MODIFIÉ : Utilise API_URL
             const response = await fetch(`${API_URL}/api/account/student/rooms`, {
                 method: 'PUT',
                 headers: headers,
@@ -1008,7 +882,6 @@
                 throw new Error(errData.error || "Erreur lors de la mise à jour");
             }
 
-            // Mettre à jour le bouton dans le tableau
             const button = document.querySelector(`.manage-rooms-btn[data-login="${login}"]`);
             if (button) {
                 button.textContent = `Gérer (${selectedRooms.length}/10)`;
@@ -1021,42 +894,33 @@
             showCustomAlert("Erreur", err.message);
         }
     }
-    // --- FIN NOUVELLES FONCTIONS ---
 
-    /**
-     * Initialisation de la page
-     */
     function init() {
-        // Vérifier le token au chargement
         if (!getAuthToken()) return;
 
-        // Références des onglets
         tabButtons = {
             security: document.getElementById('tab-security'),
             subscription: document.getElementById('tab-subscription'),
-            centre: document.getElementById('tab-centre'), // NOUVEAU
+            centre: document.getElementById('tab-centre'),
             invitations: document.getElementById('tab-invitations'),
             contact: document.getElementById('tab-contact')
         };
         tabContents = {
             security: document.getElementById('content-security'),
             subscription: document.getElementById('content-subscription'),
-            centre: document.getElementById('content-centre'), // NOUVEAU
+            centre: document.getElementById('content-centre'),
             invitations: document.getElementById('content-invitations'),
             contact: document.getElementById('content-contact')
         };
 
-        // Listeners des onglets
         tabButtons.security.addEventListener('click', () => switchTab('security'));
         tabButtons.subscription.addEventListener('click', () => switchTab('subscription'));
-        tabButtons.centre.addEventListener('click', () => switchTab('centre')); // NOUVEAU
+        tabButtons.centre.addEventListener('click', () => switchTab('centre'));
         tabButtons.invitations.addEventListener('click', () => switchTab('invitations'));
         tabButtons.contact.addEventListener('click', () => switchTab('contact'));
 
-        // Listeners des modales
         setupModalListeners();
 
-        // NOUVEAU : Références modale chambres
         roomModal = document.getElementById('room-modal');
         roomModalBox = document.getElementById('room-modal-box');
         roomModalForm = document.getElementById('room-modal-form');
@@ -1064,45 +928,34 @@
         roomModalTitle = document.getElementById('room-modal-title');
         roomModalLoginInput = document.getElementById('room-modal-login');
 
-        // NOUVEAU : Listeners modale chambres
         document.getElementById('room-modal-cancel').addEventListener('click', hideRoomModal);
         roomModalForm.addEventListener('submit', handleSaveStudentRooms);
 
-        // Listeners de la section Sécurité
         document.getElementById('change-password-form').addEventListener('submit', handleChangePassword);
-        document.getElementById('change-email-form').addEventListener('submit', handleChangeEmail); // NOUVEAU
+        document.getElementById('change-email-form').addEventListener('submit', handleChangeEmail);
         document.getElementById('delete-account-btn').addEventListener('click', handleDeleteAccount);
 
-        // MODIFIÉ : Listeners de la section Abonnement
         document.getElementById('sub-btn-free').addEventListener('click', () => handleChangeSubscription('free'));
         document.getElementById('sub-btn-independant').addEventListener('click', () => handleChangeSubscription('independant'));
         document.getElementById('sub-btn-promo').addEventListener('click', () => handleChangeSubscription('promo'));
-        // Le bouton "Centre" est géré dynamiquement dans updateSubscriptionButtons
 
-        // NOUVEAU : Listeners de la section Centre
         document.getElementById('invite-formateur-form').addEventListener('submit', handleInviteFormateur);
         document.getElementById('formateurs-list-container').addEventListener('click', handleFormateursListClick);
 
-        // Listeners de la section Invitations (Étudiants)
         document.getElementById('create-student-form').addEventListener('submit', handleCreateStudent);
         document.getElementById('generate-credentials-btn').addEventListener('click', handleGenerateCredentials);
 
-        // Listeners délégués pour le tableau des permissions (Étudiants)
         const permissionsTbody = document.getElementById('permissions-tbody');
         permissionsTbody.addEventListener('change', handlePermissionChange);
         permissionsTbody.addEventListener('click', handleTableClicks);
 
-        // NOUVEAU : Listener pour la page Contact
         document.getElementById('copy-email-btn').addEventListener('click', handleCopyEmail);
 
-        // Charger les données initiales
         loadAccountDetails();
 
-        // Activer le premier onglet
         switchTab('security');
     }
 
-    // Lancer l'initialisation
     document.addEventListener('DOMContentLoaded', init);
 
 })();

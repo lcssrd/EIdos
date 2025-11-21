@@ -94,6 +94,28 @@
         toastElement = document.getElementById('toast-notification');
         toastIcon = document.getElementById('toast-icon');
         toastText = document.getElementById('toast-text');
+
+        // NOUVEAU : Écouteur pour le champ allergie (mise en valeur en temps réel)
+        const allergyInput = document.getElementById('atcd-allergies');
+        if (allergyInput) {
+            allergyInput.addEventListener('input', checkAllergyStatus);
+        }
+    }
+
+    /**
+     * NOUVEAU : Vérifie si le champ allergie est rempli et applique le style d'alerte
+     */
+    function checkAllergyStatus() {
+        const input = document.getElementById('atcd-allergies');
+        if (!input) return;
+        const container = input.closest('.info-item');
+        if (!container) return;
+
+        if (input.value && input.value.trim() !== '') {
+            container.classList.add('allergy-active');
+        } else {
+            container.classList.remove('allergy-active');
+        }
     }
 
     /**
@@ -407,6 +429,9 @@
         document.getElementById('glycemie-tbody').innerHTML = '';
         document.getElementById('pancarte-tbody').innerHTML = '';
         
+        // NOUVEAU : Réinitialiser l'alerte allergie
+        checkAllergyStatus();
+
         initializeDynamicTables();
 
         calculateAndDisplayIMC();
@@ -427,6 +452,8 @@
         });
         setTimeout(() => {
             document.querySelectorAll('textarea.info-value').forEach(autoResize);
+            // NOUVEAU : Mettre à jour l'alerte allergie après remplissage
+            checkAllergyStatus();
         }, 0);
     }
 
