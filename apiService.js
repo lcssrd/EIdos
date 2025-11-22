@@ -1,9 +1,9 @@
-(function () {
+(function() {
     "use strict";
 
     // MODIFIÉ : La constante API_URL est maintenant l'URL de base
     const API_URL = 'https://eidos-api.onrender.com';
-
+    
     // NOUVEAU : Variable pour stocker la connexion socket
     let socket = null;
 
@@ -15,7 +15,7 @@
         const token = localStorage.getItem('authToken');
         if (!token) {
             console.error("Aucun token trouvé, redirection vers login.");
-            window.location.href = 'auth.html';
+            window.location.href = 'auth.html'; 
             return null;
         }
         return token;
@@ -27,7 +27,7 @@
         if (!token) {
             throw new Error("Token non trouvé, impossible de créer les headers.");
         }
-
+        
         const headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -45,7 +45,7 @@
         if (response.status === 401) {
             console.error("Token invalide ou expiré, redirection vers login.");
             localStorage.removeItem('authToken');
-            window.location.href = 'auth.html';
+            window.location.href = 'auth.html'; 
             return true;
         }
         return false;
@@ -85,7 +85,7 @@
         socket.on('disconnect', () => {
             console.log('Socket déconnecté.');
         });
-
+        
         // La fonction retourne l'instance pour que patientService puisse l'écouter
         return socket;
     }
@@ -130,12 +130,12 @@
 
             const response = await fetch(`${API_URL}/api/patients`, { headers });
             if (handleAuthError(response)) return;
-
+            
             return await response.json();
         } catch (err) {
             console.error("Erreur de chargement de la liste des patients:", err);
             if (err.message.includes("Token non trouvé")) {
-                window.location.href = 'auth.html';
+                 window.location.href = 'auth.html';
             }
             throw err;
         }
@@ -187,10 +187,10 @@
             console.warn('saveChamberData ne doit être utilisé que pour les chambres.');
             return;
         }
-
+        
         try {
             // MODIFIÉ : getAuthHeaders() inclut maintenant le x-socket-id
-            const headers = getAuthHeaders();
+            const headers = getAuthHeaders(); 
             if (!headers) return;
 
             const response = await fetch(`${API_URL}/api/patients/${patientId}`, {
@@ -203,18 +203,41 @@
             });
 
             if (handleAuthError(response)) return;
-
+            
             return await response.json();
         } catch (err) {
             console.error("Erreur lors de la sauvegarde sur le serveur:", err);
             if (err.message.includes("Token non trouvé")) {
-                window.location.href = 'auth.html';
+                 window.location.href = 'auth.html';
             }
             throw err;
         }
     }
 
     /**
+     * Crée ou met à jour une sauvegarde de cas (dossier archivé).
+     * @param {Object} dossierData - L'objet complet contenant l'état du dossier.
+     * @param {string} patientName - Le nom du patient (obligatoire pour la sauvegarde).
+     * @returns {Promise<Object>} La réponse du serveur.
+     */
+    async function saveCaseData(dossierData, patientName) {
+        try {
+            const headers = getAuthHeaders();
+            if (!headers) return;
+
+            const response = await fetch(`${API_URL}/api/patients/save`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    dossierData: dossierData,
+                    sidebar_patient_name: patientName
+                })
+            });
+
+            if (handleAuthError(response)) return;
+            
+            const data = await response.json();
+            if (!response.ok) {
                 throw new Error(data.error || 'Erreur lors de la sauvegarde');
             }
             return data;
@@ -235,21 +258,21 @@
      */
     async function deleteSavedCase(patientId) {
         if (!patientId || !patientId.startsWith('save_')) {
-            throw new Error("Cette fonction ne peut supprimer que des sauvegardes.");
+             throw new Error("Cette fonction ne peut supprimer que des sauvegardes.");
         }
-
+        
         try {
             const headers = getAuthHeaders();
             delete headers['Content-Type']; // Pas de body
             if (!headers) return;
 
-            const response = await fetch(`${API_URL}/api/patients/${patientId}`, {
+            const response = await fetch(`${API_URL}/api/patients/${patientId}`, { 
                 method: 'DELETE',
                 headers: headers
             });
 
             if (handleAuthError(response)) return;
-
+            
             return await response.json();
 
         } catch (err) {
@@ -269,7 +292,7 @@
     async function clearAllChamberData(allChamberIds) {
         const headers = getAuthHeaders();
         if (!headers) return;
-
+        
         const clearPromises = [];
 
         for (const patientId of allChamberIds) {
@@ -287,14 +310,14 @@
         try {
             return await Promise.all(clearPromises);
         } catch (err) {
-            console.error("Erreur lors de la réinitialisation de toutes les chambres:", err);
-            throw err;
+             console.error("Erreur lors de la réinitialisation de toutes les chambres:", err);
+             throw err;
         }
     }
 
 
     // --- Exposition du service ---
-
+    
     window.apiService = {
         connectSocket, // NOUVEAU
         fetchUserPermissions,
