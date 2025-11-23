@@ -101,6 +101,9 @@
     let studentCount = 0;
     let currentUserEmail = '';
 
+    // Variables pour la modale des chambres (Restaurées)
+    let roomModal, roomModalBox, roomModalForm, roomModalList, roomModalTitle, roomModalLoginInput;
+
     function switchTab(tabId) {
         Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
         Object.values(tabContents).forEach(content => content.classList.remove('active'));
@@ -116,7 +119,7 @@
     let adminState = {
         organisations: [],
         independants: [],
-        selectedOrgId: null, // ou 'independants'
+        selectedOrgId: null, 
         selectedUserId: null,
         selectedUserEmail: null
     };
@@ -125,29 +128,23 @@
         const adminTabBtn = document.getElementById('tab-admin');
         const adminContent = document.getElementById('content-admin');
         
-        // Dévoiler l'onglet
         adminTabBtn.style.display = 'flex';
         
-        // Enregistrer les références
         tabButtons.admin = adminTabBtn;
         tabContents.admin = adminContent;
 
-        // Écouteur sur le bouton
         adminTabBtn.addEventListener('click', () => {
             switchTab('admin');
-            loadAdminStructure(); // Charger les données quand on clique
+            loadAdminStructure();
         });
 
-        // Écouteurs Sous-onglets Admin
         document.querySelectorAll('#admin-tabs-nav button').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                // Reset styles
                 document.querySelectorAll('#admin-tabs-nav button').forEach(b => {
                     b.className = "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300";
                 });
                 document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
 
-                // Activate current
                 e.target.className = "inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 active text-red-600 border-red-600";
                 const targetId = e.target.dataset.target;
                 document.getElementById(targetId).classList.remove('hidden');
@@ -158,14 +155,9 @@
             });
         });
 
-        // Écouteur Suppression Utilisateur
         document.getElementById('admin-delete-user-btn').addEventListener('click', handleAdminDeleteUser);
-        
-        // Écouteur Rafraîchissement Patients
         document.getElementById('admin-refresh-patients').addEventListener('click', loadAdminPatients);
     }
-
-    // --- COLONNES DE MILLER (ADMIN) ---
 
     async function loadAdminStructure() {
         try {
@@ -177,7 +169,6 @@
             adminState.independants = data.independants;
             
             renderAdminCol1();
-            // Reset des autres colonnes
             document.getElementById('admin-list-trainers').innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Sélectionnez un centre...</p>';
             document.getElementById('admin-list-students').innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Sélectionnez un formateur...</p>';
             document.getElementById('admin-user-actions').style.display = 'none';
@@ -191,7 +182,6 @@
         const container = document.getElementById('admin-list-orgs');
         let html = '';
 
-        // Groupe Indépendants
         html += `
             <div class="miller-item font-medium" onclick="handleAdminSelectOrg('independants', this)">
                 <span><i class="fas fa-user-tie mr-2 text-teal-600"></i> Indépendants</span>
@@ -199,7 +189,6 @@
             </div>
         `;
 
-        // Organisations
         adminState.organisations.forEach(org => {
             html += `
                 <div class="miller-item" onclick="handleAdminSelectOrg('${org._id}', this)">
@@ -216,14 +205,13 @@
     }
 
     window.handleAdminSelectOrg = async function(idOrType, el) {
-        // Highlight UI
         document.querySelectorAll('#admin-list-orgs .miller-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
 
         adminState.selectedOrgId = idOrType;
         const trainersContainer = document.getElementById('admin-list-trainers');
         trainersContainer.innerHTML = '<p class="p-4 text-sm text-gray-500">Chargement...</p>';
-        document.getElementById('admin-list-students').innerHTML = ''; // Clear col 3
+        document.getElementById('admin-list-students').innerHTML = ''; 
         document.getElementById('admin-user-actions').style.display = 'none';
 
         let usersToDisplay = [];
@@ -231,7 +219,6 @@
         if (idOrType === 'independants') {
             usersToDisplay = adminState.independants;
         } else {
-            // Fetch formateurs du centre
             try {
                 const response = await fetch(`${API_URL}/api/admin/centre/${idOrType}/formateurs`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error("Erreur chargement formateurs");
@@ -272,19 +259,16 @@
     }
 
     window.handleAdminSelectTrainer = async function(userId, userEmail, el) {
-        // Highlight UI
         document.querySelectorAll('#admin-list-trainers .miller-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
 
         adminState.selectedUserId = userId;
         adminState.selectedUserEmail = userEmail;
 
-        // Show Actions
         const actionPanel = document.getElementById('admin-user-actions');
         document.getElementById('admin-selected-user-email').textContent = userEmail;
         actionPanel.style.display = 'flex';
 
-        // Load Students (Col 3)
         const studentsContainer = document.getElementById('admin-list-students');
         studentsContainer.innerHTML = '<p class="p-4 text-sm text-gray-500">Chargement...</p>';
 
@@ -343,15 +327,13 @@
                     if (!response.ok) throw new Error("Erreur lors de la suppression");
                     
                     showCustomAlert("Succès", "Utilisateur supprimé.");
-                    loadAdminStructure(); // Reload full tree
+                    loadAdminStructure(); 
                 } catch (err) {
                     showCustomAlert("Erreur", err.message);
                 }
             }
         );
     }
-
-    // --- GESTION DOSSIERS PATIENTS (ADMIN) ---
 
     async function loadAdminPatients() {
         const tbody = document.getElementById('admin-patients-tbody');
@@ -403,14 +385,13 @@
     }
 
     window.handleAdminTogglePublic = async function(patientId, checkbox) {
-        const originalState = !checkbox.checked; // Revert state if error
+        const originalState = !checkbox.checked; 
         try {
             const response = await fetch(`${API_URL}/api/admin/patients/${patientId}/public`, {
                 method: 'PUT',
                 headers: getAuthHeaders()
             });
             if (!response.ok) throw new Error("Erreur update");
-            // Succès visuel (optionnel)
         } catch (err) {
             checkbox.checked = originalState;
             showCustomAlert("Erreur", "Impossible de changer le statut public.");
@@ -427,7 +408,7 @@
                         headers: getAuthHeaders()
                     });
                     if (!response.ok) throw new Error("Erreur suppression");
-                    loadAdminPatients(); // Refresh
+                    loadAdminPatients(); 
                 } catch (err) {
                     showCustomAlert("Erreur", err.message);
                 }
@@ -439,7 +420,6 @@
     // --- CHARGEMENT DONNÉES COMPTE (CLASSIQUE) ---
 
     async function loadAccountDetails() {
-        // Cacher les onglets conditionnels par défaut
         document.getElementById('tab-invitations').style.display = 'none';
         document.getElementById('tab-centre').style.display = 'none';
 
@@ -454,17 +434,14 @@
             const data = await response.json();
             currentUserEmail = data.email;
 
-            // --- LOGIQUE SUPER ADMIN ACTIVATION ---
             if (currentUserEmail === ADMIN_EMAIL) {
                 initAdminInterface();
             }
-            // --------------------------------------
 
             const planNameEl = document.getElementById('current-plan-name');
             const planDescEl = document.getElementById('plan-description');
             let displayPlan = data.plan;
 
-            // Affichage classique
             if (data.role === 'formateur' && data.organisation) {
                 displayPlan = data.organisation.plan;
                 planNameEl.textContent = `Plan ${displayPlan} (via ${data.organisation.name})`;
@@ -508,8 +485,6 @@
         }
     }
 
-    // --- FONCTIONS UTILITAIRES UI (CORRIGÉ POUR LES BADGES) ---
-
     function updateSubscriptionButtons(activePlan, quoteUrl, quotePrice) {
         const buttons = {
             'free': document.getElementById('sub-btn-free'),
@@ -518,7 +493,6 @@
             'centre': document.getElementById('sub-btn-centre')
         };
 
-        // Définition des styles pour les badges
         const styles = {
             'free': { badge: ['bg-yellow-300', 'text-yellow-800'], border: 'border-yellow-300' },
             'independant': { badge: ['bg-teal-600', 'text-white'], border: 'border-teal-600' },
@@ -526,27 +500,22 @@
             'centre': { badge: ['bg-indigo-600', 'text-white'], border: 'border-indigo-600' }
         };
         
-        // Reset all
         Object.keys(buttons).forEach(plan => {
             const btn = buttons[plan];
             if(!btn) return;
             const card = btn.closest('.card');
             const badge = card.querySelector('.js-active-plan-badge');
 
-            // Reset card styles
             card.classList.remove('shadow-xl', 'border-2', styles[plan].border);
             card.classList.add('hover:scale-[1.02]', 'hover:shadow-xl');
             
-            // Reset badge
             badge.classList.add('hidden');
             badge.classList.remove(...styles[plan].badge);
 
-            // Reset button
             btn.disabled = false;
             btn.innerHTML = 'Choisir ce plan';
             btn.className = btn.className.replace(/cursor-not-allowed|bg-.*-100|text-.*-800|opacity-75/g, ''); 
             
-            // Reset specific button styles (simple restoration)
             if (plan === 'centre') {
                  btn.classList.add('bg-gray-200', 'text-gray-700');
                  btn.classList.remove('bg-indigo-600', 'text-white');
@@ -555,28 +524,23 @@
             }
         });
 
-        // Active specific
         if (buttons[activePlan]) {
             const btn = buttons[activePlan];
             const card = btn.closest('.card');
             const badge = card.querySelector('.js-active-plan-badge');
             const planStyle = styles[activePlan];
             
-            // Active card
             card.classList.add('shadow-xl', 'border-2', planStyle.border);
             card.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl');
             
-            // Active badge (CORRECTION APPLIQUÉE)
             badge.classList.remove('hidden');
             badge.classList.add(...planStyle.badge);
             
-            // Active button
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-check mr-2"></i> Plan actuel';
             btn.classList.add('cursor-not-allowed', 'opacity-75');
         }
         
-        // Centre Logic
         const centerBtn = buttons['centre'];
         if(activePlan === 'centre' && quoteUrl) {
              centerBtn.innerHTML = `Activer devis (${quotePrice})`;
@@ -641,7 +605,7 @@
         tbody.innerHTML = html;
     }
 
-    // --- HANDLERS (IDENTIQUES + Modifications mineures) ---
+    // --- HANDLERS ---
 
     function generateRandomString(length) {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -688,12 +652,83 @@
         });
     }
 
+    // --- GESTION MODALE CHAMBRES (RESTAURÉE) ---
+
+    function hideRoomModal() {
+        roomModalBox.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            roomModal.classList.add('hidden');
+        }, 200);
+    }
+
+    function handleOpenRoomModal(button) {
+        const login = button.dataset.login;
+        const name = button.dataset.name;
+        const rooms = JSON.parse(button.dataset.rooms || '[]');
+
+        roomModalTitle.textContent = `Gérer les chambres pour ${name}`;
+        roomModalLoginInput.value = login;
+
+        let roomCheckboxesHTML = '';
+        for (let i = 101; i <= 110; i++) {
+            const roomId = `chambre_${i}`;
+            const isChecked = rooms.includes(roomId);
+            roomCheckboxesHTML += `
+                <label class="flex items-center space-x-2 p-2 border rounded-md ${isChecked ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50'
+                } cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" name="room" value="${roomId}" ${isChecked ? 'checked' : ''} class="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                    <span class="font-medium text-sm">${i}</span>
+                </label>
+            `;
+        }
+        roomModalList.innerHTML = roomCheckboxesHTML;
+
+        roomModal.classList.remove('hidden');
+        setTimeout(() => {
+            roomModalBox.classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    }
+
+    async function handleSaveStudentRooms(e) {
+        e.preventDefault();
+
+        const login = roomModalLoginInput.value;
+        const selectedRooms = Array.from(roomModalForm.querySelectorAll('input[name="room"]:checked'))
+            .map(cb => cb.value);
+
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${API_URL}/api/account/student/rooms`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify({ login: login, rooms: selectedRooms })
+            });
+
+            if (handleAuthError(response)) return;
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.error || "Erreur lors de la mise à jour");
+            }
+
+            // Mettre à jour le bouton dans le tableau
+            const button = document.querySelector(`.manage-rooms-btn[data-login="${login}"]`);
+            if (button) {
+                button.textContent = `Gérer (${selectedRooms.length}/10)`;
+                button.dataset.rooms = JSON.stringify(selectedRooms);
+            }
+
+            hideRoomModal();
+
+        } catch (err) {
+            showCustomAlert("Erreur", err.message);
+        }
+    }
+
     // --- INIT ---
 
     function init() {
         if (!getAuthToken()) return;
 
-        // Tabs listeners
         ['security', 'subscription', 'centre', 'invitations', 'contact'].forEach(tab => {
             const btn = document.getElementById(`tab-${tab}`);
             const content = document.getElementById(`content-${tab}`);
@@ -706,7 +741,19 @@
 
         setupModalListeners();
 
-        // Forms listeners
+        // Initialisation références modale chambres
+        roomModal = document.getElementById('room-modal');
+        roomModalBox = document.getElementById('room-modal-box');
+        roomModalForm = document.getElementById('room-modal-form');
+        roomModalList = document.getElementById('room-modal-list');
+        roomModalTitle = document.getElementById('room-modal-title');
+        roomModalLoginInput = document.getElementById('room-modal-login');
+
+        // Écouteurs modale chambres
+        document.getElementById('room-modal-cancel').addEventListener('click', hideRoomModal);
+        roomModalForm.addEventListener('submit', handleSaveStudentRooms);
+
+        // Autres écouteurs
         document.getElementById('change-password-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const cur = document.getElementById('current-password').value;
@@ -729,7 +776,7 @@
             document.getElementById('student-password').value = generateRandomString(8);
         });
 
-        // Event delegation for dynamic tables
+        // Écouteurs Tableaux (Délégation)
         document.getElementById('formateurs-list-container').addEventListener('click', async (e) => {
             if(e.target.closest('.remove-formateur-btn')) {
                 const email = e.target.closest('.remove-formateur-btn').dataset.email;
@@ -750,12 +797,20 @@
         });
 
         document.getElementById('permissions-tbody').addEventListener('click', async (e) => {
+            // Supprimer étudiant
             if(e.target.closest('.delete-student-btn')) {
                 const login = e.target.closest('.delete-student-btn').dataset.login;
                 showDeleteConfirmation(`Supprimer étudiant ${login} ?`, async () => {
                     await fetch(`${API_URL}/api/account/student`, { method: 'DELETE', headers: getAuthHeaders(), body: JSON.stringify({ login }) });
                     loadAccountDetails();
                 });
+                return;
+            }
+            
+            // Gérer les chambres (Bouton restauré)
+            const manageRoomsBtn = e.target.closest('.manage-rooms-btn');
+            if (manageRoomsBtn) {
+                handleOpenRoomModal(manageRoomsBtn);
             }
         });
 
