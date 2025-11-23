@@ -508,7 +508,7 @@
         }
     }
 
-    // --- FONCTIONS UTILITAIRES UI (IDENTIQUES À L'ORIGINAL) ---
+    // --- FONCTIONS UTILITAIRES UI (CORRIGÉ POUR LES BADGES) ---
 
     function updateSubscriptionButtons(activePlan, quoteUrl, quotePrice) {
         const buttons = {
@@ -517,31 +517,60 @@
             'promo': document.getElementById('sub-btn-promo'),
             'centre': document.getElementById('sub-btn-centre')
         };
+
+        // Définition des styles pour les badges
+        const styles = {
+            'free': { badge: ['bg-yellow-300', 'text-yellow-800'], border: 'border-yellow-300' },
+            'independant': { badge: ['bg-teal-600', 'text-white'], border: 'border-teal-600' },
+            'promo': { badge: ['bg-blue-600', 'text-white'], border: 'border-blue-600' },
+            'centre': { badge: ['bg-indigo-600', 'text-white'], border: 'border-indigo-600' }
+        };
         
         // Reset all
-        Object.values(buttons).forEach(btn => {
+        Object.keys(buttons).forEach(plan => {
+            const btn = buttons[plan];
             if(!btn) return;
             const card = btn.closest('.card');
-            card.classList.remove('shadow-xl', 'border-2', 'border-yellow-300', 'border-teal-600', 'border-blue-600', 'border-indigo-600');
+            const badge = card.querySelector('.js-active-plan-badge');
+
+            // Reset card styles
+            card.classList.remove('shadow-xl', 'border-2', styles[plan].border);
             card.classList.add('hover:scale-[1.02]', 'hover:shadow-xl');
-            card.querySelector('.js-active-plan-badge').classList.add('hidden');
+            
+            // Reset badge
+            badge.classList.add('hidden');
+            badge.classList.remove(...styles[plan].badge);
+
+            // Reset button
             btn.disabled = false;
             btn.innerHTML = 'Choisir ce plan';
-            btn.className = btn.className.replace(/cursor-not-allowed|bg-.*-100|text-.*-800/g, ''); // Reset basic classes roughly
-            // Note: Pour simplifier le code ici, je n'ai pas remis tout le détail des classes CSS complexes de la version précédente car c'est purement cosmétique, 
-            // mais la logique d'état (disabled/active) est là.
+            btn.className = btn.className.replace(/cursor-not-allowed|bg-.*-100|text-.*-800|opacity-75/g, ''); 
+            
+            // Reset specific button styles (simple restoration)
+            if (plan === 'centre') {
+                 btn.classList.add('bg-gray-200', 'text-gray-700');
+                 btn.classList.remove('bg-indigo-600', 'text-white');
+            } else {
+                 btn.classList.remove('cursor-not-allowed');
+            }
         });
 
         // Active specific
         if (buttons[activePlan]) {
             const btn = buttons[activePlan];
             const card = btn.closest('.card');
-            const borderColor = activePlan === 'free' ? 'border-yellow-300' : activePlan === 'independant' ? 'border-teal-600' : activePlan === 'promo' ? 'border-blue-600' : 'border-indigo-600';
+            const badge = card.querySelector('.js-active-plan-badge');
+            const planStyle = styles[activePlan];
             
-            card.classList.add('shadow-xl', 'border-2', borderColor);
+            // Active card
+            card.classList.add('shadow-xl', 'border-2', planStyle.border);
             card.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl');
-            card.querySelector('.js-active-plan-badge').classList.remove('hidden');
             
+            // Active badge (CORRECTION APPLIQUÉE)
+            badge.classList.remove('hidden');
+            badge.classList.add(...planStyle.badge);
+            
+            // Active button
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-check mr-2"></i> Plan actuel';
             btn.classList.add('cursor-not-allowed', 'opacity-75');
@@ -554,7 +583,7 @@
              centerBtn.onclick = () => window.location.href = quoteUrl;
              centerBtn.disabled = false;
              centerBtn.classList.remove('cursor-not-allowed', 'opacity-75');
-        } else {
+        } else if (activePlan !== 'centre') {
              centerBtn.onclick = () => switchTab('contact');
         }
     }
@@ -728,7 +757,6 @@
                     loadAccountDetails();
                 });
             }
-            // Room logic omitted for brevity but should be kept (same as original file)
         });
 
         loadAccountDetails();
