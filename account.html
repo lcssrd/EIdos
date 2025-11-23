@@ -45,6 +45,14 @@
             display: block;
             animation: fadeIn 0.5s ease-in-out; /* Réutilise l'animation de style.css */
         }
+        
+        /* Style spécifique pour l'admin */
+        .admin-card {
+            transition: transform 0.2s;
+        }
+        .admin-card:hover {
+            transform: translateY(-2px);
+        }
     </style>
 
 </head>
@@ -76,6 +84,11 @@
                 <button type="button" id="tab-invitations" class="account-tab-btn">
                     <i class="fas fa-users"></i> Gestion des étudiants
                 </button>
+                
+                <button type="button" id="tab-admin" class="account-tab-btn text-red-600 hover:bg-red-50" style="display: none;">
+                    <i class="fas fa-user-shield"></i> Administration
+                </button>
+
                 <button type="button" id="tab-contact" class="account-tab-btn">
                     <i class="fas fa-envelope"></i> Contacter le développeur
                 </button>
@@ -330,6 +343,67 @@
                             </div>
                         </div>
                     </section>
+                    
+                    <section id="content-admin" class="account-section">
+                        <div class="flex justify-between items-center mb-6">
+                            <h1 class="text-3xl font-bold text-gray-800">Administration Système</h1>
+                            <span class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Super Admin</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                            <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500">
+                                <p class="text-sm text-gray-500">Total Utilisateurs</p>
+                                <p class="text-2xl font-bold text-gray-800" id="admin-stat-users">...</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-teal-500">
+                                <p class="text-sm text-gray-500">Total Dossiers</p>
+                                <p class="text-2xl font-bold text-gray-800" id="admin-stat-patients">...</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500">
+                                <p class="text-sm text-gray-500">Centres de Formation</p>
+                                <p class="text-2xl font-bold text-gray-800" id="admin-stat-orgs">...</p>
+                            </div>
+                            <div class="bg-white p-4 rounded-xl shadow-md border-l-4 border-yellow-500">
+                                <p class="text-sm text-gray-500">Étudiants Actifs</p>
+                                <p class="text-2xl font-bold text-gray-800" id="admin-stat-students">...</p>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-4 mb-6 border-b border-gray-200">
+                            <button id="admin-view-users-btn" class="pb-2 px-4 font-medium text-teal-600 border-b-2 border-teal-600 focus:outline-none">
+                                <i class="fas fa-users-cog mr-2"></i> Utilisateurs & Centres
+                            </button>
+                            <button id="admin-view-scenarios-btn" class="pb-2 px-4 font-medium text-gray-500 hover:text-teal-600 focus:outline-none">
+                                <i class="fas fa-book-medical mr-2"></i> Bibliothèque de Cas
+                            </button>
+                        </div>
+
+                        <div id="admin-view-users">
+                            <div class="mb-4">
+                                <input type="text" id="admin-search-users" class="styled-input w-full" placeholder="Rechercher un utilisateur (email, login)...">
+                            </div>
+                            <div id="admin-users-list" class="space-y-4">
+                                <p class="text-gray-500 text-center py-8">Chargement des données...</p>
+                            </div>
+                        </div>
+
+                        <div id="admin-view-scenarios" class="hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <input type="text" id="admin-search-scenarios" class="styled-input w-2/3" placeholder="Rechercher un dossier...">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-600 font-medium">Filtre :</span>
+                                    <select id="admin-filter-scenarios" class="styled-input py-1">
+                                        <option value="all">Tout</option>
+                                        <option value="public">Public</option>
+                                        <option value="private">Privé</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="admin-scenarios-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                </div>
+                        </div>
+                    </section>
+
                     <section id="content-invitations" class="account-section">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Invitations et Gestion (Étudiants)</h1>
 

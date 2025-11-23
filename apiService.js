@@ -8,8 +8,6 @@
     let socket = null;
 
     // --- Fonctions d'authentification "privées" ---
-    // (Elles ne sont pas exposées sur window.apiService, 
-    // mais sont utilisées par les autres fonctions de ce fichier)
 
     function getAuthToken() {
         const token = localStorage.getItem('authToken');
@@ -48,13 +46,16 @@
             window.location.href = 'auth.html'; 
             return true;
         }
+        if (response.status === 403) {
+            console.error("Accès interdit (403).");
+            // On ne redirige pas forcément, mais on le signale
+            return false; // Laisse l'appelant gérer l'erreur 403
+        }
         return false;
     }
 
     // --- Fonctions API "publiques" ---
-    // (Celles-ci seront exposées sur window.apiService)
 
-    // NOUVEAU : Fonction pour initialiser la connexion Socket.io
     /**
      * Initialise la connexion Socket.io avec le serveur.
      * @returns {Socket} L'instance du socket connecté.
@@ -115,7 +116,7 @@
             if (err.message.includes("Token non trouvé")) {
                 window.location.href = 'auth.html';
             }
-            throw err; // Propage l'erreur pour que le code appelant puisse réagir
+            throw err; 
         }
     }
 
@@ -316,17 +317,96 @@
     }
 
 
+    // --- FONCTIONS ADMIN (NOUVEAU) ---
+
+    async function fetchAdminStats() {
+        try {
+            const headers = getAuthHeaders();
+            delete headers['Content-Type'];
+            
+            const response = await fetch(`${API_URL}/api/admin/stats`, { headers });
+            if (handleAuthError(response)) return;
+            
+            if (!response.ok) throw new Error("Impossible de charger les stats");
+            return await response.json();
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    }
+
+    async function fetchAdminData() {
+        try {
+            const headers = getAuthHeaders();
+            delete headers['Content-Type'];
+            
+            const response = await fetch(`${API_URL}/api/admin/data`, { headers });
+            if (handleAuthError(response)) return;
+            
+            if (!response.ok) throw new Error("Impossible de charger les données admin");
+            return await response.json();
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    }
+
+    async function adminDeleteUser(userId) {
+        try {
+            const headers = getAuthHeaders();
+            delete headers['Content-Type'];
+            
+            const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: headers
+            });
+            
+            if (handleAuthError(response)) return;
+            if (!response.ok) throw new Error("Erreur suppression utilisateur");
+            
+            return await response.json();
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    }
+
+    async function toggleScenarioPublic(patientId) {
+        try {
+            const headers = getAuthHeaders();
+            
+            const response = await fetch(`${API_URL}/api/admin/scenarios/${patientId}/toggle-public`, {
+                method: 'PUT',
+                headers: headers
+            });
+            
+            if (handleAuthError(response)) return;
+            if (!response.ok) throw new Error("Erreur changement visibilité");
+            
+            return await response.json();
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    }
+
+
     // --- Exposition du service ---
     
     window.apiService = {
-        connectSocket, // NOUVEAU
+        connectSocket,
         fetchUserPermissions,
         fetchPatientList,
         fetchPatientData,
         saveChamberData,
         saveCaseData,
         deleteSavedCase,
-        clearAllChamberData
+        clearAllChamberData,
+        // Admin
+        fetchAdminStats,
+        fetchAdminData,
+        adminDeleteUser,
+        toggleScenarioPublic
     };
 
 })();
