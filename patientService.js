@@ -68,10 +68,28 @@
         // On préserve l'état existant (currentPatientState)
         state.comptesRendus = currentPatientState.comptesRendus || {};
 
-        // 5. Diagramme de Soins
-        const careDiagramTbody = document.getElementById('care-diagram-tbody');
-        if (careDiagramTbody) state['care-diagram-tbody_html'] = careDiagramTbody.innerHTML;
-        state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
+        // 5. Diagramme de Soins (SÉCURISÉ - Contre XSS)
+        // On ne stocke PLUS de HTML brut. On extrait les données.
+        state.careDiagramData = [];
+        
+        const rows = document.querySelectorAll('#care-diagram-tbody tr');
+        rows.forEach(row => {
+            // Le nom du soin est dans le premier <span>
+            // On utilise textContent pour garantir qu'on ne prend que du texte, pas de balises scripts cachées
+            const nameEl = row.querySelector('td:first-child span'); 
+            const name = nameEl ? nameEl.textContent.trim() : '';
+            
+            // On récupère l'état de toutes les checkboxes de cette ligne
+            const checks = Array.from(row.querySelectorAll('input[type="checkbox"]'))
+                                .map(cb => cb.checked);
+                                
+            if (name) {
+                state.careDiagramData.push({
+                    name: name,
+                    checks: checks
+                });
+            }
+        });
 
         // 6. Biologie
         const bioData = { dateOffsets: [], analyses: {} };

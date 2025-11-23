@@ -417,7 +417,8 @@
 
     function fillFormFromState(state) {
         Object.keys(state).forEach(id => {
-            if (['observations', 'transmissions', 'comptesRendus', 'biologie', 'pancarte', 'glycemie', 'prescriptions', 'lockButtonStates', 'careDiagramCheckboxes'].includes(id) || id.endsWith('_html')) {
+            // Liste d'exclusions, incluant maintenant careDiagramData
+            if (['observations', 'transmissions', 'comptesRendus', 'biologie', 'pancarte', 'glycemie', 'prescriptions', 'lockButtonStates', 'careDiagramCheckboxes', 'careDiagramData'].includes(id) || id.endsWith('_html')) {
                 return;
             }
             const el = document.getElementById(id);
@@ -474,14 +475,32 @@
         }
     }
 
+    // --- SÉCURISATION DE L'AFFICHAGE DU DIAGRAMME DE SOINS ---
     function fillCareDiagramFromState(state) {
         const careDiagramTbody = document.getElementById('care-diagram-tbody');
-        if (careDiagramTbody && state['care-diagram-tbody_html']) {
-            careDiagramTbody.innerHTML = state['care-diagram-tbody_html'];
-        } else if (careDiagramTbody) {
+        if (!careDiagramTbody) return;
+
+        // 1. Nettoyage complet du tbody
+        careDiagramTbody.innerHTML = '';
+
+        // 2. Reconstruction propre à partir des données JSON
+        if (state.careDiagramData && Array.isArray(state.careDiagramData)) {
+            state.careDiagramData.forEach(rowItem => {
+                addCareDiagramRow({ name: rowItem.name }, rowItem.checks);
+            });
+        } 
+        // 3. Fallback (Rétrocompatibilité) : Si on trouve du vieux HTML, on le sanitize
+        else if (state['care-diagram-tbody_html']) {
+            console.warn("Nettoyage du HTML legacy pour le diagramme de soins...");
+            careDiagramTbody.innerHTML = DOMPurify.sanitize(state['care-diagram-tbody_html']);
+        } 
+        else {
             careDiagramTbody.innerHTML = getDefaultForCareDiagramTbody();
         }
-        if (state.careDiagramCheckboxes) {
+        
+        // Rétrocompatibilité pour les checkboxes si stockées séparément (ancien système)
+        // Seulement si on n'a pas utilisé careDiagramData (qui intègre déjà les checks)
+        if (!state.careDiagramData && state.careDiagramCheckboxes) {
             document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]').forEach((cb, index) => {
                 if (state.careDiagramCheckboxes[index] !== undefined) {
                     cb.checked = state.careDiagramCheckboxes[index];
@@ -738,6 +757,7 @@
             if (!isNaN(offset)) {
                 const targetDate = utils.calculateDateFromOffset(entryDateStr, offset);
                 const formattedDate = utils.formatDate(targetDate);
+                // DOMPurify n'est pas nécessaire ici car c'est du textContent généré, mais on garde la logique saine
                 item.querySelector('h3').textContent = `${formattedDate} - ${item.dataset.author.toUpperCase()}`;
             }
         });
@@ -907,8 +927,6 @@
         }, 200);
     }
 
-    // --- MODIFICATION MAJEURE : openLoadPatientModal ---
-    // Gestion de l'affichage différencié des dossiers publics
     function openLoadPatientModal(savedPatients) {
         if (savedPatients.length === 0) {
             loadPatientListContainer.innerHTML = '<p class="text-gray-500">Aucun dossier patient n\'a encore été sauvegardé.</p>';
@@ -1020,6 +1038,7 @@
         return { author, text, formattedDate, dateOffset };
     }
 
+    // --- SÉCURISATION : addObservation ---
     function addObservation(data, fromLoad = false) {
         const { author, text, formattedDate, dateOffset } = data;
 
@@ -1029,17 +1048,19 @@
         item.dataset.text = text;
         item.dataset.dateOffset = dateOffset;
         
+        // DOMPurify pour le titre (Date - Auteur)
+        // TextContent pour le corps du message (sécurité maximale)
         item.innerHTML = `
             <div class="timeline-dot dot-rose"></div>
             <div class="flex justify-between items-start">
-                <h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3>
+                <h3 class="font-semibold text-gray-800">${DOMPurify.sanitize(formattedDate)} - ${DOMPurify.sanitize(author.toUpperCase())}</h3>
                 <button type="button" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer l'observation">
                     <i class="fas fa-times-circle"></i>
                 </button>
             </div>
             <p class="text-gray-600 preserve-whitespace"></p>
         `;
-        item.querySelector('p').textContent = text;
+        item.querySelector('p').textContent = text; // Pas d'HTML autorisé dans le corps
         
         const list = document.getElementById('observations-list');
         if (fromLoad) {
@@ -1071,6 +1092,7 @@
         return { author, text, formattedDate, dateOffset };
     }
     
+    // --- SÉCURISATION : addTransmission ---
     function addTransmission(data, fromLoad = false) {
         const { author, text, formattedDate, dateOffset } = data;
 
@@ -1083,7 +1105,7 @@
         item.innerHTML = `
             <div class="timeline-dot dot-green"></div>
             <div class="flex justify-between items-start">
-                <h3 class="font-semibold text-gray-800">${formattedDate} - ${author.toUpperCase()}</h3>
+                <h3 class="font-semibold text-gray-800">${DOMPurify.sanitize(formattedDate)} - ${DOMPurify.sanitize(author.toUpperCase())}</h3>
                 <button type="button" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la transmission">
                     <i class="fas fa-times-circle"></i>
                 </button>
@@ -1091,15 +1113,17 @@
             <p class="text-gray-600 preserve-whitespace"></p>
         `;
 
-        const safeTextNode = document.createTextNode(text);
-        const tempDiv = document.createElement('div');
-        tempDiv.appendChild(safeTextNode);
-        const formattedText = tempDiv.innerHTML
+        // Nettoyage complet AVANT le formatage
+        const safeText = DOMPurify.sanitize(text);
+        
+        // Ajout du formatage gras pour les mots-clés des transmissions ciblées
+        const formattedText = safeText
             .replace(/Cible :/g, '<strong class="text-gray-900">Cible :</strong>')
             .replace(/Données :/g, '<br><strong class="text-gray-900">Données :</strong>')
             .replace(/Actions :/g, '<br><strong class="text-gray-900">Actions :</strong>')
             .replace(/Résultat :/g, '<br><strong class="text-gray-900">Résultat :</strong>');
-        item.querySelector('p').innerHTML = formattedText;
+            
+        item.querySelector('p').innerHTML = formattedText; // On injecte du HTML sûr
         
         const list = document.getElementById('transmissions-list-ide');
         if (fromLoad) {
@@ -1145,17 +1169,18 @@
         newRow.dataset.type = type; 
         newRow.dataset.dateOffset = dateOffset;
 
+        // Sécurisation : on utilise DOMPurify pour le nom et la posologie au cas où
         newRow.innerHTML = `
             <td class="p-2 text-left align-top min-w-[220px]">
                 <div class="flex items-start justify-between">
-                    <span>${name}</span>
+                    <span>${DOMPurify.sanitize(name)}</span>
                     <button type="button" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer la prescription">
                         <i class="fas fa-times-circle"></i>
                     </button>
                 </div>
             </td>
-            <td class="p-2 text-left align-top min-w-[144px]">${posologie}</td>
-            <td class="p-2 text-left align-top min-w-[96px]">${voie}</td>
+            <td class="p-2 text-left align-top min-w-[144px]">${DOMPurify.sanitize(posologie)}</td>
+            <td class="p-2 text-left align-top min-w-[96px]">${DOMPurify.sanitize(voie)}</td>
             <td class="p-2 text-left align-top" style="min-width: 100px;">${formattedStartDate}</td>
         `;
 
@@ -1203,14 +1228,19 @@
         return { name };
     }
     
-    function addCareDiagramRow(data) {
+    // --- SÉCURISATION : addCareDiagramRow ---
+    // Accepte maintenant l'état des cases (checksState)
+    function addCareDiagramRow(data, checksState = null) {
         const { name } = data;
+        // Nettoyage strict du nom du soin
+        const safeName = DOMPurify.sanitize(name);
+        
         const newRow = document.getElementById('care-diagram-tbody').insertRow();
         
         let cellsHTML = `
             <td class="p-2 text-left align-top">
                 <div class="flex items-start justify-between">
-                    <span>${name}</span>
+                    <span>${safeName}</span>
                     <button type="button" class="ml-2 text-red-500 hover:text-red-700 transition-colors" title="Supprimer ce soin">
                         <i class="fas fa-times-circle"></i>
                     </button>
@@ -1218,11 +1248,16 @@
             </td>
         `;
         
+        // Génération des cases à cocher
         for(let i=0; i<11; i++) {
             for (let j = 0; j < 3; j++) {
                 const borderClass = (j === 0) ? 'border-l' : '';
+                // Calcul de l'index global si on a un état à restaurer
+                const globalIndex = (i * 3) + j;
+                const isChecked = (checksState && checksState[globalIndex]) ? 'checked' : '';
+
                 cellsHTML += `<td class="${borderClass} p-0" style="min-width: 70px;">
-                                <input type="checkbox" class="block mx-auto">
+                                <input type="checkbox" class="block mx-auto" ${isChecked}>
                             </td>`;
             }
         }
