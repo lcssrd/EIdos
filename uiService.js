@@ -12,7 +12,7 @@
     // Références pour le bouton de statut
     let saveStatusButton, saveStatusIcon, saveStatusText;
 
-    // NOUVEAU : Références pour le Toast
+    // Références pour le Toast
     let toastElement, toastIcon, toastText;
     let toastTimeout = null;
 
@@ -52,9 +52,6 @@
     
     // --- Fonctions d'initialisation de l'UI ---
 
-    /**
-     * Initialise les références des éléments du DOM (Modales, etc.)
-     */
     function initUIComponents() {
         // Modale de confirmation
         confirmModal = document.getElementById('custom-confirm-modal');
@@ -90,21 +87,18 @@
         saveStatusIcon = document.getElementById('save-status-icon');
         saveStatusText = document.getElementById('save-status-text');
 
-        // NOUVEAU : Toast
+        // Toast
         toastElement = document.getElementById('toast-notification');
         toastIcon = document.getElementById('toast-icon');
         toastText = document.getElementById('toast-text');
 
-        // NOUVEAU : Écouteur pour le champ allergie (mise en valeur en temps réel)
+        // Écouteur pour le champ allergie
         const allergyInput = document.getElementById('atcd-allergies');
         if (allergyInput) {
             allergyInput.addEventListener('input', checkAllergyStatus);
         }
     }
 
-    /**
-     * NOUVEAU : Vérifie si le champ allergie est rempli et applique le style d'alerte
-     */
     function checkAllergyStatus() {
         const input = document.getElementById('atcd-allergies');
         if (!input) return;
@@ -118,9 +112,6 @@
         }
     }
 
-    /**
-     * Construit les lignes de la table de biologie.
-     */
     function generateBioRows(title, data) {
         let html = `<tr class="font-bold bg-purple-50 text-left"><td class="p-2" colspan="8">${title}</td></tr>`;
         for (const [key, value] of Object.entries(data)) {
@@ -133,16 +124,10 @@
         return html;
     }
 
-    /**
-     * Construit la structure vide (tbody) du diagramme de soins.
-     */
     function getDefaultForCareDiagramTbody() {
-        return ``; // Par défaut, il est vide
+        return ``; 
     }
 
-    /**
-     * Construit les en-têtes et les lignes vides pour toutes les tables dynamiques.
-     */
     function initializeDynamicTables() {
         let html = '';
 
@@ -269,9 +254,6 @@
         }
     }
 
-    /**
-     * Initialise les écouteurs pour les modales.
-     */
     function setupModalListeners() {
         // Modale de confirmation
         confirmOkBtn.addEventListener('click', () => {
@@ -317,11 +299,6 @@
             crModalSaveBtn.style.display = 'inline-flex';
             return;
         }
-
-        // --- Ce qui suit ne s'applique QU'AUX ÉTUDIANTS ---
-        
-        // ***** MODIFICATION : LIGNE SUPPRIMÉE *****
-        // if (saveStatusButton) saveStatusButton.style.display = 'none';
 
         const studentForbiddenButtons = [
             '#save-patient-btn', '#load-patient-btn', '#import-json-btn',
@@ -429,7 +406,6 @@
         document.getElementById('glycemie-tbody').innerHTML = '';
         document.getElementById('pancarte-tbody').innerHTML = '';
         
-        // NOUVEAU : Réinitialiser l'alerte allergie
         checkAllergyStatus();
 
         initializeDynamicTables();
@@ -452,7 +428,6 @@
         });
         setTimeout(() => {
             document.querySelectorAll('textarea.info-value').forEach(autoResize);
-            // NOUVEAU : Mettre à jour l'alerte allergie après remplissage
             checkAllergyStatus();
         }, 0);
     }
@@ -616,7 +591,6 @@
     function updateSaveStatus(status) {
         if (!saveStatusButton || !saveStatusIcon || !saveStatusText) return;
 
-        // Stocker l'ancien texte et l'ancienne icône pour l'animation
         const oldText = saveStatusText.textContent;
         const oldIconClasses = Array.from(saveStatusIcon.classList);
         
@@ -643,15 +617,12 @@
                 break;
         }
 
-        // Ne rien faire si l'état est déjà le bon (évite les animations inutiles)
         if (saveStatusButton.classList.contains(newButtonClasses)) {
-             // Sauf si on force un "Enregistré" (pour le feedback visuel après sauvegarde)
              if (status !== 'saved') {
                 return;
              }
         }
 
-        // Gérer l'animation de fondu pour le texte et l'icône
         if (oldText !== newText) {
             saveStatusIcon.style.opacity = '0';
             saveStatusText.style.opacity = '0';
@@ -667,22 +638,18 @@
                 saveStatusIcon.style.opacity = '1';
                 saveStatusText.style.opacity = '1';
 
-                // Gérer l'animation de spin pour l'état 'saving'
                 if (status === 'saving') {
                     saveStatusIcon.classList.add('fa-spin');
                 } else {
                     saveStatusIcon.classList.remove('fa-spin');
                 }
 
-                // ***** MODIFICATION : Le bouton n'est JAMAIS désactivé *****
                 saveStatusButton.disabled = false;
 
-            }, 200); // Correspond à la moitié de la transition/animation
+            }, 200); 
         } else {
-             // Si le texte est le même, juste mettre à jour la classe
              saveStatusButton.classList.remove('status-saved', 'status-dirty', 'status-saving');
              saveStatusButton.classList.add(newButtonClasses);
-             // ***** MODIFICATION : Le bouton n'est JAMAIS désactivé *****
              saveStatusButton.disabled = false;
              if (status === 'saving') {
                 saveStatusIcon.classList.add('fa-spin');
@@ -788,7 +755,7 @@
             const offset = parseInt(row.dataset.dateOffset, 10);
             if (!isNaN(offset)) {
                 const targetDate = utils.calculateDateFromOffset(entryDateStr, offset);
-                const formattedDate = utils.formatDate(targetDate).slice(0, 8); // JJ/MM/AA
+                const formattedDate = utils.formatDate(targetDate).slice(0, 8); 
                 row.cells[3].textContent = formattedDate;
             }
         });
@@ -867,21 +834,13 @@
         }
     }
 
-    // --- MODIFICATION : showToast ---
-    /**
-     * Affiche une notification toast non bloquante.
-     * @param {string} message - Le message à afficher.
-     * @param {string} [type='success'] - Le type ('success' ou 'error').
-     */
     function showToast(message, type = 'success') {
         if (!toastElement) return;
 
-        // Annuler le timer de disparition précédent s'il existe
         if (toastTimeout) {
             clearTimeout(toastTimeout);
         }
 
-        // Configurer le style du toast
         toastIcon.classList.remove('fa-check-circle', 'fa-exclamation-triangle', 'text-green-500', 'text-red-500');
         if (type === 'error') {
             toastIcon.classList.add('fa-exclamation-triangle', 'text-red-500');
@@ -890,16 +849,13 @@
         }
         toastText.textContent = message;
 
-        // Afficher le toast
         toastElement.classList.add('show');
 
-        // Programmer la disparition
         toastTimeout = setTimeout(() => {
             toastElement.classList.remove('show');
             toastTimeout = null;
-        }, 3000); // Le toast disparaît après 3 secondes
+        }, 3000); 
     }
-    // --- FIN MODIFICATION ---
 
 
     function showDeleteConfirmation(message, callback) {
@@ -928,7 +884,6 @@
     }
     
     function showCustomAlert(title, message) {
-        // Cette fonction reste pour les alertes bloquantes (erreurs critiques, etc.)
         confirmTitle.textContent = title;
         confirmMessage.textContent = message;
 
@@ -952,33 +907,34 @@
         }, 200);
     }
 
+    // --- MODIFICATION MAJEURE : openLoadPatientModal ---
+    // Gestion de l'affichage différencié des dossiers publics
     function openLoadPatientModal(savedPatients) {
         if (savedPatients.length === 0) {
             loadPatientListContainer.innerHTML = '<p class="text-gray-500">Aucun dossier patient n\'a encore été sauvegardé.</p>';
         } else {
             let html = '';
             savedPatients.sort((a, b) => a.sidebar_patient_name.localeCompare(b.sidebar_patient_name)).forEach(patient => {
-                // --- MODIFICATION ICI pour les dossiers publics ---
-                const isPublic = patient.is_public;
-                const bgClass = isPublic ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200';
-                const iconHtml = isPublic ? '<span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full mr-2"><i class="fas fa-globe mr-1"></i>Public</span>' : '';
-                // --------------------------------------------------
+                const isPublic = patient.isPublic;
+                const cardClasses = isPublic ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200';
+                const publicIcon = isPublic ? '<i class="fas fa-globe text-yellow-600 mr-2" title="Dossier Public"></i>' : '';
+                
+                // Si le dossier est public, on NE génère PAS le bouton supprimer
+                const deleteButton = isPublic ? '' : `
+                    <button type="button" class="delete-btn px-3 py-1 text-sm font-medium text-red-600 rounded-md hover:bg-red-100" data-patient-id="${patient.patientId}" data-patient-name="${patient.sidebar_patient_name}">
+                        <i class="fas fa-trash"></i>
+                    </button>`;
 
                 html += `
-                    <div class="flex items-center justify-between p-3 ${bgClass} rounded-lg border">
+                    <div class="flex items-center justify-between p-3 rounded-lg border ${cardClasses}">
                         <div>
-                            <p class="font-medium text-gray-800">
-                                ${iconHtml}
-                                ${patient.sidebar_patient_name}
-                            </p>
+                            <p class="font-medium text-gray-800">${publicIcon}${patient.sidebar_patient_name}</p>
                         </div>
                         <div class="space-x-2 flex-shrink-0">
                             <button type="button" class="load-btn px-3 py-1 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700" data-patient-id="${patient.patientId}">
                                 <i class="fas fa-download mr-1"></i> Charger
                             </button>
-                            <button type="button" class="delete-btn px-3 py-1 text-sm font-medium text-red-600 rounded-md hover:bg-red-100" data-patient-id="${patient.patientId}" data-patient-name="${patient.sidebar_patient_name}">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            ${deleteButton}
                         </div>
                     </div>
                 `;
@@ -1638,7 +1594,6 @@
 
     // --- Fonctions UI : Tutoriel ---
     
-    // MODIFICATION : Mise à jour du texte du tutoriel
     const tutorialSteps = [
         { element: '#patient-list li:first-child button', text: "Bienvenue ! Voici la liste des patients. Cliquez sur un patient pour ouvrir son dossier.", position: 'right' },
         { element: '#patient-header-form', text: "Cet en-tête contient les informations principales. La 'Date d'entrée' est cruciale : toutes les autres dates du dossier seront recalculées à partir de celle-ci.", position: 'bottom' },
@@ -1653,7 +1608,6 @@
         { element: 'button[id="clear-all-data-btn"]', text: "ATTENTION : Ce bouton réinitialise les 10 chambres du service.", position: 'top' },
         { element: 'button[id="start-tutorial-btn"]', text: "Vous avez terminé ! Vous pouvez relancer ce tutoriel à tout moment.", position: 'top' }
     ];
-    // FIN MODIFICATION
 
     function startTutorial() {
         currentStepIndex = 0;
@@ -1794,9 +1748,9 @@
         changeTab,
         autoResize,
         toggleFullscreen,
-        showToast, // NOUVEAU : Exposer le toast
+        showToast, 
         showDeleteConfirmation,
-        showCustomAlert, // Gardé pour les alertes bloquantes
+        showCustomAlert,
         hideConfirmation,
         openLoadPatientModal,
         hideLoadPatientModal,
