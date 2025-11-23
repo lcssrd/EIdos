@@ -958,10 +958,19 @@
         } else {
             let html = '';
             savedPatients.sort((a, b) => a.sidebar_patient_name.localeCompare(b.sidebar_patient_name)).forEach(patient => {
+                // --- MODIFICATION ICI pour les dossiers publics ---
+                const isPublic = patient.is_public;
+                const bgClass = isPublic ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200';
+                const iconHtml = isPublic ? '<span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full mr-2"><i class="fas fa-globe mr-1"></i>Public</span>' : '';
+                // --------------------------------------------------
+
                 html += `
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between p-3 ${bgClass} rounded-lg border">
                         <div>
-                            <p class="font-medium text-gray-800">${patient.sidebar_patient_name}</p>
+                            <p class="font-medium text-gray-800">
+                                ${iconHtml}
+                                ${patient.sidebar_patient_name}
+                            </p>
                         </div>
                         <div class="space-x-2 flex-shrink-0">
                             <button type="button" class="load-btn px-3 py-1 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700" data-patient-id="${patient.patientId}">
