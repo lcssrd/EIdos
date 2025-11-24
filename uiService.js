@@ -9,9 +9,79 @@
     let toastElement, toastIcon, toastText;
     let toastTimeout = null;
     let confirmCallback = null; 
+    
+    // Variables Tutoriel
     let tutorialOverlay, tutorialStepBox, tutorialText, tutorialSkipBtn, tutorialNextBtn;
     let currentStepIndex = 0;
     let highlightedElement = null;
+    let activeTutorialSteps = []; // Contiendra les étapes de la page actuelle
+
+    // --- DONNÉES DU TUTORIEL ---
+    
+    const tutorialStepsSimul = [
+        {
+            element: '#sidebar', 
+            text: "Bienvenue sur EIdos ! \n\nCeci est votre barre latérale principale. C'est ici que s'affichent vos patients (les chambres). Cliquez sur un patient pour charger son dossier.",
+            position: 'right'
+        },
+        {
+            element: '#main-header',
+            text: "Voici l'en-tête du dossier. \n\nVous y trouverez les boutons pour sauvegarder, charger ou réinitialiser un dossier. Le bouton de statut (à gauche) vous indique si vos modifications sont enregistrées.",
+            position: 'bottom-left'
+        },
+        {
+            element: '#patient-header-form',
+            text: "L'identité du patient. \n\nRemplissez ces champs (Nom, Prénom, Date d'entrée) dès le début. C'est indispensable pour que les calculs de dates (J0, J1...) fonctionnent correctement.",
+            position: 'bottom'
+        },
+        {
+            element: '#tabs-nav-container',
+            text: "La navigation du dossier. \n\nUtilisez ces onglets pour naviguer entre les différentes sections du DPI (Administratif, Prescriptions, Transmissions, etc.).",
+            position: 'bottom'
+        },
+        {
+            element: '#tabs-nav button[data-tab-id="prescriptions"]',
+            text: "L'onglet Prescriptions. \n\nC'est ici que vous prescrivez les médicaments et les soins. Vous pourrez ensuite planifier les horaires d'administration sur une frise temporelle.",
+            position: 'bottom'
+        },
+        {
+            element: '#tabs-nav button[data-tab-id="diagramme"]',
+            text: "Le Diagramme de Soins. \n\nC'est ici que l'étudiant valide la réalisation des soins (toilettes, pansements, surveillance) pour chaque moment de la journée.",
+            position: 'bottom'
+        },
+        {
+            element: '#account-management-btn',
+            text: "La suite se passe ici ! \n\nCliquez sur 'Suivant' pour découvrir l'espace de gestion de votre compte, vos abonnements et vos étudiants.",
+            position: 'right',
+            action: 'redirect_account'
+        }
+    ];
+
+    const tutorialStepsAccount = [
+        {
+            element: '#account-sidebar',
+            text: "Bienvenue dans votre espace personnel. \n\nCe menu vous permet de naviguer entre la sécurité, votre abonnement et la gestion de vos classes.",
+            position: 'right'
+        },
+        {
+            element: '#tab-subscription',
+            text: "Votre Abonnement. \n\nConsultez votre plan actuel ou changez d'offre (Indépendant, Promo ou Centre) pour débloquer plus d'étudiants et de sauvegardes.",
+            position: 'right'
+        },
+        {
+            element: '#tab-invitations',
+            text: "Gestion des Étudiants. \n\nC'est ici que vous créez les comptes pour vos élèves. Vous pourrez générer leurs identifiants et mots de passe.",
+            position: 'right'
+        },
+        {
+            element: 'a[href="simul.html"]',
+            text: "Tutoriel terminé ! \n\nUtilisez ce bouton pour retourner au simulateur et commencer à créer vos cas cliniques.",
+            position: 'right'
+        }
+    ];
+
+    // --- FIN DONNÉES TUTORIEL ---
+
     let ivInteraction = { active: false, mode: null, targetBar: null, targetCell: null, startX: 0, startLeft: 0, startWidth: 0, startLeftPx: 0 };
 
     const nfsData = { "Hématies (T/L)": "4.5-5.5", "Hémoglobine (g/dL)": "13-17", "Hématocrite (%)": "40-52", "VGM (fL)": "80-100", "Leucocytes (G/L)": "4-10", "Plaquettes (G/L)": "150-400" };
@@ -40,11 +110,14 @@
         crModalSaveBtn = document.getElementById('cr-modal-save-btn');
         crModalCloseBtn = document.getElementById('cr-modal-close-btn');
         crModalActiveIdInput = document.getElementById('cr-modal-active-id');
+        
+        // Tutorial UI
         tutorialOverlay = document.getElementById('tutorial-overlay');
         tutorialStepBox = document.getElementById('tutorial-step-box');
         tutorialText = document.getElementById('tutorial-text');
         tutorialSkipBtn = document.getElementById('tutorial-skip-btn');
         tutorialNextBtn = document.getElementById('tutorial-next-btn');
+        
         saveStatusButton = document.getElementById('save-status-button');
         saveStatusIcon = document.getElementById('save-status-icon');
         saveStatusText = document.getElementById('save-status-text');
@@ -55,6 +128,7 @@
         if (allergyInput) allergyInput.addEventListener('input', checkAllergyStatus);
     }
 
+    // ... (Les fonctions checkAllergyStatus, generateBioRows, getDefaultForCareDiagramTbody, initializeDynamicTables restent inchangées)
     function checkAllergyStatus() {
         const input = document.getElementById('atcd-allergies');
         if (!input) return;
@@ -77,6 +151,7 @@
     function getDefaultForCareDiagramTbody() { return ``; }
 
     function initializeDynamicTables() {
+        // ... (Code inchangé pour initializeDynamicTables)
         let html = '';
         const prescriptionThead = document.getElementById('prescription-thead');
         if (prescriptionThead) {
@@ -161,6 +236,7 @@
         }
     }
 
+    // ... (setupModalListeners, disableSectionInputs inchangés)
     function setupModalListeners() {
         confirmOkBtn.addEventListener('click', () => { if (typeof confirmCallback === 'function') confirmCallback(); hideConfirmation(); });
         confirmCancelBtn.addEventListener('click', hideConfirmation);
@@ -177,10 +253,7 @@
     }
 
     function applyPermissions(userPermissions) {
-        
-        // --- NOUVEAU : Gestion Super Admin ---
-        
-        // 1. Affichage du badge
+        // 1. Gestion du Badge Super Admin
         const adminBadge = document.getElementById('admin-badge');
         if (adminBadge) {
             if (userPermissions.isSuperAdmin) {
@@ -190,13 +263,13 @@
             }
         }
 
-        // 2. Gestion stricte des boutons JSON
+        // 2. Gestion stricte des boutons Import/Export JSON
         const jsonButtons = ['#import-json-btn', '#export-json-btn'];
         
         if (userPermissions.isSuperAdmin) {
             jsonButtons.forEach(selector => {
                 const btn = document.querySelector(selector);
-                if (btn) btn.style.display = 'inline-flex';
+                if (btn) btn.style.display = 'inline-flex'; 
             });
             const importInput = document.getElementById('import-file');
             if (importInput) importInput.disabled = false;
@@ -206,8 +279,8 @@
                 if (btn) btn.style.display = 'none';
             });
         }
-        // --- FIN NOUVEAU ---
 
+        // 3. Gestion de l'abonnement (bouton sauvegarder)
         if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
@@ -216,6 +289,7 @@
         
         if (!userPermissions.isStudent) { crModalSaveBtn.style.display = 'inline-flex'; return; }
         
+        // 4. Permissions Etudiant
         const studentForbiddenButtons = ['#save-patient-btn', '#load-patient-btn', '#import-json-btn', '#export-json-btn', '#clear-current-patient-btn', '#clear-all-data-btn', '#account-management-btn'];
         studentForbiddenButtons.forEach(selector => { const btn = document.querySelector(selector); if (btn) btn.style.display = 'none'; });
         if (!userPermissions.header) disableSectionInputs('patient-header-form');
@@ -230,6 +304,7 @@
         if (!userPermissions.biologie) document.querySelectorAll('#bio-table input').forEach(el => el.disabled = true);
     }
 
+    // ... (Fonctions Sidebar, Reset, Fill, etc. inchangées jusqu'à startTutorial)
     function initSidebar(patients, patientMap) {
         const list = document.getElementById('patient-list');
         let listHTML = '';
@@ -311,18 +386,14 @@
         }
     }
 
-    // CORRECTION DU BUG D'AFFICHAGE ET SUPPORT RÉTROCOMPATIBLE
     function fillCareDiagramFromState(state) {
         const careDiagramTbody = document.getElementById('care-diagram-tbody');
         if (!careDiagramTbody) return;
         careDiagramTbody.innerHTML = ''; 
 
-        // Cas 1: Données propres (nouveau format)
         if (state.careDiagramRows && Array.isArray(state.careDiagramRows)) {
             state.careDiagramRows.forEach(row => addCareDiagramRow(row));
-        } 
-        // Cas 2: Récupération des données corrompues ou anciennes
-        else if (state['care-diagram-tbody_html']) {
+        } else if (state['care-diagram-tbody_html']) {
             const tempContainer = document.createElement('div');
             tempContainer.innerHTML = `<table><tbody>${state['care-diagram-tbody_html']}</tbody></table>`;
             const rows = tempContainer.querySelectorAll('tr');
@@ -672,6 +743,8 @@
         applySort(type);
     }
 
+    // ... (readObservationForm, addObservation, readTransmissionForm, addTransmission, readPrescriptionForm, addPrescription, readCareDiagramForm, addCareDiagramRow, deleteEntry, deletePrescription, deleteCareDiagramRow, openCrModal, closeCrModal, updateCrCardCheckmark, handleIVMouseDown, handleIVMouseMove, handleIVMouseUp, updatePancarteChart, updateIVBarDetails inchangés)
+    
     function readObservationForm() {
         const author = document.getElementById('new-observation-author').value.trim();
         const text = document.getElementById('new-observation-text').value.trim();
@@ -980,46 +1053,133 @@
         pancarteChartInstance = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 }, y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 }, y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 }, y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } }, y4: { position: 'right', title: { display: true, text: 'SpO2' }, grid: { drawOnChartArea: false }, min: 50, max: 100 } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }} } } });
     }
 
-    function startTutorial() {
+    // --- TUTORIAL LOGIC ---
+
+    function startTutorial(pageType = 'simul') {
         currentStepIndex = 0;
-        const firstPatientButton = document.querySelector('#patient-list li:first-child button');
-        if (!firstPatientButton) { tutorialSteps[0].element = '#sidebar'; tutorialSteps[0].text = "Bienvenue ! Voici la barre latérale où les patients apparaîtront."; } 
-        else { tutorialSteps[0].element = '#patient-list li:first-child button'; tutorialSteps[0].text = "Bienvenue ! Voici la liste des patients. Cliquez sur un patient pour ouvrir son dossier."; }
-        tutorialOverlay.classList.remove('hidden'); showTutorialStep(currentStepIndex);
+        
+        if (pageType === 'account') {
+            activeTutorialSteps = tutorialStepsAccount;
+        } else {
+            activeTutorialSteps = tutorialStepsSimul;
+        }
+
+        tutorialOverlay.classList.remove('hidden');
+        showTutorialStep(currentStepIndex);
     }
 
     function endTutorial(setFlag = false) {
         tutorialOverlay.classList.add('hidden');
-        if (highlightedElement) { highlightedElement.classList.remove('tutorial-highlight'); if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') highlightedElement.style = ''; highlightedElement = null; }
+        if (highlightedElement) { 
+            highlightedElement.classList.remove('tutorial-highlight'); 
+            // Reset styles if specific overrides were used
+            if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
+                highlightedElement.style = ''; 
+            }
+            highlightedElement = null; 
+        }
         if (setFlag) localStorage.setItem('tutorialCompleted', 'true');
     }
 
     function showTutorialStep(index) {
-        if (highlightedElement) { highlightedElement.classList.remove('tutorial-highlight'); if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') highlightedElement.style = ''; }
-        if (index >= tutorialSteps.length) { endTutorial(true); return; }
-        const step = tutorialSteps[index];
+        // Clean up previous highlight
+        if (highlightedElement) { 
+            highlightedElement.classList.remove('tutorial-highlight'); 
+            if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
+                highlightedElement.style = ''; 
+            }
+        }
+
+        if (index >= activeTutorialSteps.length) { 
+            endTutorial(true); 
+            return; 
+        }
+
+        const step = activeTutorialSteps[index];
         const element = document.querySelector(step.element);
-        if (!element) { currentStepIndex++; showTutorialStep(currentStepIndex); return; }
+
+        // If element not found, skip to next
+        if (!element) { 
+            console.warn(`Tutorial element ${step.element} not found, skipping.`);
+            currentStepIndex++; 
+            showTutorialStep(currentStepIndex); 
+            return; 
+        }
+
         tutorialText.textContent = step.text;
-        tutorialNextBtn.textContent = (index === tutorialSteps.length - 1) ? "Terminer" : "Suivant";
+        
+        // Button Logic
+        if (index === activeTutorialSteps.length - 1) {
+            tutorialNextBtn.textContent = "Terminer";
+        } else {
+            tutorialNextBtn.textContent = "Suivant";
+        }
+
+        // Highlighting
         element.classList.add('tutorial-highlight');
         highlightedElement = element;
-        if (element.closest('#header-buttons') || element.id === 'save-status-button') { element.style.setProperty('z-index', '9997', 'important'); element.style.setProperty('position', 'relative', 'important'); }
+
+        // Specific z-index fixes for floating/fixed elements
+        if (element.closest('#header-buttons') || element.id === 'save-status-button') { 
+            element.style.setProperty('z-index', '9997', 'important'); 
+            element.style.setProperty('position', 'relative', 'important'); 
+        }
+
+        // Positioning the box
         const rect = element.getBoundingClientRect();
         const boxRect = tutorialStepBox.getBoundingClientRect();
-        const margin = 15; let top, left;
+        const margin = 15; 
+        let top, left;
+
         switch(step.position) {
-            case 'right': top = rect.top + (rect.height / 2) - (boxRect.height / 2); left = rect.right + margin; break;
-            case 'left': top = rect.top + (rect.height / 2) - (boxRect.height / 2); left = rect.left - boxRect.width - margin; break;
-            case 'top': top = rect.top - boxRect.height - margin; left = rect.left + (rect.width / 2) - (boxRect.width / 2); break;
-            case 'bottom-left': top = rect.bottom + margin; left = rect.right - boxRect.width; break;
-            default: top = rect.bottom + margin; left = rect.left + (rect.width / 2) - (boxRect.width / 2);
+            case 'right': 
+                top = rect.top + (rect.height / 2) - (boxRect.height / 2); 
+                left = rect.right + margin; 
+                break;
+            case 'left': 
+                top = rect.top + (rect.height / 2) - (boxRect.height / 2); 
+                left = rect.left - boxRect.width - margin; 
+                break;
+            case 'top': 
+                top = rect.top - boxRect.height - margin; 
+                left = rect.left + (rect.width / 2) - (boxRect.width / 2); 
+                break;
+            case 'bottom-left': 
+                top = rect.bottom + margin; 
+                left = rect.right - boxRect.width; 
+                break;
+            default: // bottom
+                top = rect.bottom + margin; 
+                left = rect.left + (rect.width / 2) - (boxRect.width / 2);
         }
-        if (top < margin) top = margin; if (left < margin) left = margin; if (top + boxRect.height > window.innerHeight - margin) top = window.innerHeight - boxRect.height - margin; if (left + boxRect.width > window.innerWidth - margin) left = window.innerWidth - boxRect.width - margin;
-        tutorialStepBox.style.top = `${top}px`; tutorialStepBox.style.left = `${left}px`;
+
+        // Boundary checks to keep box in viewport
+        if (top < margin) top = margin; 
+        if (left < margin) left = margin; 
+        if (top + boxRect.height > window.innerHeight - margin) top = window.innerHeight - boxRect.height - margin; 
+        if (left + boxRect.width > window.innerWidth - margin) left = window.innerWidth - boxRect.width - margin;
+
+        tutorialStepBox.style.top = `${top}px`; 
+        tutorialStepBox.style.left = `${left}px`;
+    }
+
+    function incrementTutorialStep() {
+        const currentStep = activeTutorialSteps[currentStepIndex];
+        
+        // Check for special actions before moving
+        if (currentStep && currentStep.action === 'redirect_account') {
+            // End this tutorial part without setting the completed flag
+            endTutorial(false); 
+            window.location.href = 'account.html?tutorial=true';
+            return;
+        }
+
+        currentStepIndex++;
+        showTutorialStep(currentStepIndex);
     }
     
     window.uiService = {
-        initUIComponents, initializeDynamicTables, setupModalListeners, applyPermissions, initSidebar, updateSidebarActiveState, updateSidebarEntryName, resetForm, fillFormFromState, fillListsFromState, fillCareDiagramFromState, fillPrescriptionsFromState, fillBioFromState, fillPancarteFromState, fillCrCardsFromState, updateAgeDisplay, updateJourHosp, calculateAndDisplayIMC, setupSync, updateDynamicDates, refreshAllRelativeDates, updateSaveStatus, changeTab, autoResize, toggleFullscreen, showToast, showDeleteConfirmation, showCustomAlert, hideConfirmation, openLoadPatientModal, hideLoadPatientModal, toggleSort, readObservationForm, addObservation, readTransmissionForm, addTransmission, readPrescriptionForm, addPrescription, readCareDiagramForm, addCareDiagramRow, deleteEntry, deletePrescription, deleteCareDiagramRow, openCrModal, closeCrModal, updateCrCardCheckmark, handleIVMouseDown, handleIVMouseMove, handleIVMouseUp, updatePancarteChart, startTutorial, endTutorial, showTutorialStep, incrementTutorialStep: () => { currentStepIndex++; showTutorialStep(currentStepIndex); }
+        initUIComponents, initializeDynamicTables, setupModalListeners, applyPermissions, initSidebar, updateSidebarActiveState, updateSidebarEntryName, resetForm, fillFormFromState, fillListsFromState, fillCareDiagramFromState, fillPrescriptionsFromState, fillBioFromState, fillPancarteFromState, fillCrCardsFromState, updateAgeDisplay, updateJourHosp, calculateAndDisplayIMC, setupSync, updateDynamicDates, refreshAllRelativeDates, updateSaveStatus, changeTab, autoResize, toggleFullscreen, showToast, showDeleteConfirmation, showCustomAlert, hideConfirmation, openLoadPatientModal, hideLoadPatientModal, toggleSort, readObservationForm, addObservation, readTransmissionForm, addTransmission, readPrescriptionForm, addPrescription, readCareDiagramForm, addCareDiagramRow, deleteEntry, deletePrescription, deleteCareDiagramRow, openCrModal, closeCrModal, updateCrCardCheckmark, handleIVMouseDown, handleIVMouseMove, handleIVMouseUp, updatePancarteChart, 
+        startTutorial, endTutorial, showTutorialStep, incrementTutorialStep
     };
 })();

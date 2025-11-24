@@ -29,8 +29,10 @@
         uiService.changeTab(activeTabId);
         
         // 6. Démarrer le tutoriel si c'est la première visite
+        // Vérifie si le flag 'tutorialCompleted' est absent du localStorage
         if (!localStorage.getItem('tutorialCompleted')) {
-            setTimeout(uiService.startTutorial, 500);
+            // Petit délai pour s'assurer que l'interface est bien chargée visuellement
+            setTimeout(() => uiService.startTutorial(), 1000);
         }
     }
 
@@ -42,6 +44,7 @@
             localStorage.removeItem('authToken');
             localStorage.removeItem('activePatientId');
             localStorage.removeItem('activeTab');
+            // On ne supprime PAS 'tutorialCompleted' pour ne pas spammer l'utilisateur au prochain login
             window.location.href = 'auth.html';
         });
 
@@ -63,19 +66,22 @@
         setupBaseEventListeners();
         
         // --- Header (Sauvegarde, Chargement, etc.) ---
-        document.getElementById('start-tutorial-btn').addEventListener('click', uiService.startTutorial);
+        
+        // Bouton Tuto : Lance le tutoriel manuellement
+        document.getElementById('start-tutorial-btn').addEventListener('click', () => uiService.startTutorial());
+        
         document.getElementById('clear-all-data-btn').addEventListener('click', patientService.clearAllPatients);
         document.getElementById('save-patient-btn').addEventListener('click', patientService.saveCurrentPatientAsCase);
         document.getElementById('load-patient-btn').addEventListener('click', patientService.openLoadPatientModal);
         document.getElementById('export-json-btn').addEventListener('click', patientService.exportPatientData);
         document.getElementById('clear-current-patient-btn').addEventListener('click', patientService.clearCurrentPatient);
 
-        // NOUVEAU : Écouteur pour le bouton de statut/sauvegarde
+        // Bouton de statut/sauvegarde (Force la synchro)
         document.getElementById('save-status-button').addEventListener('click', patientService.forceSaveAndRefresh);
 
-        // --- Importation de fichier ---
+        // --- Importation de fichier (Restriction Super Admin) ---
         document.getElementById('import-json-btn').addEventListener('click', () => {
-            // MODIFIÉ : Restriction stricte au Super Admin
+            // Seul le Super Admin peut importer
             if (patientService.getUserPermissions().isSuperAdmin) {
                 document.getElementById('import-file').click();
             } else {
@@ -119,14 +125,12 @@
         mainContent.addEventListener('input', patientService.debouncedSave);
         mainContent.addEventListener('change', patientService.debouncedSave);
 
-        // --- NOUVELLE MODIFICATION ---
         // Ajoute la sauvegarde automatique pour l'en-tête patient
         const headerForm = document.getElementById('patient-header-form');
         if (headerForm) {
             headerForm.addEventListener('input', patientService.debouncedSave);
             headerForm.addEventListener('change', patientService.debouncedSave);
         }
-        // --- FIN MODIFICATION ---
 
         // --- Mises à jour auto de l'UI (Header & Vie) ---
         document.getElementById('patient-entry-date').addEventListener('input', () => {
@@ -147,8 +151,8 @@
             const data = uiService.readObservationForm();
             if (data) {
                 uiService.addObservation(data, false);
-                // Note: L'observation est le seul qui ne sauvegarde pas, car c'est souvent médical.
-                // Si vous voulez qu'il sauvegarde, ajoutez la ligne ci-dessous.
+                // Note: L'observation est le seul qui ne sauvegarde pas auto (choix design), 
+                // sauf si vous décommentez la ligne suivante :
                 // patientService.debouncedSave(); 
             }
         });
@@ -156,21 +160,21 @@
             const data = uiService.readTransmissionForm();
             if (data) {
                 uiService.addTransmission(data, false);
-                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
+                patientService.debouncedSave();
             }
         });
         document.getElementById('add-prescription-btn').addEventListener('click', () => {
             const data = uiService.readPrescriptionForm();
             if (data) {
                 uiService.addPrescription(data, false);
-                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
+                patientService.debouncedSave();
             }
         });
         document.getElementById('add-care-diagram-btn').addEventListener('click', () => {
             const data = uiService.readCareDiagramForm();
             if (data) {
                 uiService.addCareDiagramRow(data);
-                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
+                patientService.debouncedSave();
             }
         });
         
@@ -181,7 +185,7 @@
         // --- Suppression d'entrées (Listes) ---
         document.getElementById('observations-list').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette entrée ?", () => {
                     if (uiService.deleteEntry(deleteBtn)) patientService.debouncedSave();
                 });
@@ -189,7 +193,7 @@
         });
         document.getElementById('transmissions-list-ide').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette entrée ?", () => {
                     if (uiService.deleteEntry(deleteBtn)) patientService.debouncedSave();
                 });
@@ -199,7 +203,7 @@
         // --- Suppression d'entrées (Tables) ---
         document.getElementById('prescription-tbody').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette prescription ?", () => {
                     if (uiService.deletePrescription(deleteBtn)) patientService.debouncedSave();
                 });
@@ -207,7 +211,7 @@
         });
         document.getElementById('care-diagram-tbody').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer ce soin ?", () => {
                     if (uiService.deleteCareDiagramRow(deleteBtn)) patientService.debouncedSave();
                 });
@@ -245,7 +249,7 @@
         // Écouteur personnalisé pour déclencher une sauvegarde (utilisé par les barres IV)
         document.addEventListener('uiNeedsSave', patientService.debouncedSave);
 
-        // --- Tutoriel ---
+        // --- Tutoriel (Overlay & Navigation) ---
         document.getElementById('tutorial-overlay').addEventListener('click', () => uiService.endTutorial(true));
         document.getElementById('tutorial-step-box').addEventListener('click', (e) => e.stopPropagation());
         document.getElementById('tutorial-skip-btn').addEventListener('click', () => uiService.endTutorial(true));
