@@ -14,70 +14,90 @@
     let tutorialOverlay, tutorialStepBox, tutorialText, tutorialSkipBtn, tutorialNextBtn;
     let currentStepIndex = 0;
     let highlightedElement = null;
-    let activeTutorialSteps = []; // Contiendra les étapes de la page actuelle
+    let activeTutorialSteps = []; 
 
     // --- DONNÉES DU TUTORIEL ---
     
     const tutorialStepsSimul = [
+        // ÉTAPE 1 : INTRODUCTION
+        {
+            element: '#sidebar > div:first-child', // Le bloc logo/titre en haut à gauche
+            text: "Bienvenue dans le tutoriel EIdos !\n\nNous allons parcourir ensemble les fonctionnalités principales de l'interface. \nCliquez sur 'Suivant' pour commencer.",
+            position: 'right'
+        },
+        // ÉTAPE 2 : SIDEBAR
         {
             element: '#sidebar', 
-            text: "Bienvenue sur EIdos ! \n\nCeci est votre barre latérale principale. C'est ici que s'affichent vos patients (les chambres). Cliquez sur un patient pour charger son dossier.",
+            text: "La Barre Latérale.\n\nC'est ici que s'affichent vos patients (les chambres). Cliquez sur un patient pour charger son dossier et commencer à travailler dessus.",
+            position: 'right'
+        },
+        // ÉTAPE 3 : HEADER PRINCIPAL
+        {
+            element: '#main-header',
+            text: "L'En-tête du Service.\n\nIl contient les outils de gestion de fichiers : Sauvegarder, Charger, Importer/Exporter (Super Admin) et le statut de sauvegarde automatique.",
+            position: 'bottom-left'
+        },
+        // ÉTAPE 4 : EN-TÊTE PATIENT
+        {
+            element: '#patient-header-form',
+            text: "L'Identité du Patient.\n\nRemplissez ces champs (Nom, Prénom, Date d'entrée) dès le début. La Date d'Entrée est cruciale pour le calcul automatique des jours (J0, J1...).",
+            position: 'bottom'
+        },
+        // ÉTAPE 5 : NAVIGATION ONGLETS
+        {
+            element: '#tabs-nav-container',
+            text: "Le Dossier Patient.\n\nNaviguez à travers les différentes sections du DPI : Administratif, Prescriptions, Transmissions, Résultats de biologie, etc.",
+            position: 'bottom'
+        },
+        // ÉTAPE 6 : PRESCRIPTIONS
+        {
+            element: '#tabs-nav button[data-tab-id="prescriptions"]',
+            text: "L'Onglet Prescriptions.\n\nC'est ici que vous prescrivez médicaments et soins, et que vous définissez les horaires d'administration sur la frise temporelle.",
+            position: 'bottom'
+        },
+        // ÉTAPE 7 : DIAGRAMME
+        {
+            element: '#tabs-nav button[data-tab-id="diagramme"]',
+            text: "Le Diagramme de Soins.\n\nL'espace pour valider la réalisation des soins infirmiers et de confort (toilettes, surveillance) tout au long de la journée.",
+            position: 'bottom'
+        },
+        // --- NOUVELLES ÉTAPES : BOUTONS DU BAS ---
+        {
+            element: '#account-management-btn',
+            text: "Gestion de Compte.\n\nAccédez à votre profil, gérez votre abonnement et créez les comptes de vos étudiants ici.",
             position: 'right'
         },
         {
-            element: '#main-header',
-            text: "Voici l'en-tête du dossier. \n\nVous y trouverez les boutons pour sauvegarder, charger ou réinitialiser un dossier. Le bouton de statut (à gauche) vous indique si vos modifications sont enregistrées.",
-            position: 'bottom-left'
+            element: '#start-tutorial-btn',
+            text: "Besoin d'aide ?\n\nUn doute sur l'interface ? Cliquez sur ce bouton pour relancer ce tutoriel à tout moment.",
+            position: 'right'
         },
         {
-            element: '#patient-header-form',
-            text: "L'identité du patient. \n\nRemplissez ces champs (Nom, Prénom, Date d'entrée) dès le début. C'est indispensable pour que les calculs de dates (J0, J1...) fonctionnent correctement.",
-            position: 'bottom'
+            element: '#clear-all-data-btn',
+            text: "Zone de Danger !\n\nCe bouton réinitialise TOUS les patients (les 10 chambres) à zéro. À utiliser avec précaution pour remettre le simulateur à neuf.",
+            position: 'right'
         },
         {
-            element: '#tabs-nav-container',
-            text: "La navigation du dossier. \n\nUtilisez ces onglets pour naviguer entre les différentes sections du DPI (Administratif, Prescriptions, Transmissions, etc.).",
-            position: 'bottom'
+            element: '#logout-btn',
+            text: "Déconnexion.\n\nPour fermer votre session en toute sécurité à la fin de votre travail.",
+            position: 'right'
         },
+        // FIN
         {
-            element: '#tabs-nav button[data-tab-id="prescriptions"]',
-            text: "L'onglet Prescriptions. \n\nC'est ici que vous prescrivez les médicaments et les soins. Vous pourrez ensuite planifier les horaires d'administration sur une frise temporelle.",
-            position: 'bottom'
-        },
-        {
-            element: '#tabs-nav button[data-tab-id="diagramme"]',
-            text: "Le Diagramme de Soins. \n\nC'est ici que l'étudiant valide la réalisation des soins (toilettes, pansements, surveillance) pour chaque moment de la journée.",
-            position: 'bottom'
-        },
-        {
-            element: '#account-management-btn',
-            text: "La suite se passe ici ! \n\nCliquez sur 'Suivant' pour découvrir l'espace de gestion de votre compte, vos abonnements et vos étudiants.",
-            position: 'right',
-            action: 'redirect_account'
+            element: '#sidebar > div:first-child',
+            text: "C'est terminé !\n\nVous connaissez maintenant les bases d'EIdos. À vous de jouer !",
+            position: 'right'
         }
     ];
 
+    // On garde celui-ci pour plus tard, mais il n'est plus lié automatiquement
     const tutorialStepsAccount = [
         {
             element: '#account-sidebar',
             text: "Bienvenue dans votre espace personnel. \n\nCe menu vous permet de naviguer entre la sécurité, votre abonnement et la gestion de vos classes.",
             position: 'right'
         },
-        {
-            element: '#tab-subscription',
-            text: "Votre Abonnement. \n\nConsultez votre plan actuel ou changez d'offre (Indépendant, Promo ou Centre) pour débloquer plus d'étudiants et de sauvegardes.",
-            position: 'right'
-        },
-        {
-            element: '#tab-invitations',
-            text: "Gestion des Étudiants. \n\nC'est ici que vous créez les comptes pour vos élèves. Vous pourrez générer leurs identifiants et mots de passe.",
-            position: 'right'
-        },
-        {
-            element: 'a[href="simul.html"]',
-            text: "Tutoriel terminé ! \n\nUtilisez ce bouton pour retourner au simulateur et commencer à créer vos cas cliniques.",
-            position: 'right'
-        }
+        // ... (autres étapes account conservées pour usage futur)
     ];
 
     // --- FIN DONNÉES TUTORIEL ---
@@ -128,7 +148,6 @@
         if (allergyInput) allergyInput.addEventListener('input', checkAllergyStatus);
     }
 
-    // ... (Les fonctions checkAllergyStatus, generateBioRows, getDefaultForCareDiagramTbody, initializeDynamicTables restent inchangées)
     function checkAllergyStatus() {
         const input = document.getElementById('atcd-allergies');
         if (!input) return;
@@ -151,7 +170,6 @@
     function getDefaultForCareDiagramTbody() { return ``; }
 
     function initializeDynamicTables() {
-        // ... (Code inchangé pour initializeDynamicTables)
         let html = '';
         const prescriptionThead = document.getElementById('prescription-thead');
         if (prescriptionThead) {
@@ -236,7 +254,6 @@
         }
     }
 
-    // ... (setupModalListeners, disableSectionInputs inchangés)
     function setupModalListeners() {
         confirmOkBtn.addEventListener('click', () => { if (typeof confirmCallback === 'function') confirmCallback(); hideConfirmation(); });
         confirmCancelBtn.addEventListener('click', hideConfirmation);
@@ -280,7 +297,7 @@
             });
         }
 
-        // 3. Gestion de l'abonnement (bouton sauvegarder)
+        // 3. Gestion de l'abonnement
         if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
@@ -304,7 +321,6 @@
         if (!userPermissions.biologie) document.querySelectorAll('#bio-table input').forEach(el => el.disabled = true);
     }
 
-    // ... (Fonctions Sidebar, Reset, Fill, etc. inchangées jusqu'à startTutorial)
     function initSidebar(patients, patientMap) {
         const list = document.getElementById('patient-list');
         let listHTML = '';
@@ -743,8 +759,6 @@
         applySort(type);
     }
 
-    // ... (readObservationForm, addObservation, readTransmissionForm, addTransmission, readPrescriptionForm, addPrescription, readCareDiagramForm, addCareDiagramRow, deleteEntry, deletePrescription, deleteCareDiagramRow, openCrModal, closeCrModal, updateCrCardCheckmark, handleIVMouseDown, handleIVMouseMove, handleIVMouseUp, updatePancarteChart, updateIVBarDetails inchangés)
-    
     function readObservationForm() {
         const author = document.getElementById('new-observation-author').value.trim();
         const text = document.getElementById('new-observation-text').value.trim();
