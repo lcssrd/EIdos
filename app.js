@@ -75,10 +75,14 @@
 
         // --- Importation de fichier ---
         document.getElementById('import-json-btn').addEventListener('click', () => {
-            if (!patientService.getUserPermissions().isStudent && patientService.getUserPermissions().subscription !== 'free') {
+            // MODIFIÉ : Restriction stricte au Super Admin
+            if (patientService.getUserPermissions().isSuperAdmin) {
                 document.getElementById('import-file').click();
+            } else {
+                uiService.showToast("Réservé au Super Admin", "error");
             }
         });
+        
         document.getElementById('import-file').addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;

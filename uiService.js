@@ -177,12 +177,45 @@
     }
 
     function applyPermissions(userPermissions) {
+        
+        // --- NOUVEAU : Gestion Super Admin ---
+        
+        // 1. Affichage du badge
+        const adminBadge = document.getElementById('admin-badge');
+        if (adminBadge) {
+            if (userPermissions.isSuperAdmin) {
+                adminBadge.classList.remove('hidden');
+            } else {
+                adminBadge.classList.add('hidden');
+            }
+        }
+
+        // 2. Gestion stricte des boutons JSON
+        const jsonButtons = ['#import-json-btn', '#export-json-btn'];
+        
+        if (userPermissions.isSuperAdmin) {
+            jsonButtons.forEach(selector => {
+                const btn = document.querySelector(selector);
+                if (btn) btn.style.display = 'inline-flex';
+            });
+            const importInput = document.getElementById('import-file');
+            if (importInput) importInput.disabled = false;
+        } else {
+            jsonButtons.forEach(selector => {
+                const btn = document.querySelector(selector);
+                if (btn) btn.style.display = 'none';
+            });
+        }
+        // --- FIN NOUVEAU ---
+
         if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
             if (saveStatusButton) saveStatusButton.style.display = 'none';
         }
+        
         if (!userPermissions.isStudent) { crModalSaveBtn.style.display = 'inline-flex'; return; }
+        
         const studentForbiddenButtons = ['#save-patient-btn', '#load-patient-btn', '#import-json-btn', '#export-json-btn', '#clear-current-patient-btn', '#clear-all-data-btn', '#account-management-btn'];
         studentForbiddenButtons.forEach(selector => { const btn = document.querySelector(selector); if (btn) btn.style.display = 'none'; });
         if (!userPermissions.header) disableSectionInputs('patient-header-form');

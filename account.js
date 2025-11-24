@@ -2,7 +2,7 @@
     "use strict";
 
     const API_URL = 'https://eidos-api.onrender.com';
-    const ADMIN_EMAIL = "lucas.seraudie@gmail.com"; // L'email du Super Admin
+    // MODIFIÉ : Suppression de la constante ADMIN_EMAIL
 
     // --- AUTHENTIFICATION ---
 
@@ -434,7 +434,8 @@
             const data = await response.json();
             currentUserEmail = data.email;
 
-            if (currentUserEmail === ADMIN_EMAIL) {
+            // MODIFIÉ : Vérification basée sur le flag is_super_admin
+            if (data.is_super_admin) {
                 initAdminInterface();
             }
 

@@ -51,16 +51,14 @@
         // 4. Comptes Rendus
         state.comptesRendus = currentPatientState.comptesRendus || {};
 
-        // 5. Diagramme de Soins (CORRECTION : Sauvegarde structurée au lieu du HTML)
+        // 5. Diagramme de Soins
         state.careDiagramRows = [];
         document.querySelectorAll('#care-diagram-tbody tr').forEach(row => {
-            // On récupère le nom du soin dans la première cellule
             const nameSpan = row.querySelector('td:first-child span');
             if (nameSpan) {
                 state.careDiagramRows.push({ name: nameSpan.textContent.trim() });
             }
         });
-        // On sauvegarde aussi l'état des cases à cocher
         state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
 
         // 6. Biologie
@@ -185,8 +183,15 @@
             userPermissions.subscription = userData.subscription || 'free';
             userPermissions.allowedRooms = userData.allowedRooms || []; 
 
+            // MODIFIÉ : Stockage du flag Super Admin
+            userPermissions.isSuperAdmin = userData.is_super_admin || false;
+
             if (userData.role === 'etudiant' && userData.permissions) {
                 userPermissions = { ...userPermissions, ...userData.permissions, isStudent: true, role: 'etudiant' };
+                
+                // Sécurité supplémentaire : un étudiant ne peut pas être admin
+                userPermissions.isSuperAdmin = false;
+
                 patientList = userPermissions.allowedRooms
                     .map(roomId => ({ id: roomId, room: roomId.split('_')[1] }))
                     .sort((a, b) => a.room.localeCompare(b.room));
@@ -198,6 +203,7 @@
                 }
                 
                 userPermissions = { 
+                    ...userPermissions, // Garder isSuperAdmin
                     isStudent: false, role: role, subscription: effectivePlan,
                     header: true, admin: true, vie: true, observations: true, 
                     prescriptions_add: true, prescriptions_delete: true, prescriptions_validate: true,
@@ -375,10 +381,12 @@
     }
     
     function exportPatientData() {
-        if (userPermissions.isStudent || userPermissions.subscription === 'free') {
-            uiService.showToast("Non disponible.", 'error');
+        // MODIFIÉ : Restriction stricte au Super Admin
+        if (!userPermissions.isSuperAdmin) {
+            uiService.showToast("Réservé au Super Admin.", 'error');
             return;
         }
+
         const state = collectPatientStateFromUI();
         const patientName = state.sidebar_patient_name;
         let fileName = "dossier.json";
