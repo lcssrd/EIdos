@@ -32,7 +32,7 @@
             position: 'right'
         },
         
-        // --- NOUVELLES ÉTAPES : DÉTAIL DU HEADER ---
+        // --- DÉTAIL DU HEADER ---
         
         // ÉTAPE 3 : SYNCHRONISATION
         {
@@ -40,19 +40,19 @@
             text: "Synchronisation.\n\nCe badge indique si vos données sont enregistrées. La sauvegarde est automatique, mais vous pouvez cliquer dessus pour forcer une synchronisation manuelle si besoin.",
             position: 'bottom'
         },
-        // ÉTAPE 4 : SAUVEGARDE (ARCHIVAGE)
+        // ÉTAPE 4 : SAUVEGARDE (ARCHIVAGE) -> Sera sauté si étudiant/free
         {
             element: '#save-patient-btn',
             text: "Archiver le Cas.\n\nSauvegardez l'état exact du dossier actuel dans vos archives. C'est idéal pour créer et conserver vos scénarios pédagogiques.",
             position: 'bottom'
         },
-        // ÉTAPE 5 : CHARGEMENT
+        // ÉTAPE 5 : CHARGEMENT -> Sera sauté si étudiant/free
         {
             element: '#load-patient-btn',
             text: "Charger un Cas.\n\nOuvre votre bibliothèque. Vous pouvez y choisir un dossier archivé (ou un cas public) pour l'installer dans la chambre actuelle.",
             position: 'bottom'
         },
-        // ÉTAPE 6 : EFFACEMENT LOCAL
+        // ÉTAPE 6 : EFFACEMENT LOCAL -> Sera sauté si étudiant
         {
             element: '#clear-current-patient-btn',
             text: "Remise à Zéro.\n\nAttention : ce bouton efface intégralement le contenu du dossier que vous consultez actuellement. Les autres chambres ne sont pas affectées.",
@@ -1135,9 +1135,19 @@
         const step = activeTutorialSteps[index];
         const element = document.querySelector(step.element);
 
-        // If element not found, skip to next
-        if (!element) { 
-            console.warn(`Tutorial element ${step.element} not found, skipping.`);
+        // CHECK VISIBILITY TO SKIP HIDDEN ELEMENTS (e.g. for Students)
+        let isVisible = false;
+        if (element) {
+            const style = window.getComputedStyle(element);
+            if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                const rect = element.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    isVisible = true;
+                }
+            }
+        }
+
+        if (!isVisible) { 
             currentStepIndex++; 
             showTutorialStep(currentStepIndex); 
             return; 
