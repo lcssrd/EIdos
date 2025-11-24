@@ -21,7 +21,7 @@
     const tutorialStepsSimul = [
         // ÉTAPE 1 : INTRODUCTION
         {
-            element: '#sidebar > div:first-child', // Le bloc logo/titre en haut à gauche
+            element: '#sidebar > div:first-child', 
             text: "Bienvenue dans le tutoriel EIdos !\n\nNous allons parcourir ensemble les fonctionnalités principales de l'interface. \nCliquez sur 'Suivant' pour commencer.",
             position: 'right'
         },
@@ -31,37 +31,62 @@
             text: "La Barre Latérale.\n\nC'est ici que s'affichent vos patients (les chambres). Cliquez sur un patient pour charger son dossier et commencer à travailler dessus.",
             position: 'right'
         },
-        // ÉTAPE 3 : HEADER PRINCIPAL
+        
+        // --- NOUVELLES ÉTAPES : DÉTAIL DU HEADER ---
+        
+        // ÉTAPE 3 : SYNCHRONISATION
         {
-            element: '#main-header',
-            text: "L'En-tête du Service.\n\nIl contient les outils de gestion de fichiers : Sauvegarder, Charger, Importer/Exporter (Super Admin) et le statut de sauvegarde automatique.",
-            position: 'bottom-left'
+            element: '#save-status-button',
+            text: "Synchronisation.\n\nCe badge indique si vos données sont enregistrées. La sauvegarde est automatique, mais vous pouvez cliquer dessus pour forcer une synchronisation manuelle si besoin.",
+            position: 'bottom'
         },
-        // ÉTAPE 4 : EN-TÊTE PATIENT
+        // ÉTAPE 4 : SAUVEGARDE (ARCHIVAGE)
+        {
+            element: '#save-patient-btn',
+            text: "Archiver le Cas.\n\nSauvegardez l'état exact du dossier actuel dans vos archives. C'est idéal pour créer et conserver vos scénarios pédagogiques.",
+            position: 'bottom'
+        },
+        // ÉTAPE 5 : CHARGEMENT
+        {
+            element: '#load-patient-btn',
+            text: "Charger un Cas.\n\nOuvre votre bibliothèque. Vous pouvez y choisir un dossier archivé (ou un cas public) pour l'installer dans la chambre actuelle.",
+            position: 'bottom'
+        },
+        // ÉTAPE 6 : EFFACEMENT LOCAL
+        {
+            element: '#clear-current-patient-btn',
+            text: "Remise à Zéro.\n\nAttention : ce bouton efface intégralement le contenu du dossier que vous consultez actuellement. Les autres chambres ne sont pas affectées.",
+            position: 'bottom'
+        },
+
+        // --- SUITE DU TUTO ---
+
+        // ÉTAPE 7 : EN-TÊTE PATIENT
         {
             element: '#patient-header-form',
             text: "L'Identité du Patient.\n\nRemplissez ces champs (Nom, Prénom, Date d'entrée) dès le début. La Date d'Entrée est cruciale pour le calcul automatique des jours (J0, J1...).",
             position: 'bottom'
         },
-        // ÉTAPE 5 : NAVIGATION ONGLETS
+        // ÉTAPE 8 : NAVIGATION ONGLETS
         {
             element: '#tabs-nav-container',
             text: "Le Dossier Patient.\n\nNaviguez à travers les différentes sections du DPI : Administratif, Prescriptions, Transmissions, Résultats de biologie, etc.",
             position: 'bottom'
         },
-        // ÉTAPE 6 : PRESCRIPTIONS
+        // ÉTAPE 9 : PRESCRIPTIONS
         {
             element: '#tabs-nav button[data-tab-id="prescriptions"]',
             text: "L'Onglet Prescriptions.\n\nC'est ici que vous prescrivez médicaments et soins, et que vous définissez les horaires d'administration sur la frise temporelle.",
             position: 'bottom'
         },
-        // ÉTAPE 7 : DIAGRAMME
+        // ÉTAPE 10 : DIAGRAMME
         {
             element: '#tabs-nav button[data-tab-id="diagramme"]',
             text: "Le Diagramme de Soins.\n\nL'espace pour valider la réalisation des soins infirmiers et de confort (toilettes, surveillance) tout au long de la journée.",
             position: 'bottom'
         },
-        // --- NOUVELLES ÉTAPES : BOUTONS DU BAS ---
+        
+        // --- BOUTONS DU BAS (MENU GAUCHE) ---
         {
             element: '#account-management-btn',
             text: "Gestion de Compte.\n\nAccédez à votre profil, gérez votre abonnement et créez les comptes de vos étudiants ici.",
@@ -74,7 +99,7 @@
         },
         {
             element: '#clear-all-data-btn',
-            text: "Zone de Danger !\n\nCe bouton réinitialise TOUS les patients (les 10 chambres) à zéro. À utiliser avec précaution pour remettre le simulateur à neuf.",
+            text: "Zone de Danger !\n\nCe bouton réinitialise TOUS les patients (les 10 chambres) à zéro d'un seul coup. À utiliser pour remettre tout le simulateur à neuf.",
             position: 'right'
         },
         {
@@ -90,14 +115,12 @@
         }
     ];
 
-    // On garde celui-ci pour plus tard, mais il n'est plus lié automatiquement
     const tutorialStepsAccount = [
         {
             element: '#account-sidebar',
             text: "Bienvenue dans votre espace personnel. \n\nCe menu vous permet de naviguer entre la sécurité, votre abonnement et la gestion de vos classes.",
             position: 'right'
         },
-        // ... (autres étapes account conservées pour usage futur)
     ];
 
     // --- FIN DONNÉES TUTORIEL ---
