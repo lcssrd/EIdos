@@ -293,13 +293,39 @@
     }
 
     function applyPermissions(userPermissions) {
-        // 1. Gestion du Badge Super Admin
-        const adminBadge = document.getElementById('admin-badge');
-        if (adminBadge) {
+        
+        // 1. GESTION DU BADGE DE RÔLE (Couleurs douces et texte)
+        const roleBadge = document.getElementById('user-role-badge');
+        if (roleBadge) {
+            roleBadge.classList.remove('hidden');
+            const span = roleBadge.querySelector('span');
+            const icon = roleBadge.querySelector('i');
+            
+            // Reset des classes de couleur (on garde la base)
+            roleBadge.className = 'flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm mr-2 transition-all duration-300';
+            
             if (userPermissions.isSuperAdmin) {
-                adminBadge.classList.remove('hidden');
+                span.textContent = 'Super Admin';
+                icon.className = 'fas fa-user-shield';
+                // Orange doux et transparent
+                roleBadge.classList.add('bg-orange-50', 'text-orange-700', 'border-orange-200');
+            } else if (userPermissions.role === 'owner') {
+                span.textContent = 'Gestionnaire';
+                icon.className = 'fas fa-building';
+                // Violet doux
+                roleBadge.classList.add('bg-purple-50', 'text-purple-700', 'border-purple-200');
+            } else if (userPermissions.role === 'formateur' || userPermissions.role === 'user') {
+                span.textContent = 'Formateur';
+                icon.className = 'fas fa-chalkboard-teacher';
+                // Bleu doux
+                roleBadge.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
+            } else if (userPermissions.isStudent) {
+                span.textContent = 'Étudiant';
+                icon.className = 'fas fa-user-graduate';
+                // Vert doux
+                roleBadge.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
             } else {
-                adminBadge.classList.add('hidden');
+                roleBadge.classList.add('hidden');
             }
         }
 
@@ -320,7 +346,7 @@
             });
         }
 
-        // 3. Gestion de l'abonnement
+        // 3. Gestion de l'abonnement (bouton sauvegarder)
         if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
