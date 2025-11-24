@@ -68,9 +68,15 @@
         // On préserve l'état existant (currentPatientState)
         state.comptesRendus = currentPatientState.comptesRendus || {};
 
-        // 5. Diagramme de Soins
-        const careDiagramTbody = document.getElementById('care-diagram-tbody');
-        if (careDiagramTbody) state['care-diagram-tbody_html'] = careDiagramTbody.innerHTML;
+        // 5. Diagramme de Soins (MODIFIÉ : Sauvegarde structurée)
+        state.careDiagramRows = [];
+        document.querySelectorAll('#care-diagram-tbody tr').forEach(row => {
+            // On récupère le nom du soin dans la première cellule
+            const nameSpan = row.querySelector('td:first-child span');
+            if (nameSpan) {
+                state.careDiagramRows.push({ name: nameSpan.textContent.trim() });
+            }
+        });
         state.careDiagramCheckboxes = Array.from(document.querySelectorAll('#care-diagram-tbody input[type="checkbox"]')).map(cb => cb.checked);
 
         // 6. Biologie
