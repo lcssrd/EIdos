@@ -232,6 +232,21 @@
         renderAdminCol2(usersToDisplay);
     };
 
+    // --- NOUVEAU : Fonction utilitaire pour les badges de plan ---
+    function getPlanBadge(plan) {
+        const styles = {
+            'free': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+            'independant': 'bg-teal-100 text-teal-800 border-teal-200',
+            'promo': 'bg-blue-100 text-blue-800 border-blue-200',
+            'centre': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+            'student': 'bg-gray-100 text-gray-800 border-gray-200'
+        };
+        const label = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : 'Inconnu';
+        const style = styles[plan] || styles['free'];
+        return `<span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${style}">${label}</span>`;
+    }
+
+    // --- MODIFIÉ : Fonction pour inclure le badge de plan ---
     function renderAdminCol2(users) {
         const container = document.getElementById('admin-list-trainers');
         if (users.length === 0) {
@@ -245,13 +260,23 @@
             const icon = isOwner ? '<i class="fas fa-crown text-yellow-500 mr-2" title="Propriétaire"></i>' : '<i class="fas fa-user mr-2 text-gray-400"></i>';
             const roleLabel = isOwner ? 'Propriétaire' : (u.role === 'formateur' ? 'Formateur' : 'Utilisateur');
             
+            // Récupération du plan (par défaut 'free' si non défini)
+            const userPlan = u.subscription || 'free';
+            const planBadge = getPlanBadge(userPlan);
+
             html += `
                 <div class="miller-item" onclick="handleAdminSelectTrainer('${u._id}', '${u.email}', this)">
-                    <div>
-                        <div class="font-medium text-sm truncate w-40" title="${u.email}">${icon}${u.email}</div>
-                        <div class="text-xs text-gray-500">${roleLabel}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-medium text-sm truncate flex items-center" title="${u.email}">
+                            ${icon}
+                            <span class="truncate">${u.email}</span>
+                        </div>
+                        <div class="text-xs text-gray-500 flex items-center mt-1">
+                            ${roleLabel}
+                            ${planBadge}
+                        </div>
                     </div>
-                    <i class="fas fa-chevron-right text-gray-400"></i>
+                    <i class="fas fa-chevron-right text-gray-400 ml-2"></i>
                 </div>
             `;
         });
