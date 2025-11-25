@@ -180,31 +180,26 @@
         try {
             const userData = await apiService.fetchUserPermissions();
             
-            userPermissions.subscription = userData.subscription || 'free';
+            // CORRECTION : Utilisation de effectivePlan envoyé par le serveur pour déterminer l'abonnement réel
+            // Cela permet de distinguer correctement les "free" des "promo/centre/independant"
+            userPermissions.subscription = userData.effectivePlan || userData.subscription || 'free';
             userPermissions.allowedRooms = userData.allowedRooms || []; 
-
-            // MODIFIÉ : Stockage du flag Super Admin
             userPermissions.isSuperAdmin = userData.is_super_admin || false;
 
             if (userData.role === 'etudiant' && userData.permissions) {
                 userPermissions = { ...userPermissions, ...userData.permissions, isStudent: true, role: 'etudiant' };
-                
-                // Sécurité supplémentaire : un étudiant ne peut pas être admin
                 userPermissions.isSuperAdmin = false;
 
                 patientList = userPermissions.allowedRooms
                     .map(roomId => ({ id: roomId, room: roomId.split('_')[1] }))
                     .sort((a, b) => a.room.localeCompare(b.room));
             } else {
-                let effectivePlan = userData.subscription || 'free';
                 let role = userData.role || 'user';
-                if ((role === 'formateur' || role === 'owner') && userData.organisation) {
-                    effectivePlan = userData.organisation.plan;
-                }
                 
                 userPermissions = { 
-                    ...userPermissions, // Garder isSuperAdmin
-                    isStudent: false, role: role, subscription: effectivePlan,
+                    ...userPermissions, 
+                    isStudent: false, role: role, 
+                    // subscription est déjà défini ci-dessus via effectivePlan
                     header: true, admin: true, vie: true, observations: true, 
                     prescriptions_add: true, prescriptions_delete: true, prescriptions_validate: true,
                     transmissions: true, pancarte: true, diagramme: true, biologie: true,
@@ -247,16 +242,16 @@
     
     async function loadPatientList() {
         let patientMap = new Map();
-        // On charge la liste pour tout le monde pour avoir les noms corrects
-        try {
-            const allPatients = await apiService.fetchPatientList();
-            allPatients.forEach(p => {
-                if (p.patientId.startsWith('chambre_')) {
-                    patientMap.set(p.patientId, p.sidebar_patient_name);
-                }
-            });
-        } catch (error) { console.error(error); }
-        
+        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
+            try {
+                const allPatients = await apiService.fetchPatientList();
+                allPatients.forEach(p => {
+                    if (p.patientId.startsWith('chambre_')) {
+                        patientMap.set(p.patientId, p.sidebar_patient_name);
+                    }
+                });
+            } catch (error) { console.error(error); }
+        }
         uiService.initSidebar(patientList, patientMap);
     }
     
@@ -288,8 +283,9 @@
     async function saveCurrentPatientData() {
         if (isLoadingData || !activePatientId) return;
         
-        // MODIFICATION : Suppression de la restriction pour le plan 'free'
-        // Le serveur autorise désormais la sauvegarde des chambres pour tous les utilisateurs
+        // RESTRICTION : Bloque la sauvegarde uniquement si le plan est STRICTEMENT 'free'
+        // Les abonnements 'independant', 'promo', 'centre' (via effectivePlan) ne sont PAS 'free'.
+        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) return;
 
         uiService.updateSaveStatus('saving');
         const state = collectPatientStateFromUI();
@@ -324,7 +320,6 @@
     }
 
     async function saveCurrentPatientAsCase() {
-        // La sauvegarde en tant que "Cas" (Archive) reste une fonctionnalité payante
         if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
         const state = collectPatientStateFromUI();
         const patientName = state.sidebar_patient_name;
@@ -373,8 +368,6 @@
     }
 
     async function importPatientData(jsonData) {
-        // On laisse cette restriction si vous le souhaitez, ou on peut l'enlever.
-        // Pour l'instant je la laisse car elle concerne l'import de fichier externe.
         if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
         try {
             const patientName = jsonData.sidebar_patient_name || `Chambre ${activePatientId.split('_')[1]}`;
@@ -412,7 +405,9 @@
         uiService.showDeleteConfirmation(`Effacer la chambre ${activePatientId.split('_')[1]} ?`, async () => {
             currentPatientState = {}; 
             uiService.resetForm();
-            // MODIFICATION : Suppression de la restriction pour le plan 'free'
+            
+            // Restriction rétablie
+            if (userPermissions.subscription === 'free') return;
             
             try {
                 uiService.updateSaveStatus('saving');
@@ -431,7 +426,9 @@
         uiService.showDeleteConfirmation("Réinitialiser les 10 chambres ?", async () => {
             currentPatientState = {};
             uiService.resetForm();
-            // MODIFICATION : Suppression de la restriction pour le plan 'free'
+            
+            // Restriction rétablie
+            if (userPermissions.subscription === 'free') return;
             
             try {
                 uiService.updateSaveStatus('saving');
