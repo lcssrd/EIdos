@@ -553,32 +553,62 @@
         }
     }
 
+    // MODIFIÉ : Fonction mise à jour pour gérer l'affichage des invitations ET la sécurité du loading
     function renderCentreDetails(organisation) {
         document.getElementById('centre-plan-name').textContent = `Plan ${organisation.plan} ("${organisation.name}")`;
         document.getElementById('centre-plan-details').textContent = `Licences formateur utilisées : ${organisation.licences_utilisees} / ${organisation.licences_max || 'Illimitées'}`;
         
         const listContainer = document.getElementById('formateurs-list-container');
         
-        // --- CORRECTION ICI ---
-        // On vérifie si l'élément existe avant d'essayer de modifier son style
+        // Protection contre l'erreur "Cannot read properties of null (reading 'style')"
         const loadingEl = document.getElementById('formateurs-loading');
         if (loadingEl) {
             loadingEl.style.display = 'none';
         }
-        // ----------------------
 
         let html = '';
-        if (!organisation.formateurs || organisation.formateurs.length === 0) {
-            html = '<p class="text-sm text-gray-500">Vous n\'avez pas encore invité de formateur.</p>';
-        } else {
-            html = organisation.formateurs.map(f => `
-                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md border">
-                    <span class="text-sm font-medium text-gray-700">${f.email}</span>
-                    <button type="button" class="remove-formateur-btn text-xs text-red-500 hover:text-red-700" data-email="${f.email}">
-                        <i class="fas fa-trash"></i> Retirer
+
+        // 1. Affichage des invitations en attente
+        if (organisation.invitations && organisation.invitations.length > 0) {
+            html += `<div class="mb-4">
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Invitations en attente</h4>
+                <div class="space-y-2">`;
+            
+            html += organisation.invitations.map(inv => `
+                <div class="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <div class="flex items-center">
+                        <i class="fas fa-clock text-yellow-500 mr-2"></i>
+                        <div>
+                            <span class="text-sm font-medium text-gray-700 block">${inv.email}</span>
+                            <span class="text-xs text-gray-500">Envoyée le ${new Date(inv.expires_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="delete-invitation-btn text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors" data-id="${inv._id}" data-email="${inv.email}">
+                        <i class="fas fa-times mr-1"></i> Annuler
                     </button>
                 </div>
             `).join('');
+            
+            html += `</div></div>`;
+        }
+
+        // 2. Affichage des formateurs actifs
+        html += `<h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Formateurs actifs</h4>`;
+        
+        if (!organisation.formateurs || organisation.formateurs.length === 0) {
+            html += '<p class="text-sm text-gray-500 italic">Aucun formateur actif.</p>';
+        } else {
+            html += `<div class="space-y-2">` + organisation.formateurs.map(f => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md border border-gray-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-check text-teal-600 mr-2"></i>
+                        <span class="text-sm font-medium text-gray-700">${f.email}</span>
+                    </div>
+                    <button type="button" class="remove-formateur-btn text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors" data-email="${f.email}">
+                        <i class="fas fa-trash mr-1"></i> Retirer
+                    </button>
+                </div>
+            `).join('') + `</div>`;
         }
         
         listContainer.innerHTML = html;
@@ -785,14 +815,43 @@
             document.getElementById('student-password').value = generateRandomString(8);
         });
 
-        // Écouteurs Tableaux (Délégation)
+        // MODIFIÉ : Écouteurs Tableaux (Délégation) avec gestion de la suppression des invitations
         document.getElementById('formateurs-list-container').addEventListener('click', async (e) => {
-            if(e.target.closest('.remove-formateur-btn')) {
-                const email = e.target.closest('.remove-formateur-btn').dataset.email;
-                showDeleteConfirmation(`Retirer ${email} ?`, async () => {
-                    await fetch(`${API_URL}/api/organisation/remove`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
-                    loadAccountDetails();
+            // Cas 1 : Retirer un formateur actif
+            const removeBtn = e.target.closest('.remove-formateur-btn');
+            if (removeBtn) {
+                const email = removeBtn.dataset.email;
+                showDeleteConfirmation(`Retirer le formateur ${email} du centre ?\nIl repassera en compte "Free" indépendant.`, async () => {
+                    try {
+                        await fetch(`${API_URL}/api/organisation/remove`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
+                        loadAccountDetails();
+                        showCustomAlert("Succès", "Formateur retiré.");
+                    } catch (err) { showCustomAlert("Erreur", "Impossible de retirer le formateur."); }
                 });
+                return;
+            }
+
+            // Cas 2 : Annuler une invitation (NOUVEAU)
+            const deleteInviteBtn = e.target.closest('.delete-invitation-btn');
+            if (deleteInviteBtn) {
+                const id = deleteInviteBtn.dataset.id;
+                const email = deleteInviteBtn.dataset.email;
+                
+                if(!confirm(`Annuler l'invitation pour ${email} ?`)) return;
+
+                try {
+                    const res = await fetch(`${API_URL}/api/organisation/invite/${id}`, { 
+                        method: 'DELETE', 
+                        headers: getAuthHeaders() 
+                    });
+                    
+                    if (!res.ok) throw new Error();
+                    
+                    // Recharger pour mettre à jour la liste
+                    loadAccountDetails();
+                } catch (err) {
+                    showCustomAlert("Erreur", "Impossible d'annuler l'invitation.");
+                }
             }
         });
 
