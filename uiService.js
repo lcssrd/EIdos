@@ -346,10 +346,12 @@
             });
         }
 
-        // 3. Gestion de l'abonnement (bouton sauvegarder)
-        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
+        // 3. Gestion des droits d'enregistrement (Role 'user' = Free = Lecture seule sur la persistance)
+        if (userPermissions.role === 'user') {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
+            
+            // On masque aussi le statut car ils ne peuvent pas sauvegarder
             if (saveStatusButton) saveStatusButton.style.display = 'none';
         }
         

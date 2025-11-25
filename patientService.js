@@ -180,7 +180,7 @@
         try {
             const userData = await apiService.fetchUserPermissions();
             
-            // Détermine l'abonnement réel (effectivePlan est envoyé par le serveur)
+            // Abonnement et Rôle viennent du serveur (corrigé dans server.js)
             userPermissions.subscription = userData.effectivePlan || userData.subscription || 'free';
             userPermissions.allowedRooms = userData.allowedRooms || []; 
             userPermissions.isSuperAdmin = userData.is_super_admin || false;
@@ -193,12 +193,12 @@
                     .map(roomId => ({ id: roomId, room: roomId.split('_')[1] }))
                     .sort((a, b) => a.room.localeCompare(b.room));
             } else {
+                // Pour les autres (user, formateur, owner)
                 let role = userData.role || 'user';
                 
                 userPermissions = { 
                     ...userPermissions, 
                     isStudent: false, role: role, 
-                    // subscription déjà défini
                     header: true, admin: true, vie: true, observations: true, 
                     prescriptions_add: true, prescriptions_delete: true, prescriptions_validate: true,
                     transmissions: true, pancarte: true, diagramme: true, biologie: true,
@@ -215,7 +215,8 @@
             return;
         }
 
-        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
+        // Socket activé pour tout le monde sauf le strict 'user' (free)
+        if (userPermissions.role !== 'user') {
             initializeSocket();
         }
 
@@ -241,8 +242,8 @@
     
     async function loadPatientList() {
         let patientMap = new Map();
-        // On tente de charger les noms pour tout le monde (sauf free qui n'en ont pas)
-        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
+        // Charge les noms pour ceux qui ne sont pas 'user' (car 'user' ne sauvegarde pas, donc pas de noms persistants)
+        if (userPermissions.role !== 'user') {
             try {
                 const allPatients = await apiService.fetchPatientList();
                 allPatients.forEach(p => {
@@ -283,21 +284,9 @@
     async function saveCurrentPatientData() {
         if (isLoadingData || !activePatientId) return;
         
-        // --- CORRECTION CRITIQUE : LOGIQUE DE SAUVEGARDE ---
-        // On bloque si c'est un compte 'free' standard (rôle 'user').
-        // MAIS on autorise explicitement :
-        // 1. Les étudiants (!isStudent)
-        // 2. Les rôles 'owner' (Centre) et 'formateur', même si leur abonnement apparait 'free' (cas des centres inactifs/test)
-        // 3. Les abonnements payants ('independant', 'promo')
-        
-        const isFreePlan = userPermissions.subscription === 'free';
-        const isStudent = userPermissions.isStudent;
-        const isProRole = userPermissions.role === 'owner' || userPermissions.role === 'formateur';
-
-        // Si c'est Free ET pas étudiant ET pas un rôle pro (owner/formateur) -> on bloque
-        if (isFreePlan && !isStudent && !isProRole) {
-            return;
-        }
+        // --- LOGIQUE SIMPLIFIÉE ---
+        // Seul le rôle 'user' (Free) est bloqué.
+        if (userPermissions.role === 'user') return;
 
         uiService.updateSaveStatus('saving');
         const state = collectPatientStateFromUI();
@@ -332,7 +321,9 @@
     }
 
     async function saveCurrentPatientAsCase() {
-        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
+        // Sauvegarde archive : Interdit aux 'user' (free) et 'etudiant'
+        if (userPermissions.role === 'user' || userPermissions.role === 'etudiant') return;
+        
         const state = collectPatientStateFromUI();
         const patientName = state.sidebar_patient_name;
         if (!patientName || patientName.startsWith('Chambre ')) {
@@ -346,7 +337,8 @@
     }
     
     async function openLoadPatientModal() {
-        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
+        if (userPermissions.role === 'user' || userPermissions.role === 'etudiant') return;
+        
         let savedPatients = [];
         try {
             const allPatients = await apiService.fetchPatientList();
@@ -380,7 +372,8 @@
     }
 
     async function importPatientData(jsonData) {
-        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
+        if (userPermissions.role === 'user' || userPermissions.role === 'etudiant') return;
+        
         try {
             const patientName = jsonData.sidebar_patient_name || `Chambre ${activePatientId.split('_')[1]}`;
             await apiService.saveChamberData(activePatientId, jsonData, patientName);
@@ -413,17 +406,15 @@
     }
     
     function clearCurrentPatient() {
-        if (userPermissions.isStudent) return;
+        if (userPermissions.role === 'etudiant') return;
+        
         uiService.showDeleteConfirmation(`Effacer la chambre ${activePatientId.split('_')[1]} ?`, async () => {
             currentPatientState = {}; 
             uiService.resetForm();
-            
-            // --- CORRECTION CRITIQUE ---
-            const isFreePlan = userPermissions.subscription === 'free';
-            const isProRole = userPermissions.role === 'owner' || userPermissions.role === 'formateur';
-            
-            if (isFreePlan && !isProRole) return;
-            
+
+            // Bloqué pour 'user'
+            if (userPermissions.role === 'user') return;
+
             try {
                 uiService.updateSaveStatus('saving');
                 await apiService.saveChamberData(activePatientId, {}, `Chambre ${activePatientId.split('_')[1]}`);
@@ -437,17 +428,15 @@
     }
 
     function clearAllPatients() {
-        if (userPermissions.isStudent) return;
+        if (userPermissions.role === 'etudiant') return;
+        
         uiService.showDeleteConfirmation("Réinitialiser les 10 chambres ?", async () => {
             currentPatientState = {};
             uiService.resetForm();
-            
-            // --- CORRECTION CRITIQUE ---
-            const isFreePlan = userPermissions.subscription === 'free';
-            const isProRole = userPermissions.role === 'owner' || userPermissions.role === 'formateur';
-            
-            if (isFreePlan && !isProRole) return;
-            
+
+            // Bloqué pour 'user'
+            if (userPermissions.role === 'user') return;
+
             try {
                 uiService.updateSaveStatus('saving');
                 const allChamberIds = patientList.map(p => p.id);
