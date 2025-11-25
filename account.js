@@ -558,7 +558,14 @@
         document.getElementById('centre-plan-details').textContent = `Licences formateur utilisées : ${organisation.licences_utilisees} / ${organisation.licences_max || 'Illimitées'}`;
         
         const listContainer = document.getElementById('formateurs-list-container');
-        document.getElementById('formateurs-loading').style.display = 'none';
+        
+        // --- CORRECTION ICI ---
+        // On vérifie si l'élément existe avant d'essayer de modifier son style
+        const loadingEl = document.getElementById('formateurs-loading');
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
+        }
+        // ----------------------
 
         let html = '';
         if (!organisation.formateurs || organisation.formateurs.length === 0) {
@@ -573,6 +580,7 @@
                 </div>
             `).join('');
         }
+        
         listContainer.innerHTML = html;
     }
 
