@@ -180,8 +180,7 @@
         try {
             const userData = await apiService.fetchUserPermissions();
             
-            // CORRECTION : Utilisation de effectivePlan envoyé par le serveur pour déterminer l'abonnement réel
-            // Cela permet de distinguer correctement les "free" des "promo/centre/independant"
+            // Détermine l'abonnement réel (effectivePlan est envoyé par le serveur)
             userPermissions.subscription = userData.effectivePlan || userData.subscription || 'free';
             userPermissions.allowedRooms = userData.allowedRooms || []; 
             userPermissions.isSuperAdmin = userData.is_super_admin || false;
@@ -199,7 +198,7 @@
                 userPermissions = { 
                     ...userPermissions, 
                     isStudent: false, role: role, 
-                    // subscription est déjà défini ci-dessus via effectivePlan
+                    // subscription déjà défini
                     header: true, admin: true, vie: true, observations: true, 
                     prescriptions_add: true, prescriptions_delete: true, prescriptions_validate: true,
                     transmissions: true, pancarte: true, diagramme: true, biologie: true,
@@ -242,6 +241,7 @@
     
     async function loadPatientList() {
         let patientMap = new Map();
+        // On tente de charger les noms pour tout le monde (sauf free qui n'en ont pas)
         if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
             try {
                 const allPatients = await apiService.fetchPatientList();
@@ -283,9 +283,21 @@
     async function saveCurrentPatientData() {
         if (isLoadingData || !activePatientId) return;
         
-        // RESTRICTION : Bloque la sauvegarde uniquement si le plan est STRICTEMENT 'free'
-        // Les abonnements 'independant', 'promo', 'centre' (via effectivePlan) ne sont PAS 'free'.
-        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) return;
+        // --- CORRECTION CRITIQUE : LOGIQUE DE SAUVEGARDE ---
+        // On bloque si c'est un compte 'free' standard (rôle 'user').
+        // MAIS on autorise explicitement :
+        // 1. Les étudiants (!isStudent)
+        // 2. Les rôles 'owner' (Centre) et 'formateur', même si leur abonnement apparait 'free' (cas des centres inactifs/test)
+        // 3. Les abonnements payants ('independant', 'promo')
+        
+        const isFreePlan = userPermissions.subscription === 'free';
+        const isStudent = userPermissions.isStudent;
+        const isProRole = userPermissions.role === 'owner' || userPermissions.role === 'formateur';
+
+        // Si c'est Free ET pas étudiant ET pas un rôle pro (owner/formateur) -> on bloque
+        if (isFreePlan && !isStudent && !isProRole) {
+            return;
+        }
 
         uiService.updateSaveStatus('saving');
         const state = collectPatientStateFromUI();
@@ -406,8 +418,11 @@
             currentPatientState = {}; 
             uiService.resetForm();
             
-            // Restriction rétablie
-            if (userPermissions.subscription === 'free') return;
+            // --- CORRECTION CRITIQUE ---
+            const isFreePlan = userPermissions.subscription === 'free';
+            const isProRole = userPermissions.role === 'owner' || userPermissions.role === 'formateur';
+            
+            if (isFreePlan && !isProRole) return;
             
             try {
                 uiService.updateSaveStatus('saving');
@@ -427,8 +442,11 @@
             currentPatientState = {};
             uiService.resetForm();
             
-            // Restriction rétablie
-            if (userPermissions.subscription === 'free') return;
+            // --- CORRECTION CRITIQUE ---
+            const isFreePlan = userPermissions.subscription === 'free';
+            const isProRole = userPermissions.role === 'owner' || userPermissions.role === 'formateur';
+            
+            if (isFreePlan && !isProRole) return;
             
             try {
                 uiService.updateSaveStatus('saving');
