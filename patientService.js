@@ -1,3 +1,7 @@
+{
+type: uploaded file
+fileName: EIDOS FULL OK/patientService.js
+fullContent:
 (function() {
     "use strict";
 
@@ -247,7 +251,11 @@
     
     async function loadPatientList() {
         let patientMap = new Map();
-        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
+        // On charge la liste si ce n'est pas free OU si c'est un étudiant
+        // MODIFICATION : Ou si c'est un formateur/owner même free
+        const shouldLoad = userPermissions.subscription !== 'free' || userPermissions.isStudent || userPermissions.role === 'formateur' || userPermissions.role === 'owner';
+        
+        if (shouldLoad) {
             try {
                 const allPatients = await apiService.fetchPatientList();
                 allPatients.forEach(p => {
@@ -287,7 +295,9 @@
     
     async function saveCurrentPatientData() {
         if (isLoadingData || !activePatientId) return;
-        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) return;
+        
+        // MODIFICATION : Autoriser Formateur et Owner même si 'free'
+        if (userPermissions.subscription === 'free' && !userPermissions.isStudent && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner') return;
 
         uiService.updateSaveStatus('saving');
         const state = collectPatientStateFromUI();
@@ -322,7 +332,9 @@
     }
 
     async function saveCurrentPatientAsCase() {
-        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
+        // MODIFICATION : Autoriser Formateur et Owner même si 'free'
+        if (userPermissions.isStudent || (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner')) return;
+        
         const state = collectPatientStateFromUI();
         const patientName = state.sidebar_patient_name;
         if (!patientName || patientName.startsWith('Chambre ')) {
@@ -336,7 +348,9 @@
     }
     
     async function openLoadPatientModal() {
-        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
+        // MODIFICATION : Autoriser Formateur et Owner même si 'free'
+        if (userPermissions.isStudent || (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner')) return;
+        
         let savedPatients = [];
         try {
             const allPatients = await apiService.fetchPatientList();
@@ -370,7 +384,8 @@
     }
 
     async function importPatientData(jsonData) {
-        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
+        // MODIFICATION : Autoriser Formateur et Owner même si 'free'
+        if (userPermissions.isStudent || (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner')) return;
         try {
             const patientName = jsonData.sidebar_patient_name || `Chambre ${activePatientId.split('_')[1]}`;
             await apiService.saveChamberData(activePatientId, jsonData, patientName);
@@ -405,10 +420,14 @@
     
     function clearCurrentPatient() {
         if (userPermissions.isStudent) return;
+        
+        // MODIFICATION : Autoriser Formateur et Owner même si 'free'
+        if (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner') return;
+
         uiService.showDeleteConfirmation(`Effacer la chambre ${activePatientId.split('_')[1]} ?`, async () => {
             currentPatientState = {}; 
             uiService.resetForm();
-            if (userPermissions.subscription === 'free') return;
+            
             try {
                 uiService.updateSaveStatus('saving');
                 await apiService.saveChamberData(activePatientId, {}, `Chambre ${activePatientId.split('_')[1]}`);
@@ -423,10 +442,14 @@
 
     function clearAllPatients() {
         if (userPermissions.isStudent) return;
+        
+        // MODIFICATION : Autoriser Formateur et Owner même si 'free'
+        if (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner') return;
+
         uiService.showDeleteConfirmation("Réinitialiser les 10 chambres ?", async () => {
             currentPatientState = {};
             uiService.resetForm();
-            if (userPermissions.subscription === 'free') return;
+            
             try {
                 uiService.updateSaveStatus('saving');
                 const allChamberIds = patientList.map(p => p.id);
@@ -461,3 +484,4 @@
         clearCurrentPatient, clearAllPatients, getCrText, handleCrModalSave
     };
 })();
+}

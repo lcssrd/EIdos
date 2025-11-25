@@ -1,3 +1,7 @@
+{
+type: uploaded file
+fileName: EIDOS FULL OK/uiService.js
+fullContent:
 (function() {
     "use strict";
 
@@ -347,10 +351,22 @@
         }
 
         // 3. Gestion de l'abonnement (bouton sauvegarder)
-        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
+        // MODIFICATION : On autorise l'affichage si :
+        // - Ce n'est pas "free"
+        // - OU c'est un étudiant (sauvegarde automatique)
+        // - OU c'est un formateur (role === 'formateur')
+        // - OU c'est un owner (role === 'owner')
+        const canSave = userPermissions.subscription !== 'free' || userPermissions.isStudent || userPermissions.role === 'formateur' || userPermissions.role === 'owner';
+
+        if (!canSave) {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
             if (saveStatusButton) saveStatusButton.style.display = 'none';
+        } else {
+            // S'assurer que c'est visible si les conditions sont remplies (cas de ré-login)
+            const saveBtn = document.getElementById('save-patient-btn');
+            if (saveBtn && !userPermissions.isStudent) saveBtn.style.display = 'inline-flex';
+            if (saveStatusButton) saveStatusButton.style.display = 'flex';
         }
         
         if (!userPermissions.isStudent) { crModalSaveBtn.style.display = 'inline-flex'; return; }
@@ -1256,3 +1272,4 @@
         startTutorial, endTutorial, showTutorialStep, incrementTutorialStep
     };
 })();
+}
