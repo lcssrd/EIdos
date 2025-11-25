@@ -1,7 +1,3 @@
-{
-type: uploaded file
-fileName: EIDOS FULL OK/uiService.js
-fullContent:
 (function() {
     "use strict";
 
@@ -1272,4 +1268,3 @@ fullContent:
         startTutorial, endTutorial, showTutorialStep, incrementTutorialStep
     };
 })();
-}
