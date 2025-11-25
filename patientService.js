@@ -247,16 +247,16 @@
     
     async function loadPatientList() {
         let patientMap = new Map();
-        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
-            try {
-                const allPatients = await apiService.fetchPatientList();
-                allPatients.forEach(p => {
-                    if (p.patientId.startsWith('chambre_')) {
-                        patientMap.set(p.patientId, p.sidebar_patient_name);
-                    }
-                });
-            } catch (error) { console.error(error); }
-        }
+        // On charge la liste pour tout le monde pour avoir les noms corrects
+        try {
+            const allPatients = await apiService.fetchPatientList();
+            allPatients.forEach(p => {
+                if (p.patientId.startsWith('chambre_')) {
+                    patientMap.set(p.patientId, p.sidebar_patient_name);
+                }
+            });
+        } catch (error) { console.error(error); }
+        
         uiService.initSidebar(patientList, patientMap);
     }
     
@@ -287,7 +287,9 @@
     
     async function saveCurrentPatientData() {
         if (isLoadingData || !activePatientId) return;
-        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) return;
+        
+        // MODIFICATION : Suppression de la restriction pour le plan 'free'
+        // Le serveur autorise désormais la sauvegarde des chambres pour tous les utilisateurs
 
         uiService.updateSaveStatus('saving');
         const state = collectPatientStateFromUI();
@@ -322,6 +324,7 @@
     }
 
     async function saveCurrentPatientAsCase() {
+        // La sauvegarde en tant que "Cas" (Archive) reste une fonctionnalité payante
         if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
         const state = collectPatientStateFromUI();
         const patientName = state.sidebar_patient_name;
@@ -370,6 +373,8 @@
     }
 
     async function importPatientData(jsonData) {
+        // On laisse cette restriction si vous le souhaitez, ou on peut l'enlever.
+        // Pour l'instant je la laisse car elle concerne l'import de fichier externe.
         if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
         try {
             const patientName = jsonData.sidebar_patient_name || `Chambre ${activePatientId.split('_')[1]}`;
@@ -381,7 +386,6 @@
     }
     
     function exportPatientData() {
-        // MODIFIÉ : Restriction stricte au Super Admin
         if (!userPermissions.isSuperAdmin) {
             uiService.showToast("Réservé au Super Admin.", 'error');
             return;
@@ -408,7 +412,8 @@
         uiService.showDeleteConfirmation(`Effacer la chambre ${activePatientId.split('_')[1]} ?`, async () => {
             currentPatientState = {}; 
             uiService.resetForm();
-            if (userPermissions.subscription === 'free') return;
+            // MODIFICATION : Suppression de la restriction pour le plan 'free'
+            
             try {
                 uiService.updateSaveStatus('saving');
                 await apiService.saveChamberData(activePatientId, {}, `Chambre ${activePatientId.split('_')[1]}`);
@@ -426,7 +431,8 @@
         uiService.showDeleteConfirmation("Réinitialiser les 10 chambres ?", async () => {
             currentPatientState = {};
             uiService.resetForm();
-            if (userPermissions.subscription === 'free') return;
+            // MODIFICATION : Suppression de la restriction pour le plan 'free'
+            
             try {
                 uiService.updateSaveStatus('saving');
                 const allChamberIds = patientList.map(p => p.id);
