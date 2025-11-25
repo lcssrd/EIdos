@@ -247,8 +247,7 @@
     
     async function loadPatientList() {
         let patientMap = new Map();
-        // MODIFIÉ : Autoriser si formateur/owner même si free
-        if (userPermissions.subscription !== 'free' || userPermissions.isStudent || userPermissions.role === 'formateur' || userPermissions.role === 'owner') {
+        if (userPermissions.subscription !== 'free' || userPermissions.isStudent) {
             try {
                 const allPatients = await apiService.fetchPatientList();
                 allPatients.forEach(p => {
@@ -288,9 +287,7 @@
     
     async function saveCurrentPatientData() {
         if (isLoadingData || !activePatientId) return;
-        
-        // MODIFIÉ : Autoriser formateur/owner explicitement
-        if (userPermissions.subscription === 'free' && !userPermissions.isStudent && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner') return;
+        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) return;
 
         uiService.updateSaveStatus('saving');
         const state = collectPatientStateFromUI();
@@ -325,9 +322,7 @@
     }
 
     async function saveCurrentPatientAsCase() {
-        // MODIFIÉ : Autoriser formateur/owner explicitement
-        if (userPermissions.isStudent || (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner')) return;
-        
+        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
         const state = collectPatientStateFromUI();
         const patientName = state.sidebar_patient_name;
         if (!patientName || patientName.startsWith('Chambre ')) {
@@ -341,9 +336,7 @@
     }
     
     async function openLoadPatientModal() {
-        // MODIFIÉ : Autoriser formateur/owner explicitement
-        if (userPermissions.isStudent || (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner')) return;
-        
+        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
         let savedPatients = [];
         try {
             const allPatients = await apiService.fetchPatientList();
@@ -377,8 +370,7 @@
     }
 
     async function importPatientData(jsonData) {
-        // MODIFIÉ : Autoriser formateur/owner explicitement
-        if (userPermissions.isStudent || (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner')) return;
+        if (userPermissions.isStudent || userPermissions.subscription === 'free') return;
         try {
             const patientName = jsonData.sidebar_patient_name || `Chambre ${activePatientId.split('_')[1]}`;
             await apiService.saveChamberData(activePatientId, jsonData, patientName);
@@ -416,8 +408,7 @@
         uiService.showDeleteConfirmation(`Effacer la chambre ${activePatientId.split('_')[1]} ?`, async () => {
             currentPatientState = {}; 
             uiService.resetForm();
-            // MODIFIÉ : Autoriser formateur/owner explicitement
-            if (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner') return;
+            if (userPermissions.subscription === 'free') return;
             try {
                 uiService.updateSaveStatus('saving');
                 await apiService.saveChamberData(activePatientId, {}, `Chambre ${activePatientId.split('_')[1]}`);
@@ -435,8 +426,7 @@
         uiService.showDeleteConfirmation("Réinitialiser les 10 chambres ?", async () => {
             currentPatientState = {};
             uiService.resetForm();
-            // MODIFIÉ : Autoriser formateur/owner explicitement
-            if (userPermissions.subscription === 'free' && userPermissions.role !== 'formateur' && userPermissions.role !== 'owner') return;
+            if (userPermissions.subscription === 'free') return;
             try {
                 uiService.updateSaveStatus('saving');
                 const allChamberIds = patientList.map(p => p.id);

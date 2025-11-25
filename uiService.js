@@ -347,22 +347,10 @@
         }
 
         // 3. Gestion de l'abonnement (bouton sauvegarder)
-        // MODIFICATION : On autorise l'affichage si :
-        // - Ce n'est pas "free"
-        // - OU c'est un étudiant (sauvegarde automatique)
-        // - OU c'est un formateur (role === 'formateur')
-        // - OU c'est un owner (role === 'owner')
-        const canSave = userPermissions.subscription !== 'free' || userPermissions.isStudent || userPermissions.role === 'formateur' || userPermissions.role === 'owner';
-
-        if (!canSave) {
+        if (userPermissions.subscription === 'free' && !userPermissions.isStudent) {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
             if (saveStatusButton) saveStatusButton.style.display = 'none';
-        } else {
-            // S'assurer que c'est visible si les conditions sont remplies (cas de ré-login)
-            const saveBtn = document.getElementById('save-patient-btn');
-            if (saveBtn && !userPermissions.isStudent) saveBtn.style.display = 'inline-flex';
-            if (saveStatusButton) saveStatusButton.style.display = 'flex';
         }
         
         if (!userPermissions.isStudent) { crModalSaveBtn.style.display = 'inline-flex'; return; }
