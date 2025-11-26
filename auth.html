@@ -71,7 +71,14 @@
                         </div>
                         
                         <div>
-                            <label for="login-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                            <div class="flex items-center justify-between">
+                                <label for="login-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                                <div class="text-sm">
+                                    <a href="#" id="show-forgot-password-link" class="font-medium text-teal-600 hover:text-teal-500">
+                                        Mot de passe oublié ?
+                                    </a>
+                                </div>
+                            </div>
                             <div class="relative mt-1">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fas fa-lock text-gray-400"></i>
@@ -208,6 +215,7 @@
                         </a>
                     </p>
                 </div>
+
                 <div id="verify-section" class="auth-section hidden">
                     <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Vérifier votre email</h2>
                     <p class="text-center text-gray-600 mb-4">Un code a été envoyé à <strong id="verify-email-display"></strong>. Veuillez le saisir ci-dessous.</p>
@@ -255,6 +263,80 @@
                         </a>
                     </p>
                 </div>
+
+                <div id="forgot-password-section" class="auth-section hidden">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Mot de passe oublié</h2>
+                    <p class="text-center text-gray-600 mb-4">Entrez votre adresse email pour recevoir un code de réinitialisation.</p>
+                    
+                    <form id="forgot-password-form" class="space-y-5">
+                        <div>
+                            <label for="forgot-email" class="block text-sm font-medium text-gray-700">Adresse email</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input type="email" id="forgot-email" name="email" required class="styled-input pl-10" placeholder="vous@hopital.fr">
+                            </div>
+                        </div>
+
+                        <p id="forgot-error-message" class="text-sm text-red-600 text-center hidden"></p>
+                        <p id="forgot-success-message" class="text-sm text-green-600 text-center hidden"></p>
+
+                        <div>
+                            <button type="submit" id="forgot-btn"
+                                    class="w-full inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-lg text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out hover:scale-105">
+                                Envoyer le code
+                            </button>
+                        </div>
+                    </form>
+
+                    <p class="mt-6 text-center text-sm text-gray-600">
+                        Retour à la <a href="#" id="back-to-login-link-1" class="font-medium text-teal-600 hover:text-teal-500">connexion</a>
+                    </p>
+                </div>
+
+                <div id="reset-password-section" class="auth-section hidden">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Nouveau mot de passe</h2>
+                    <p class="text-center text-gray-600 mb-4">Un code a été envoyé à votre adresse. Définissez votre nouveau mot de passe.</p>
+                    
+                    <form id="reset-password-form" class="space-y-5">
+                        <input type="hidden" id="reset-email-hidden">
+                        <div>
+                            <label for="reset-code" class="block text-sm font-medium text-gray-700">Code de vérification</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-key text-gray-400"></i>
+                                </div>
+                                <input type="text" id="reset-code" name="code" required class="styled-input pl-10 text-center tracking-[0.5em]" placeholder="••••••">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="reset-new-password" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input type="password" id="reset-new-password" name="newPassword" required class="styled-input pl-10" placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <p id="reset-error-message" class="text-sm text-red-600 text-center hidden"></p>
+                        <p id="reset-success-message" class="text-sm text-green-600 text-center hidden"></p>
+
+                        <div>
+                            <button type="submit" id="reset-btn"
+                                    class="w-full inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-lg text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out hover:scale-105">
+                                Réinitialiser
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <p class="mt-6 text-center text-sm text-gray-600">
+                        <a href="#" id="back-to-login-link-2" class="font-medium text-teal-600 hover:text-teal-500">Annuler</a>
+                    </p>
+                </div>
+
             </div>
         </div>
     </div>
