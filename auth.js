@@ -237,7 +237,7 @@
     }
     
     /**
-     * Vérification du code
+     * Vérification du code (Modifié pour connexion auto)
      */
     async function handleVerify(e) {
         e.preventDefault();
@@ -266,15 +266,30 @@
                 throw new Error(data.error || 'Erreur lors de la vérification');
             }
 
-            successMsg.textContent = 'Compte vérifié avec succès ! Vous pouvez maintenant vous connecter.';
-            successMsg.classList.remove('hidden');
-            document.getElementById('test-code-display').classList.add('hidden');
-            
-            setTimeout(() => {
-                showSection(loginSection);
-                verifyForm.reset();
-                successMsg.classList.add('hidden');
-            }, 2000);
+            // --- MODIFICATION : Connexion automatique ---
+            if (data.token) {
+                localStorage.setItem('authToken', data.token);
+                
+                successMsg.textContent = 'Compte vérifié ! Connexion en cours...';
+                successMsg.classList.remove('hidden');
+                document.getElementById('test-code-display').classList.add('hidden');
+
+                // Redirection directe
+                setTimeout(() => {
+                    window.location.href = 'simul.html';
+                }, 1000);
+            } else {
+                // Fallback classique (si pas de token)
+                successMsg.textContent = 'Compte vérifié avec succès ! Vous pouvez maintenant vous connecter.';
+                successMsg.classList.remove('hidden');
+                document.getElementById('test-code-display').classList.add('hidden');
+                
+                setTimeout(() => {
+                    showSection(loginSection);
+                    verifyForm.reset();
+                    successMsg.classList.add('hidden');
+                }, 2000);
+            }
 
         } catch (err) {
             errorMsg.textContent = err.message;
