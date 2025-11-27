@@ -237,7 +237,8 @@
         
         document.getElementById('cr-modal-save-btn').addEventListener('click', () => {
             const crId = document.getElementById('cr-modal-active-id').value;
-            const crText = document.getElementById('cr-modal-textarea').value;
+            // MODIFICATION ICI : On récupère innerHTML au lieu de value
+            const crText = document.getElementById('cr-modal-content').innerHTML;
             patientService.handleCrModalSave(crId, crText);
         });
 

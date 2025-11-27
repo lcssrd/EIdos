@@ -4,7 +4,8 @@
     let pancarteChartInstance;
     let loadPatientModal, loadPatientBox, loadPatientListContainer;
     let confirmModal, confirmModalBox, confirmTitle, confirmMessage, confirmCancelBtn, confirmOkBtn;
-    let crModal, crModalBox, crModalTitle, crModalTextarea, crModalSaveBtn, crModalCloseBtn, crModalActiveIdInput;
+    // MODIFICATION : Remplacement de crModalTextarea par crModalContent
+    let crModal, crModalBox, crModalTitle, crModalContent, crModalSaveBtn, crModalCloseBtn, crModalActiveIdInput;
     let saveStatusButton, saveStatusIcon, saveStatusText;
     let toastElement, toastIcon, toastText;
     let toastTimeout = null;
@@ -149,7 +150,8 @@
         crModal = document.getElementById('cr-modal');
         crModalBox = document.getElementById('cr-modal-box');
         crModalTitle = document.getElementById('cr-modal-title');
-        crModalTextarea = document.getElementById('cr-modal-textarea');
+        // MODIFICATION : Récupération de la div éditable au lieu du textarea
+        crModalContent = document.getElementById('cr-modal-content');
         crModalSaveBtn = document.getElementById('cr-modal-save-btn');
         crModalCloseBtn = document.getElementById('cr-modal-close-btn');
         crModalActiveIdInput = document.getElementById('cr-modal-active-id');
@@ -400,6 +402,9 @@
         document.querySelectorAll('#bio-table thead input[type="date"]').forEach(input => { input.value = ''; delete input.dataset.dateOffset; });
         document.getElementById('glycemie-tbody').innerHTML = '';
         document.getElementById('pancarte-tbody').innerHTML = '';
+        // Vide aussi le contenu du modal CR
+        if(crModalContent) crModalContent.innerHTML = '';
+        
         checkAllergyStatus();
         initializeDynamicTables();
         calculateAndDisplayIMC();
@@ -551,7 +556,8 @@
         if (!crData) return;
         for (const crId in crData) {
             const card = document.querySelector(`.cr-card[data-cr-id="${crId}"]`);
-            if (card && crData[crId] && crData[crId].trim() !== '') {
+            // MODIFICATION : Vérifie si le contenu HTML n'est pas vide
+            if (card && crData[crId] && crData[crId].trim() !== '' && crData[crId] !== '<br>') {
                 const icon = card.querySelector('.cr-check-icon');
                 if (icon) icon.classList.remove('hidden');
             }
@@ -939,13 +945,27 @@
     function deletePrescription(button) { const row = button.closest('tr'); if (row) { row.remove(); return true; } return false; }
     function deleteCareDiagramRow(button) { const row = button.closest('tr'); if (row) { row.remove(); return true; } return false; }
 
+    // MODIFICATION : Mise à jour pour utiliser la div éditable et innerHTML
     function openCrModal(crId, crTitle, crText) {
-        crModalTitle.textContent = crTitle; crModalActiveIdInput.value = crId; crModalTextarea.value = crText || '';
-        crModal.classList.remove('hidden'); setTimeout(() => { crModalBox.classList.remove('scale-95', 'opacity-0'); crModalTextarea.focus(); }, 10);
+        crModalTitle.textContent = crTitle; 
+        crModalActiveIdInput.value = crId; 
+        // Utilisation de innerHTML pour le formatage, avec DOMPurify pour la sécurité
+        crModalContent.innerHTML = DOMPurify.sanitize(crText) || ''; 
+        crModal.classList.remove('hidden'); 
+        setTimeout(() => { 
+            crModalBox.classList.remove('scale-95', 'opacity-0'); 
+            crModalContent.focus(); // Focus sur la div
+        }, 10);
     }
     
+    // MODIFICATION : Mise à jour pour vider le HTML
     function closeCrModal() {
-        crModalBox.classList.add('scale-95', 'opacity-0'); setTimeout(() => { crModal.classList.add('hidden'); crModalActiveIdInput.value = ''; crModalTextarea.value = ''; }, 200);
+        crModalBox.classList.add('scale-95', 'opacity-0'); 
+        setTimeout(() => { 
+            crModal.classList.add('hidden'); 
+            crModalActiveIdInput.value = ''; 
+            crModalContent.innerHTML = ''; // Vider le HTML
+        }, 200);
     }
     
     function updateCrCardCheckmark(crId, hasData) {
