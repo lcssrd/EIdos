@@ -1,9 +1,13 @@
-(function () {
-    // Sections principales
+(function() {
+    "use strict";
+
+    // URL de l'API (Backend sur Render)
+    const API_URL = 'https://eidos-api.onrender.com'; 
+
+    // --- Sélections DOM ---
     const loginSection = document.getElementById('login-section');
     const signupSection = document.getElementById('signup-section');
     const verifySection = document.getElementById('verify-section');
-
     // NOUVEAU : Sections Mot de passe oublié
     const forgotPasswordSection = document.getElementById('forgot-password-section');
     const resetPasswordSection = document.getElementById('reset-password-section');
@@ -14,9 +18,9 @@
     // NOUVEAU : Formulaires Mot de passe oublié
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const resetPasswordForm = document.getElementById('reset-password-form');
-
+    
     const resendCodeBtn = document.getElementById('resend-code-btn');
-
+    
     // Liens de navigation
     const showSignupLink = document.getElementById('show-signup-link');
     const showLoginLink1 = document.getElementById('show-login-link-1');
@@ -40,19 +44,19 @@
             selectedPlan = card.dataset.plan;
         });
     });
-
+    
     // --- Gestion du token d'invitation (Centre) ---
     let invitationToken = null;
-
+    
     function checkForInvitationToken() {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('invitation_token');
-        const emailParam = urlParams.get('email');
-
+        const emailParam = urlParams.get('email'); 
+        
         if (token) {
             invitationToken = token;
             console.log("Token d'invitation détecté :", invitationToken);
-
+            
             showSection(signupSection);
 
             if (emailParam) {
@@ -61,9 +65,9 @@
                     emailInput.value = decodeURIComponent(emailParam);
                 }
             }
-
+            
             const planSelectionContainer = document.querySelector('#signup-form .pt-2');
-
+            
             if (planSelectionContainer) {
                 planSelectionContainer.innerHTML = `
                     <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 text-center">
@@ -112,7 +116,7 @@
     if (signupForm) signupForm.addEventListener('submit', handleSignup);
     if (verifyForm) verifyForm.addEventListener('submit', handleVerify);
     if (resendCodeBtn) resendCodeBtn.addEventListener('click', handleResendCode);
-
+    
     // NOUVEAU : Listeners formulaires MDP
     if (forgotPasswordForm) forgotPasswordForm.addEventListener('submit', handleForgotPassword);
     if (resetPasswordForm) resetPasswordForm.addEventListener('submit', handleResetPassword);
@@ -122,12 +126,12 @@
      */
     async function handleLogin(e) {
         e.preventDefault();
-
+        
         const identifier = document.getElementById('login-identifier').value;
         const password = document.getElementById('login-password').value;
         const errorMsg = document.getElementById('login-error-message');
         const loginBtn = document.getElementById('login-btn');
-
+        
         errorMsg.classList.add('hidden');
         loginBtn.disabled = true;
         loginBtn.textContent = 'Connexion en cours...';
@@ -174,13 +178,13 @@
         errorMsg.classList.add('hidden');
         signupBtn.disabled = true;
         signupBtn.textContent = 'Inscription en cours...';
-
+        
         const requestBody = {
             email: email,
             password: password,
             plan: selectedPlan
         };
-
+        
         if (invitationToken) {
             requestBody.token = invitationToken;
         }
@@ -199,12 +203,12 @@
             }
 
             signupForm.reset();
-
+            
             if (data.verified) {
                 alert("Compte créé et validé avec succès ! Vous pouvez maintenant vous connecter.");
                 showSection(loginSection);
                 document.getElementById('login-identifier').value = email;
-
+                
                 if (invitationToken) {
                     window.history.replaceState({}, document.title, window.location.pathname);
                     invitationToken = null;
@@ -214,7 +218,7 @@
 
             document.getElementById('verify-email').value = email;
             document.getElementById('verify-email-display').textContent = email;
-
+            
             const testCodeDisplay = document.getElementById('test-code-display');
             if (data._test_code) {
                 testCodeDisplay.textContent = `(Code pour test : ${data._test_code})`;
@@ -235,7 +239,7 @@
             signupBtn.textContent = 'S\'inscrire';
         }
     }
-
+    
     /**
      * Vérification du code (AVEC REDIRECTION AUTO)
      */
@@ -269,7 +273,7 @@
             // --- MODIFICATION MAJEURE : Connexion automatique ---
             if (data.token) {
                 localStorage.setItem('authToken', data.token);
-
+                
                 successMsg.textContent = 'Compte vérifié ! Connexion en cours...';
                 successMsg.classList.remove('hidden');
                 document.getElementById('test-code-display').classList.add('hidden');
@@ -305,11 +309,11 @@
         const email = document.getElementById('verify-email').value;
         const messageEl = document.getElementById('resend-message');
         const btn = document.getElementById('resend-code-btn');
-
+        
         if (!email) {
-            messageEl.textContent = "Email manquant. Veuillez vous reconnecter.";
-            messageEl.className = "text-xs mt-2 h-4 text-red-600";
-            return;
+             messageEl.textContent = "Email manquant. Veuillez vous reconnecter.";
+             messageEl.className = "text-xs mt-2 h-4 text-red-600";
+             return;
         }
 
         btn.disabled = true;
@@ -381,7 +385,7 @@
             // Succès : on passe à l'étape suivante (saisie du code)
             successMsg.textContent = "Code envoyé ! Vérifiez votre boîte mail.";
             successMsg.classList.remove('hidden');
-
+            
             // Stocker l'email pour l'étape suivante
             document.getElementById('reset-email-hidden').value = email;
 
@@ -442,7 +446,7 @@
             btn.textContent = 'Réinitialiser';
         }
     }
-
+    
     // Vérification du hash au chargement
     function checkForHash() {
         if (window.location.hash === '#signup') {

@@ -1,4 +1,10 @@
 (function () {
+    "use strict";
+
+    const API_URL = 'https://eidos-api.onrender.com';
+    // MODIFIÉ : Suppression de la constante ADMIN_EMAIL
+
+    // --- AUTHENTIFICATION ---
 
     function getAuthToken() {
         const token = localStorage.getItem('authToken');
@@ -12,10 +18,7 @@
 
     function getAuthHeaders() {
         const token = getAuthToken();
-        if (!token) {
-            throw new Error("Token non trouvé, impossible de créer les headers.");
-        }
-
+        if (!token) throw new Error("Token non trouvé.");
         return {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -116,7 +119,7 @@
     let adminState = {
         organisations: [],
         independants: [],
-        selectedOrgId: null,
+        selectedOrgId: null, 
         selectedUserId: null,
         selectedUserEmail: null
     };
@@ -124,9 +127,9 @@
     function initAdminInterface() {
         const adminTabBtn = document.getElementById('tab-admin');
         const adminContent = document.getElementById('content-admin');
-
+        
         adminTabBtn.style.display = 'flex';
-
+        
         tabButtons.admin = adminTabBtn;
         tabContents.admin = adminContent;
 
@@ -158,18 +161,18 @@
 
     async function loadAdminStructure() {
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/admin/structure`, { headers: getAuthHeaders() });
+            const response = await fetch(`${API_URL}/api/admin/structure`, { headers: getAuthHeaders() });
             if (!response.ok) throw new Error("Erreur chargement structure");
             const data = await response.json();
-
+            
             adminState.organisations = data.organisations;
             adminState.independants = data.independants;
-
+            
             renderAdminCol1();
             document.getElementById('admin-list-trainers').innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Sélectionnez un centre...</p>';
             document.getElementById('admin-list-students').innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Sélectionnez un formateur...</p>';
             document.getElementById('admin-user-actions').style.display = 'none';
-
+            
         } catch (err) {
             showCustomAlert("Erreur Admin", err.message);
         }
@@ -201,14 +204,14 @@
         container.innerHTML = html;
     }
 
-    window.handleAdminSelectOrg = async function (idOrType, el) {
+    window.handleAdminSelectOrg = async function(idOrType, el) {
         document.querySelectorAll('#admin-list-orgs .miller-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
 
         adminState.selectedOrgId = idOrType;
         const trainersContainer = document.getElementById('admin-list-trainers');
         trainersContainer.innerHTML = '<p class="p-4 text-sm text-gray-500">Chargement...</p>';
-        document.getElementById('admin-list-students').innerHTML = '';
+        document.getElementById('admin-list-students').innerHTML = ''; 
         document.getElementById('admin-user-actions').style.display = 'none';
 
         let usersToDisplay = [];
@@ -217,7 +220,7 @@
             usersToDisplay = adminState.independants;
         } else {
             try {
-                const response = await fetch(`${CONFIG.API_URL}/api/admin/centre/${idOrType}/formateurs`, { headers: getAuthHeaders() });
+                const response = await fetch(`${API_URL}/api/admin/centre/${idOrType}/formateurs`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error("Erreur chargement formateurs");
                 usersToDisplay = await response.json();
             } catch (err) {
@@ -256,7 +259,7 @@
             const isOwner = u.is_owner;
             const icon = isOwner ? '<i class="fas fa-crown text-yellow-500 mr-2" title="Propriétaire"></i>' : '<i class="fas fa-user mr-2 text-gray-400"></i>';
             const roleLabel = isOwner ? 'Propriétaire' : (u.role === 'formateur' ? 'Formateur' : 'Utilisateur');
-
+            
             // Récupération du plan (par défaut 'free' si non défini)
             const userPlan = u.subscription || 'free';
             const planBadge = getPlanBadge(userPlan);
@@ -266,7 +269,7 @@
                     <div class="flex-1 min-w-0">
                         <div class="font-medium text-sm truncate flex items-center" title="${u.email}">
                             ${icon}
-                            <span class="truncate">${DOMPurify.sanitize(u.email)}</span>
+                            <span class="truncate">${u.email}</span>
                         </div>
                         <div class="text-xs text-gray-500 flex items-center mt-1">
                             ${roleLabel}
@@ -280,7 +283,7 @@
         container.innerHTML = html;
     }
 
-    window.handleAdminSelectTrainer = async function (userId, userEmail, el) {
+    window.handleAdminSelectTrainer = async function(userId, userEmail, el) {
         document.querySelectorAll('#admin-list-trainers .miller-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
 
@@ -295,7 +298,7 @@
         studentsContainer.innerHTML = '<p class="p-4 text-sm text-gray-500">Chargement...</p>';
 
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/admin/creator/${userId}/students`, { headers: getAuthHeaders() });
+            const response = await fetch(`${API_URL}/api/admin/creator/${userId}/students`, { headers: getAuthHeaders() });
             if (!response.ok) throw new Error("Erreur chargement étudiants");
             const students = await response.json();
             renderAdminCol3(students);
@@ -316,7 +319,7 @@
             html += `
                 <div class="miller-item" onclick="handleAdminSelectStudent('${s._id}', '${s.login}', this)">
                     <div>
-                        <div class="font-medium text-sm"><i class="fas fa-graduation-cap mr-2 text-gray-400"></i>${DOMPurify.sanitize(s.login)}</div>
+                        <div class="font-medium text-sm"><i class="fas fa-graduation-cap mr-2 text-gray-400"></i>${s.login}</div>
                     </div>
                 </div>
             `;
@@ -324,13 +327,13 @@
         container.innerHTML = html;
     }
 
-    window.handleAdminSelectStudent = function (userId, login, el) {
+    window.handleAdminSelectStudent = function(userId, login, el) {
         document.querySelectorAll('#admin-list-students .miller-item').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
-
+        
         adminState.selectedUserId = userId;
         adminState.selectedUserEmail = `Étudiant: ${login}`;
-
+        
         document.getElementById('admin-selected-user-email').textContent = adminState.selectedUserEmail;
         document.getElementById('admin-user-actions').style.display = 'flex';
     };
@@ -342,14 +345,14 @@
             `ADMIN: Êtes-vous sûr de vouloir supprimer l'utilisateur ${adminState.selectedUserEmail} et TOUTES ses données associées ?`,
             async () => {
                 try {
-                    const response = await fetch(`${CONFIG.API_URL}/api/admin/user/${adminState.selectedUserId}`, {
+                    const response = await fetch(`${API_URL}/api/admin/user/${adminState.selectedUserId}`, {
                         method: 'DELETE',
                         headers: getAuthHeaders()
                     });
                     if (!response.ok) throw new Error("Erreur lors de la suppression");
-
+                    
                     showCustomAlert("Succès", "Utilisateur supprimé.");
-                    loadAdminStructure();
+                    loadAdminStructure(); 
                 } catch (err) {
                     showCustomAlert("Erreur", err.message);
                 }
@@ -362,7 +365,7 @@
         tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">Chargement...</td></tr>';
 
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/admin/patients`, { headers: getAuthHeaders() });
+            const response = await fetch(`${API_URL}/api/admin/patients`, { headers: getAuthHeaders() });
             if (!response.ok) throw new Error("Impossible de charger les patients");
             const patients = await response.json();
 
@@ -375,14 +378,14 @@
             patients.forEach(p => {
                 const creator = p.user ? (p.user.email || p.user.login || 'Inconnu') : 'Supprimé';
                 const isPublic = p.isPublic;
-
+                
                 html += `
                     <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                             ${isPublic ? '<i class="fas fa-globe text-yellow-500 mr-2" title="Public"></i>' : ''}
-                            ${DOMPurify.sanitize(p.sidebar_patient_name)}
+                            ${p.sidebar_patient_name}
                         </td>
-                        <td class="px-6 py-4">${DOMPurify.sanitize(creator)}</td>
+                        <td class="px-6 py-4">${creator}</td>
                         <td class="px-6 py-4 text-center">
                             <label class="inline-flex relative items-center cursor-pointer">
                                 <input type="checkbox" class="sr-only peer toggle-checkbox" 
@@ -406,10 +409,10 @@
         }
     }
 
-    window.handleAdminTogglePublic = async function (patientId, checkbox) {
-        const originalState = !checkbox.checked;
+    window.handleAdminTogglePublic = async function(patientId, checkbox) {
+        const originalState = !checkbox.checked; 
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/admin/patients/${patientId}/public`, {
+            const response = await fetch(`${API_URL}/api/admin/patients/${patientId}/public`, {
                 method: 'PUT',
                 headers: getAuthHeaders()
             });
@@ -420,17 +423,17 @@
         }
     };
 
-    window.handleAdminDeletePatient = function (patientId, name) {
+    window.handleAdminDeletePatient = function(patientId, name) {
         showDeleteConfirmation(
             `ADMIN: Supprimer définitivement le dossier "${name}" ?`,
             async () => {
                 try {
-                    const response = await fetch(`${CONFIG.API_URL}/api/admin/patients/${patientId}`, {
+                    const response = await fetch(`${API_URL}/api/admin/patients/${patientId}`, {
                         method: 'DELETE',
                         headers: getAuthHeaders()
                     });
                     if (!response.ok) throw new Error("Erreur suppression");
-                    loadAdminPatients();
+                    loadAdminPatients(); 
                 } catch (err) {
                     showCustomAlert("Erreur", err.message);
                 }
@@ -449,7 +452,7 @@
             const headers = getAuthHeaders();
             delete headers['Content-Type'];
 
-            const response = await fetch(`${CONFIG.API_URL}/api/account/details`, { headers });
+            const response = await fetch(`${API_URL}/api/account/details`, { headers });
             if (handleAuthError(response)) return;
             if (!response.ok) throw new Error("Impossible de charger les détails.");
 
@@ -522,28 +525,28 @@
             'promo': { badge: ['bg-blue-600', 'text-white'], border: 'border-blue-600' },
             'centre': { badge: ['bg-indigo-600', 'text-white'], border: 'border-indigo-600' }
         };
-
+        
         Object.keys(buttons).forEach(plan => {
             const btn = buttons[plan];
-            if (!btn) return;
+            if(!btn) return;
             const card = btn.closest('.card');
             const badge = card.querySelector('.js-active-plan-badge');
 
             card.classList.remove('shadow-xl', 'border-2', styles[plan].border);
             card.classList.add('hover:scale-[1.02]', 'hover:shadow-xl');
-
+            
             badge.classList.add('hidden');
             badge.classList.remove(...styles[plan].badge);
 
             btn.disabled = false;
             btn.innerHTML = 'Choisir ce plan';
-            btn.className = btn.className.replace(/cursor-not-allowed|bg-.*-100|text-.*-800|opacity-75/g, '');
-
+            btn.className = btn.className.replace(/cursor-not-allowed|bg-.*-100|text-.*-800|opacity-75/g, ''); 
+            
             if (plan === 'centre') {
-                btn.classList.add('bg-gray-200', 'text-gray-700');
-                btn.classList.remove('bg-indigo-600', 'text-white');
+                 btn.classList.add('bg-gray-200', 'text-gray-700');
+                 btn.classList.remove('bg-indigo-600', 'text-white');
             } else {
-                btn.classList.remove('cursor-not-allowed');
+                 btn.classList.remove('cursor-not-allowed');
             }
         });
 
@@ -552,26 +555,26 @@
             const card = btn.closest('.card');
             const badge = card.querySelector('.js-active-plan-badge');
             const planStyle = styles[activePlan];
-
+            
             card.classList.add('shadow-xl', 'border-2', planStyle.border);
             card.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl');
-
+            
             badge.classList.remove('hidden');
             badge.classList.add(...planStyle.badge);
-
+            
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-check mr-2"></i> Plan actuel';
             btn.classList.add('cursor-not-allowed', 'opacity-75');
         }
-
+        
         const centerBtn = buttons['centre'];
-        if (activePlan === 'centre' && quoteUrl) {
-            centerBtn.innerHTML = `Activer devis (${quotePrice})`;
-            centerBtn.onclick = () => window.location.href = quoteUrl;
-            centerBtn.disabled = false;
-            centerBtn.classList.remove('cursor-not-allowed', 'opacity-75');
+        if(activePlan === 'centre' && quoteUrl) {
+             centerBtn.innerHTML = `Activer devis (${quotePrice})`;
+             centerBtn.onclick = () => window.location.href = quoteUrl;
+             centerBtn.disabled = false;
+             centerBtn.classList.remove('cursor-not-allowed', 'opacity-75');
         } else if (activePlan !== 'centre') {
-            centerBtn.onclick = () => switchTab('contact');
+             centerBtn.onclick = () => switchTab('contact');
         }
     }
 
@@ -579,9 +582,9 @@
     function renderCentreDetails(organisation) {
         document.getElementById('centre-plan-name').textContent = `Plan ${organisation.plan} ("${organisation.name}")`;
         document.getElementById('centre-plan-details').textContent = `Licences formateur utilisées : ${organisation.licences_utilisees} / ${organisation.licences_max || 'Illimitées'}`;
-
+        
         const listContainer = document.getElementById('formateurs-list-container');
-
+        
         // Protection contre l'erreur "Cannot read properties of null (reading 'style')"
         const loadingEl = document.getElementById('formateurs-loading');
         if (loadingEl) {
@@ -595,7 +598,7 @@
             html += `<div class="mb-4">
                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Invitations en attente</h4>
                 <div class="space-y-2">`;
-
+            
             html += organisation.invitations.map(inv => `
                 <div class="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-200 rounded-md">
                     <div class="flex items-center">
@@ -610,13 +613,13 @@
                     </button>
                 </div>
             `).join('');
-
+            
             html += `</div></div>`;
         }
 
         // 2. Affichage des formateurs actifs
         html += `<h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Formateurs actifs</h4>`;
-
+        
         if (!organisation.formateurs || organisation.formateurs.length === 0) {
             html += '<p class="text-sm text-gray-500 italic">Aucun formateur actif.</p>';
         } else {
@@ -632,72 +635,41 @@
                 </div>
             `).join('') + `</div>`;
         }
-
+        
         listContainer.innerHTML = html;
     }
 
     function renderStudentTable(students) {
         const tbody = document.getElementById('permissions-tbody');
-        if (!tbody) return;
-
-        if (!students || students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">Aucun étudiant</td></tr>';
-            studentCount = 0;
+        document.getElementById('student-list-title').textContent = `Gestion des étudiants (${students.length})`;
+        
+        if (students.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="15" class="p-4 text-center text-gray-500">Aucun étudiant.</td></tr>`;
             return;
         }
 
-        studentCount = students.length;
+        const permissionsList = ['header', 'admin', 'vie', 'observations', 'comptesRendus', 'prescriptions_add', 'prescriptions_delete', 'prescriptions_validate', 'transmissions', 'pancarte', 'diagramme', 'biologie'];
+        
         let html = '';
-
         students.forEach(student => {
-            const rooms = student.rooms || [];
-            const roomsCount = rooms.length;
-            const roomsData = JSON.stringify(rooms).replace(/"/g, '&quot;');
-
-            html += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        ${DOMPurify.sanitize(student.login)}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ••••••••
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div class="flex space-x-2">
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-teal-600"
-                                    data-login="${DOMPurify.sanitize(student.login)}" data-permission="read"
-                                    ${student.permissions?.read ? 'checked' : ''}>
-                                <span class="ml-2">Lecture</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" class="form-checkbox h-4 w-4 text-teal-600"
-                                    data-login="${DOMPurify.sanitize(student.login)}" data-permission="write"
-                                    ${student.permissions?.write ? 'checked' : ''}>
-                                <span class="ml-2">Écriture</span>
-                            </label>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button class="manage-rooms-btn text-indigo-600 hover:text-indigo-900"
-                            data-login="${DOMPurify.sanitize(student.login)}"
-                            data-name="${DOMPurify.sanitize(student.login)}"
-                            data-rooms="${roomsData}">
-                            Gérer (${roomsCount}/10)
-                        </button>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button class="delete-student-btn text-red-600 hover:text-red-900"
-                            data-login="${DOMPurify.sanitize(student.login)}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+            html += `<tr><td class="p-2 font-medium align-middle">${student.login}</td>`;
+            permissionsList.forEach(perm => {
+                const isChecked = student.permissions && student.permissions[perm];
+                html += `<td class="p-2 text-center align-middle">
+                           <label class="relative inline-flex items-center cursor-pointer">
+                             <input type="checkbox" class="sr-only peer" data-login="${student.login}" data-permission="${perm}" ${isChecked ? 'checked' : ''}>
+                             <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                           </label>
+                         </td>`;
+            });
+            const roomCount = (student.allowedRooms || []).length;
+            html += `<td class="p-2 text-center align-middle"><button type="button" class="manage-rooms-btn text-sm text-indigo-600 hover:underline" data-login="${student.login}" data-name="${student.login}" data-rooms='${JSON.stringify(student.allowedRooms || [])}'>Gérer (${roomCount})</button></td>`;
+            html += `<td class="p-2 text-center align-middle"><button data-login="${student.login}" class="delete-student-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr>`;
         });
-
         tbody.innerHTML = html;
     }
+
+    // --- HANDLERS ---
 
     function generateRandomString(length) {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -710,7 +682,7 @@
         e.preventDefault();
         const email = document.getElementById('invite-email').value;
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/organisation/invite`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
+            const response = await fetch(`${API_URL}/api/organisation/invite`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
             if (!response.ok) throw new Error((await response.json()).error);
             showCustomAlert("Succès", "Invitation envoyée.");
             loadAccountDetails();
@@ -721,11 +693,11 @@
         e.preventDefault();
         const login = document.getElementById('student-login').value;
         const password = document.getElementById('student-password').value;
-        if (currentPlan === 'independant' && studentCount >= 5) return showCustomAlert("Limite", "5 étudiants max.");
-        if (currentPlan === 'promo' && studentCount >= 40) return showCustomAlert("Limite", "40 étudiants max.");
+        if(currentPlan === 'independant' && studentCount >= 5) return showCustomAlert("Limite", "5 étudiants max.");
+        if(currentPlan === 'promo' && studentCount >= 40) return showCustomAlert("Limite", "40 étudiants max.");
 
         try {
-            const response = await fetch(`${CONFIG.API_URL}/api/account/invite`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ login, password }) });
+            const response = await fetch(`${API_URL}/api/account/invite`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ login, password }) });
             if (!response.ok) throw new Error((await response.json()).error);
             showCustomAlert("Succès", `Étudiant ${login} créé.`);
             document.getElementById('create-student-form').reset();
@@ -736,13 +708,15 @@
     async function handleDeleteAccount() {
         showDeleteConfirmation("Supprimer définitivement votre compte ?", async () => {
             try {
-                const response = await fetch(`${CONFIG.API_URL}/api/account/delete`, { method: 'DELETE', headers: getAuthHeaders() });
+                const response = await fetch(`${API_URL}/api/account/delete`, { method: 'DELETE', headers: getAuthHeaders() });
                 if (!response.ok) throw new Error("Erreur");
                 localStorage.clear();
                 window.location.href = 'auth.html';
             } catch (err) { showCustomAlert("Erreur", err.message); }
         });
     }
+
+    // --- GESTION MODALE CHAMBRES (RESTAURÉE) ---
 
     function hideRoomModal() {
         roomModalBox.classList.add('scale-95', 'opacity-0');
@@ -764,7 +738,8 @@
             const roomId = `chambre_${i}`;
             const isChecked = rooms.includes(roomId);
             roomCheckboxesHTML += `
-                <label class="flex items-center space-x-2 p-2 border rounded-md ${isChecked ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50'} cursor-pointer hover:bg-gray-100 transition-colors">
+                <label class="flex items-center space-x-2 p-2 border rounded-md ${isChecked ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50'
+                } cursor-pointer hover:bg-gray-100 transition-colors">
                     <input type="checkbox" name="room" value="${roomId}" ${isChecked ? 'checked' : ''} class="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4">
                     <span class="font-medium text-sm">${i}</span>
                 </label>
@@ -787,7 +762,7 @@
 
         try {
             const headers = getAuthHeaders();
-            const response = await fetch(`${CONFIG.API_URL}/api/account/student/rooms`, {
+            const response = await fetch(`${API_URL}/api/account/student/rooms`, {
                 method: 'PUT',
                 headers: headers,
                 body: JSON.stringify({ login: login, rooms: selectedRooms })
@@ -813,13 +788,15 @@
         }
     }
 
+    // --- INIT ---
+
     function init() {
         if (!getAuthToken()) return;
 
         ['security', 'subscription', 'centre', 'invitations', 'contact'].forEach(tab => {
             const btn = document.getElementById(`tab-${tab}`);
             const content = document.getElementById(`content-${tab}`);
-            if (btn && content) {
+            if(btn && content) {
                 tabButtons[tab] = btn;
                 tabContents[tab] = content;
                 btn.addEventListener('click', () => switchTab(tab));
@@ -834,36 +811,32 @@
         roomModalForm = document.getElementById('room-modal-form');
         roomModalList = document.getElementById('room-modal-list');
         roomModalTitle = document.getElementById('room-modal-title');
-        roomModalLoginInput = document.getElementById('room-modal-login-input');
+        roomModalLoginInput = document.getElementById('room-modal-login');
 
-        if (roomModalForm) {
-            roomModalForm.addEventListener('submit', handleSaveStudentRooms);
-        }
-        document.getElementById('room-modal-close').addEventListener('click', hideRoomModal);
+        // Écouteurs modale chambres
         document.getElementById('room-modal-cancel').addEventListener('click', hideRoomModal);
+        roomModalForm.addEventListener('submit', handleSaveStudentRooms);
 
-        initAdminInterface();
-
-        // --- Écouteurs ---
+        // Autres écouteurs
         document.getElementById('change-password-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const cur = document.getElementById('current-password').value;
             const neu = document.getElementById('new-password').value;
             const conf = document.getElementById('confirm-password').value;
-            if (neu !== conf) return showCustomAlert("Erreur", "Mots de passe différents");
+            if(neu !== conf) return showCustomAlert("Erreur", "Mots de passe différents");
             try {
-                const res = await fetch(`${CONFIG.API_URL}/api/account/change-password`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ currentPassword: cur, newPassword: neu }) });
-                if (!res.ok) throw new Error();
+                const res = await fetch(`${API_URL}/api/account/change-password`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ currentPassword: cur, newPassword: neu }) });
+                if(!res.ok) throw new Error();
                 showCustomAlert("Succès", "Mot de passe changé.");
                 e.target.reset();
-            } catch (err) { showCustomAlert("Erreur", "Erreur changement mot de passe"); }
+            } catch(err) { showCustomAlert("Erreur", "Erreur changement mot de passe"); }
         });
 
         document.getElementById('delete-account-btn').addEventListener('click', handleDeleteAccount);
         document.getElementById('invite-formateur-form').addEventListener('submit', handleInviteFormateur);
         document.getElementById('create-student-form').addEventListener('submit', handleCreateStudent);
         document.getElementById('generate-credentials-btn').addEventListener('click', () => {
-            document.getElementById('student-login').value = `etu${Math.floor(Math.random() * 9000) + 1000}`;
+            document.getElementById('student-login').value = `etu${Math.floor(Math.random()*9000)+1000}`;
             document.getElementById('student-password').value = generateRandomString(8);
         });
 
@@ -875,7 +848,7 @@
                 const email = removeBtn.dataset.email;
                 showDeleteConfirmation(`Retirer le formateur ${email} du centre ?\nIl repassera en compte "Free" indépendant.`, async () => {
                     try {
-                        await fetch(`${CONFIG.API_URL}/api/organisation/remove`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
+                        await fetch(`${API_URL}/api/organisation/remove`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
                         loadAccountDetails();
                         showCustomAlert("Succès", "Formateur retiré.");
                     } catch (err) { showCustomAlert("Erreur", "Impossible de retirer le formateur."); }
@@ -888,17 +861,17 @@
             if (deleteInviteBtn) {
                 const id = deleteInviteBtn.dataset.id;
                 const email = deleteInviteBtn.dataset.email;
-
-                if (!confirm(`Annuler l'invitation pour ${email} ?`)) return;
+                
+                if(!confirm(`Annuler l'invitation pour ${email} ?`)) return;
 
                 try {
-                    const res = await fetch(`${CONFIG.API_URL}/api/organisation/invite/${id}`, {
-                        method: 'DELETE',
-                        headers: getAuthHeaders()
+                    const res = await fetch(`${API_URL}/api/organisation/invite/${id}`, { 
+                        method: 'DELETE', 
+                        headers: getAuthHeaders() 
                     });
-
+                    
                     if (!res.ok) throw new Error();
-
+                    
                     // Recharger pour mettre à jour la liste
                     loadAccountDetails();
                 } catch (err) {
@@ -908,25 +881,25 @@
         });
 
         document.getElementById('permissions-tbody').addEventListener('change', async (e) => {
-            if (e.target.type === 'checkbox') {
+            if(e.target.type === 'checkbox') {
                 const { login, permission } = e.target.dataset;
                 try {
-                    await fetch(`${CONFIG.API_URL}/api/account/permissions`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ login, permission, value: e.target.checked }) });
-                } catch (err) { e.target.checked = !e.target.checked; }
+                    await fetch(`${API_URL}/api/account/permissions`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ login, permission, value: e.target.checked }) });
+                } catch(err) { e.target.checked = !e.target.checked; }
             }
         });
 
         document.getElementById('permissions-tbody').addEventListener('click', async (e) => {
             // Supprimer étudiant
-            if (e.target.closest('.delete-student-btn')) {
+            if(e.target.closest('.delete-student-btn')) {
                 const login = e.target.closest('.delete-student-btn').dataset.login;
                 showDeleteConfirmation(`Supprimer étudiant ${login} ?`, async () => {
-                    await fetch(`${CONFIG.API_URL}/api/account/student`, { method: 'DELETE', headers: getAuthHeaders(), body: JSON.stringify({ login }) });
+                    await fetch(`${API_URL}/api/account/student`, { method: 'DELETE', headers: getAuthHeaders(), body: JSON.stringify({ login }) });
                     loadAccountDetails();
                 });
                 return;
             }
-
+            
             // Gérer les chambres (Bouton restauré)
             const manageRoomsBtn = e.target.closest('.manage-rooms-btn');
             if (manageRoomsBtn) {
