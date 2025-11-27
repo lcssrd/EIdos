@@ -1,4 +1,9 @@
 (function () {
+    // Sections principales
+    const loginSection = document.getElementById('login-section');
+    const signupSection = document.getElementById('signup-section');
+    const verifySection = document.getElementById('verify-section');
+
     // NOUVEAU : Sections Mot de passe oublié
     const forgotPasswordSection = document.getElementById('forgot-password-section');
     const resetPasswordSection = document.getElementById('reset-password-section');
