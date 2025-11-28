@@ -23,7 +23,7 @@
         // ÉTAPE 1 : INTRODUCTION
         {
             element: '#sidebar > div:first-child', 
-            text: "Bienvenue dans le tutoriel EIdos !\n\nNous allons parcourir ensemble les fonctionnalités principales de l'interface. \nCliquez sur 'Suivant' pour commencer.",
+            text: "Bienvenue dans le tutoriel EIdos-simul !\n\nNous allons parcourir ensemble les fonctionnalités principales de l'interface. \nCliquez sur 'Suivant' pour commencer.",
             position: 'right'
         },
         // ÉTAPE 2 : SIDEBAR
@@ -111,7 +111,7 @@
         // FIN
         {
             element: '#sidebar > div:first-child',
-            text: "C'est terminé !\n\nVous connaissez maintenant les bases d'EIdos. À vous de jouer !",
+            text: "C'est terminé !\n\nVous connaissez maintenant les bases d'EIdos-simul. À vous de jouer !",
             position: 'right'
         }
     ];
