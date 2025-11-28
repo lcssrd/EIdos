@@ -11,11 +11,12 @@
         uiService.setupModalListeners(); // Configure les boutons "OK/Annuler" des modales
 
         // 2. Initialiser le service patient (permissions, liste des patients, patient actif)
+        // Note : initialize() utilise maintenant fetchWithCredentials pour s'authentifier via Cookie
         const initialized = await patientService.initialize();
         
-        // 3. Si l'initialisation échoue (ex: étudiant sans chambre), arrêter ici.
+        // 3. Si l'initialisation échoue (ex: étudiant sans chambre ou non connecté), arrêter ici.
         if (!initialized) {
-            console.warn("Initialisation du patientService arrêtée (ex: étudiant sans chambre).");
+            console.warn("Initialisation du patientService arrêtée.");
             // Les écouteurs de base (logout, etc.) sont quand même attachés
             setupBaseEventListeners();
             return;
@@ -29,9 +30,7 @@
         uiService.changeTab(activeTabId);
         
         // 6. Démarrer le tutoriel si c'est la première visite
-        // Vérifie si le flag 'tutorialCompleted' est absent du localStorage
         if (!localStorage.getItem('tutorialCompleted')) {
-            // Petit délai pour s'assurer que l'interface est bien chargée visuellement
             setTimeout(() => uiService.startTutorial(), 1000);
         }
     }
@@ -40,12 +39,17 @@
      * Configure les écouteurs de base (toujours actifs, même si l'init échoue).
      */
     function setupBaseEventListeners() {
-        document.getElementById('logout-btn')?.addEventListener('click', () => {
-            localStorage.removeItem('authToken');
+        // [MODIFIÉ] Gestion de la déconnexion
+        document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            // 1. Nettoyage des préférences UI locales
             localStorage.removeItem('activePatientId');
             localStorage.removeItem('activeTab');
-            // On ne supprime PAS 'tutorialCompleted' pour ne pas spammer l'utilisateur au prochain login
-            window.location.href = 'auth.html';
+            // Note: On ne touche pas à 'isLoggedIn', c'est apiService.logout() qui s'en charge
+            
+            // 2. Appel au service pour déconnexion serveur (Suppression du Cookie) et redirection
+            await apiService.logout(); 
         });
 
         document.getElementById('account-management-btn')?.addEventListener('click', (e) => {
@@ -67,7 +71,6 @@
         
         // --- Header (Sauvegarde, Chargement, etc.) ---
         
-        // Bouton Tuto : Lance le tutoriel manuellement
         document.getElementById('start-tutorial-btn').addEventListener('click', () => uiService.startTutorial());
         
         document.getElementById('clear-all-data-btn').addEventListener('click', patientService.clearAllPatients);
@@ -81,7 +84,6 @@
 
         // --- Importation de fichier (Restriction Super Admin) ---
         document.getElementById('import-json-btn').addEventListener('click', () => {
-            // Seul le Super Admin peut importer
             if (patientService.getUserPermissions().isSuperAdmin) {
                 document.getElementById('import-file').click();
             } else {
@@ -102,7 +104,7 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Permet de ré-importer le même fichier
+            event.target.value = ''; 
         });
         
         // --- Navigation (Onglets & Patients) ---
@@ -125,14 +127,13 @@
         mainContent.addEventListener('input', patientService.debouncedSave);
         mainContent.addEventListener('change', patientService.debouncedSave);
 
-        // Ajoute la sauvegarde automatique pour l'en-tête patient
         const headerForm = document.getElementById('patient-header-form');
         if (headerForm) {
             headerForm.addEventListener('input', patientService.debouncedSave);
             headerForm.addEventListener('change', patientService.debouncedSave);
         }
 
-        // --- Mises à jour auto de l'UI (Header & Vie) ---
+        // --- Mises à jour auto de l'UI ---
         document.getElementById('patient-entry-date').addEventListener('input', () => {
             uiService.updateJourHosp();
             uiService.refreshAllRelativeDates();
@@ -140,20 +141,16 @@
         document.getElementById('patient-dob').addEventListener('input', uiService.updateAgeDisplay);
         document.getElementById('admin-dob').addEventListener('input', uiService.updateAgeDisplay);
 
-        // Active la synchronisation entre les champs du header et de l'onglet admin
         uiService.setupSync();
         
         document.getElementById('vie-poids').addEventListener('input', uiService.calculateAndDisplayIMC);
         document.getElementById('vie-taille').addEventListener('input', uiService.calculateAndDisplayIMC);
 
-        // --- Ajout d'entrées (Observations, Transmissions, etc.) ---
+        // --- Ajout d'entrées ---
         document.getElementById('add-observation-btn').addEventListener('click', () => {
             const data = uiService.readObservationForm();
             if (data) {
                 uiService.addObservation(data, false);
-                // Note: L'observation est le seul qui ne sauvegarde pas auto (choix design), 
-                // sauf si vous décommentez la ligne suivante :
-                // patientService.debouncedSave(); 
             }
         });
         document.getElementById('add-transmission-btn').addEventListener('click', () => {
@@ -182,7 +179,7 @@
         document.getElementById('sort-observations-btn').addEventListener('click', () => uiService.toggleSort('observations'));
         document.getElementById('sort-transmissions-btn').addEventListener('click', () => uiService.toggleSort('transmissions'));
 
-        // --- Suppression d'entrées (Listes) ---
+        // --- Suppression d'entrées ---
         document.getElementById('observations-list').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
             if (deleteBtn && !patientService.getUserPermissions().isStudent) {
@@ -199,8 +196,6 @@
                 });
             }
         });
-        
-        // --- Suppression d'entrées (Tables) ---
         document.getElementById('prescription-tbody').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
             if (deleteBtn && !patientService.getUserPermissions().isStudent) {
@@ -218,26 +213,23 @@
             }
         });
         
-        // --- Pancarte (Graphique) ---
+        // --- Pancarte ---
         document.getElementById('pancarte-tbody').addEventListener('change', (e) => {
             if (e.target.tagName === 'INPUT') uiService.updatePancarteChart();
         });
         
-        // --- Logique Comptes Rendus (CR) ---
+        // --- Logique Comptes Rendus ---
         document.getElementById('cr-card-grid').addEventListener('click', (e) => {
             const card = e.target.closest('.cr-card');
             if (!card) return;
-            
             const crId = card.dataset.crId;
             const crTitle = card.dataset.crTitle;
             const crText = patientService.getCrText(crId);
-            
             uiService.openCrModal(crId, crTitle, crText);
         });
         
         document.getElementById('cr-modal-save-btn').addEventListener('click', () => {
             const crId = document.getElementById('cr-modal-active-id').value;
-            // MODIFICATION ICI : On récupère innerHTML au lieu de value
             const crText = document.getElementById('cr-modal-content').innerHTML;
             patientService.handleCrModalSave(crId, crText);
         });
@@ -246,11 +238,9 @@
         document.addEventListener('mousedown', uiService.handleIVMouseDown);
         document.addEventListener('mousemove', uiService.handleIVMouseMove);
         document.addEventListener('mouseup', uiService.handleIVMouseUp);
-        
-        // Écouteur personnalisé pour déclencher une sauvegarde (utilisé par les barres IV)
         document.addEventListener('uiNeedsSave', patientService.debouncedSave);
 
-        // --- Tutoriel (Overlay & Navigation) ---
+        // --- Tutoriel ---
         document.getElementById('tutorial-overlay').addEventListener('click', () => uiService.endTutorial(true));
         document.getElementById('tutorial-step-box').addEventListener('click', (e) => e.stopPropagation());
         document.getElementById('tutorial-skip-btn').addEventListener('click', () => uiService.endTutorial(true));
