@@ -4,7 +4,6 @@
     let pancarteChartInstance;
     let loadPatientModal, loadPatientBox, loadPatientListContainer;
     let confirmModal, confirmModalBox, confirmTitle, confirmMessage, confirmCancelBtn, confirmOkBtn;
-    // MODIFICATION : Remplacement de crModalTextarea par crModalContent
     let crModal, crModalBox, crModalTitle, crModalContent, crModalSaveBtn, crModalCloseBtn, crModalActiveIdInput;
     let saveStatusButton, saveStatusIcon, saveStatusText;
     let toastElement, toastIcon, toastText;
@@ -20,74 +19,56 @@
     // --- DONNÉES DU TUTORIEL ---
     
     const tutorialStepsSimul = [
-        // ÉTAPE 1 : INTRODUCTION
         {
             element: '#sidebar > div:first-child', 
             text: "Bienvenue dans le tutoriel EIdos-simul !\n\nNous allons parcourir ensemble les fonctionnalités principales de l'interface. \nCliquez sur 'Suivant' pour commencer.",
             position: 'right'
         },
-        // ÉTAPE 2 : SIDEBAR
         {
             element: '#sidebar', 
             text: "La Barre Latérale.\n\nC'est ici que s'affichent vos patients (les chambres). Cliquez sur un patient pour charger son dossier et commencer à travailler dessus.",
             position: 'right'
         },
-        
-        // --- DÉTAIL DU HEADER ---
-        
-        // ÉTAPE 3 : SYNCHRONISATION
         {
             element: '#save-status-button',
             text: "Synchronisation.\n\nCe badge indique si vos données sont enregistrées. La sauvegarde est automatique, mais vous pouvez cliquer dessus pour forcer une synchronisation manuelle si besoin.",
             position: 'bottom'
         },
-        // ÉTAPE 4 : SAUVEGARDE (ARCHIVAGE) -> Sera sauté si étudiant/free
         {
             element: '#save-patient-btn',
             text: "Archiver le Cas.\n\nSauvegardez l'état exact du dossier actuel dans vos archives. C'est idéal pour créer et conserver vos scénarios pédagogiques.",
             position: 'bottom'
         },
-        // ÉTAPE 5 : CHARGEMENT -> Sera sauté si étudiant/free
         {
             element: '#load-patient-btn',
             text: "Charger un Cas.\n\nOuvre votre bibliothèque. Vous pouvez y choisir un dossier archivé (ou un cas public) pour l'installer dans la chambre actuelle.",
             position: 'bottom'
         },
-        // ÉTAPE 6 : EFFACEMENT LOCAL -> Sera sauté si étudiant
         {
             element: '#clear-current-patient-btn',
             text: "Remise à Zéro.\n\nAttention : ce bouton efface intégralement le contenu du dossier que vous consultez actuellement. Les autres chambres ne sont pas affectées.",
             position: 'bottom'
         },
-
-        // --- SUITE DU TUTO ---
-
-        // ÉTAPE 7 : EN-TÊTE PATIENT
         {
             element: '#patient-header-form',
             text: "L'Identité du Patient.\n\nRemplissez ces champs (Nom, Prénom, Date d'entrée) dès le début. La Date d'Entrée est cruciale pour le calcul automatique des jours (J0, J1...).",
             position: 'bottom'
         },
-        // ÉTAPE 8 : NAVIGATION ONGLETS
         {
             element: '#tabs-nav-container',
             text: "Le Dossier Patient.\n\nNaviguez à travers les différentes sections du DPI : Administratif, Prescriptions, Transmissions, Résultats de biologie, etc.",
             position: 'bottom'
         },
-        // ÉTAPE 9 : PRESCRIPTIONS
         {
             element: '#tabs-nav button[data-tab-id="prescriptions"]',
             text: "L'Onglet Prescriptions.\n\nC'est ici que vous prescrivez médicaments et soins, et que vous définissez les horaires d'administration sur la frise temporelle.",
             position: 'bottom'
         },
-        // ÉTAPE 10 : DIAGRAMME
         {
             element: '#tabs-nav button[data-tab-id="diagramme"]',
             text: "Le Diagramme de Soins.\n\nL'espace pour valider la réalisation des soins infirmiers et de confort (toilettes, surveillance) tout au long de la journée.",
             position: 'bottom'
         },
-        
-        // --- BOUTONS DU BAS (MENU GAUCHE) ---
         {
             element: '#account-management-btn',
             text: "Gestion de Compte.\n\nAccédez à votre profil, gérez votre abonnement et créez les comptes de vos étudiants ici.",
@@ -108,7 +89,6 @@
             text: "Déconnexion.\n\nPour fermer votre session en toute sécurité à la fin de votre travail.",
             position: 'right'
         },
-        // FIN
         {
             element: '#sidebar > div:first-child',
             text: "C'est terminé !\n\nVous connaissez maintenant les bases d'EIdos-simul. À vous de jouer !",
@@ -150,13 +130,11 @@
         crModal = document.getElementById('cr-modal');
         crModalBox = document.getElementById('cr-modal-box');
         crModalTitle = document.getElementById('cr-modal-title');
-        // MODIFICATION : Récupération de la div éditable au lieu du textarea
         crModalContent = document.getElementById('cr-modal-content');
         crModalSaveBtn = document.getElementById('cr-modal-save-btn');
         crModalCloseBtn = document.getElementById('cr-modal-close-btn');
         crModalActiveIdInput = document.getElementById('cr-modal-active-id');
         
-        // Tutorial UI
         tutorialOverlay = document.getElementById('tutorial-overlay');
         tutorialStepBox = document.getElementById('tutorial-step-box');
         tutorialText = document.getElementById('tutorial-text');
@@ -295,45 +273,36 @@
     }
 
     function applyPermissions(userPermissions) {
-        
-        // 1. GESTION DU BADGE DE RÔLE (Couleurs douces et texte)
         const roleBadge = document.getElementById('user-role-badge');
         if (roleBadge) {
             roleBadge.classList.remove('hidden');
             const span = roleBadge.querySelector('span');
             const icon = roleBadge.querySelector('i');
             
-            // Reset des classes de couleur (on garde la base)
             roleBadge.className = 'flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm mr-2 transition-all duration-300';
             
             if (userPermissions.isSuperAdmin) {
                 span.textContent = 'Super Admin';
                 icon.className = 'fas fa-user-shield';
-                // Orange doux et transparent
                 roleBadge.classList.add('bg-orange-50', 'text-orange-700', 'border-orange-200');
             } else if (userPermissions.role === 'owner') {
                 span.textContent = 'Gestionnaire';
                 icon.className = 'fas fa-building';
-                // Violet doux
                 roleBadge.classList.add('bg-purple-50', 'text-purple-700', 'border-purple-200');
             } else if (userPermissions.role === 'formateur' || userPermissions.role === 'user') {
                 span.textContent = 'Formateur';
                 icon.className = 'fas fa-chalkboard-teacher';
-                // Bleu doux
                 roleBadge.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
             } else if (userPermissions.isStudent) {
                 span.textContent = 'Étudiant';
                 icon.className = 'fas fa-user-graduate';
-                // Vert doux
                 roleBadge.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
             } else {
                 roleBadge.classList.add('hidden');
             }
         }
 
-        // 2. Gestion stricte des boutons Import/Export JSON
         const jsonButtons = ['#import-json-btn', '#export-json-btn'];
-        
         if (userPermissions.isSuperAdmin) {
             jsonButtons.forEach(selector => {
                 const btn = document.querySelector(selector);
@@ -348,18 +317,14 @@
             });
         }
 
-        // 3. Gestion des droits d'enregistrement (Role 'user' = Free = Lecture seule sur la persistance)
         if (userPermissions.role === 'user') {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
-            
-            // On masque aussi le statut car ils ne peuvent pas sauvegarder
             if (saveStatusButton) saveStatusButton.style.display = 'none';
         }
         
         if (!userPermissions.isStudent) { crModalSaveBtn.style.display = 'inline-flex'; return; }
         
-        // 4. Permissions Etudiant
         const studentForbiddenButtons = ['#save-patient-btn', '#load-patient-btn', '#import-json-btn', '#export-json-btn', '#clear-current-patient-btn', '#clear-all-data-btn', '#account-management-btn'];
         studentForbiddenButtons.forEach(selector => { const btn = document.querySelector(selector); if (btn) btn.style.display = 'none'; });
         if (!userPermissions.header) disableSectionInputs('patient-header-form');
@@ -402,7 +367,6 @@
         document.querySelectorAll('#bio-table thead input[type="date"]').forEach(input => { input.value = ''; delete input.dataset.dateOffset; });
         document.getElementById('glycemie-tbody').innerHTML = '';
         document.getElementById('pancarte-tbody').innerHTML = '';
-        // Vide aussi le contenu du modal CR
         if(crModalContent) crModalContent.innerHTML = '';
         
         checkAllergyStatus();
@@ -466,8 +430,10 @@
         if (state.careDiagramRows && Array.isArray(state.careDiagramRows)) {
             state.careDiagramRows.forEach(row => addCareDiagramRow(row));
         } else if (state['care-diagram-tbody_html']) {
+            // [AUDIT: CORRECTION XSS]
+            const safeHtml = DOMPurify.sanitize(state['care-diagram-tbody_html']);
             const tempContainer = document.createElement('div');
-            tempContainer.innerHTML = `<table><tbody>${state['care-diagram-tbody_html']}</tbody></table>`;
+            tempContainer.innerHTML = `<table><tbody>${safeHtml}</tbody></table>`;
             const rows = tempContainer.querySelectorAll('tr');
             rows.forEach(row => {
                 const nameSpan = row.querySelector('td:first-child span');
@@ -556,7 +522,6 @@
         if (!crData) return;
         for (const crId in crData) {
             const card = document.querySelector(`.cr-card[data-cr-id="${crId}"]`);
-            // MODIFICATION : Vérifie si le contenu HTML n'est pas vide
             if (card && crData[crId] && crData[crId].trim() !== '' && crData[crId] !== '<br>') {
                 const icon = card.querySelector('.cr-check-icon');
                 if (icon) icon.classList.remove('hidden');
@@ -945,26 +910,23 @@
     function deletePrescription(button) { const row = button.closest('tr'); if (row) { row.remove(); return true; } return false; }
     function deleteCareDiagramRow(button) { const row = button.closest('tr'); if (row) { row.remove(); return true; } return false; }
 
-    // MODIFICATION : Mise à jour pour utiliser la div éditable et innerHTML
     function openCrModal(crId, crTitle, crText) {
         crModalTitle.textContent = crTitle; 
         crModalActiveIdInput.value = crId; 
-        // Utilisation de innerHTML pour le formatage, avec DOMPurify pour la sécurité
         crModalContent.innerHTML = DOMPurify.sanitize(crText) || ''; 
         crModal.classList.remove('hidden'); 
         setTimeout(() => { 
             crModalBox.classList.remove('scale-95', 'opacity-0'); 
-            crModalContent.focus(); // Focus sur la div
+            crModalContent.focus(); 
         }, 10);
     }
     
-    // MODIFICATION : Mise à jour pour vider le HTML
     function closeCrModal() {
         crModalBox.classList.add('scale-95', 'opacity-0'); 
         setTimeout(() => { 
             crModal.classList.add('hidden'); 
             crModalActiveIdInput.value = ''; 
-            crModalContent.innerHTML = ''; // Vider le HTML
+            crModalContent.innerHTML = ''; 
         }, 200);
     }
     
@@ -1138,8 +1100,6 @@
         pancarteChartInstance = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 }, y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 }, y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 }, y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } }, y4: { position: 'right', title: { display: true, text: 'SpO2' }, grid: { drawOnChartArea: false }, min: 50, max: 100 } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }} } } });
     }
 
-    // --- TUTORIAL LOGIC ---
-
     function startTutorial(pageType = 'simul') {
         currentStepIndex = 0;
         
@@ -1157,7 +1117,6 @@
         tutorialOverlay.classList.add('hidden');
         if (highlightedElement) { 
             highlightedElement.classList.remove('tutorial-highlight'); 
-            // Reset styles if specific overrides were used
             if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
                 highlightedElement.style = ''; 
             }
@@ -1167,7 +1126,6 @@
     }
 
     function showTutorialStep(index) {
-        // Clean up previous highlight
         if (highlightedElement) { 
             highlightedElement.classList.remove('tutorial-highlight'); 
             if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
@@ -1183,7 +1141,6 @@
         const step = activeTutorialSteps[index];
         const element = document.querySelector(step.element);
 
-        // CHECK VISIBILITY TO SKIP HIDDEN ELEMENTS (e.g. for Students)
         let isVisible = false;
         if (element) {
             const style = window.getComputedStyle(element);
@@ -1203,24 +1160,20 @@
 
         tutorialText.textContent = step.text;
         
-        // Button Logic
         if (index === activeTutorialSteps.length - 1) {
             tutorialNextBtn.textContent = "Terminer";
         } else {
             tutorialNextBtn.textContent = "Suivant";
         }
 
-        // Highlighting
         element.classList.add('tutorial-highlight');
         highlightedElement = element;
 
-        // Specific z-index fixes for floating/fixed elements
         if (element.closest('#header-buttons') || element.id === 'save-status-button') { 
             element.style.setProperty('z-index', '9997', 'important'); 
             element.style.setProperty('position', 'relative', 'important'); 
         }
 
-        // Positioning the box
         const rect = element.getBoundingClientRect();
         const boxRect = tutorialStepBox.getBoundingClientRect();
         const margin = 15; 
@@ -1248,7 +1201,6 @@
                 left = rect.left + (rect.width / 2) - (boxRect.width / 2);
         }
 
-        // Boundary checks to keep box in viewport
         if (top < margin) top = margin; 
         if (left < margin) left = margin; 
         if (top + boxRect.height > window.innerHeight - margin) top = window.innerHeight - boxRect.height - margin; 
@@ -1261,9 +1213,7 @@
     function incrementTutorialStep() {
         const currentStep = activeTutorialSteps[currentStepIndex];
         
-        // Check for special actions before moving
         if (currentStep && currentStep.action === 'redirect_account') {
-            // End this tutorial part without setting the completed flag
             endTutorial(false); 
             window.location.href = 'account.html?tutorial=true';
             return;
