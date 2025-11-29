@@ -1,8 +1,8 @@
 (function() {
     "use strict";
 
-    // URL de l'API
-    const API_URL = 'https://eidos-api.onrender.com';
+    // URL de l'API (Mise à jour pour le sous-domaine)
+    const API_URL = 'https://api.eidos-simul.fr'; 
     
     // Variable pour stocker la connexion socket
     let socket = null;
@@ -12,9 +12,7 @@
     // [MODIFIÉ] On ne manipule plus le token directement
     function getAuthToken() {
         // Cette fonction ne sert plus à récupérer le token brut.
-        // On peut l'utiliser pour vérifier si un cookie existe (via document.cookie si non HttpOnly)
-        // ou simplement retourner true si on suppose l'utilisateur connecté.
-        // Pour l'instant, on retourne null si on est sûr d'être déconnecté (ex: flag localStorage)
+        // On retourne true si le flag localStorage est présent.
         return localStorage.getItem('isLoggedIn') === 'true';
     }
 
@@ -251,10 +249,6 @@
         }
     }
 
-    // --- LOGIQUE ADMIN (Si nécessaire) ---
-    // Si vous avez des fonctions admin ici, appliquez la même logique :
-    // fetchWithCredentials(...) au lieu de fetch(...)
-
     // [NOUVEAU] Fonction de Déconnexion
     async function logout() {
         try {
@@ -265,7 +259,6 @@
         } finally {
             // Nettoyage local et redirection
             localStorage.removeItem('isLoggedIn');
-            // Autres nettoyages si besoin (activePatientId, etc. géré par app.js)
             window.location.href = 'auth.html';
         }
     }
@@ -281,7 +274,7 @@
         saveCaseData,
         deleteSavedCase,
         clearAllChamberData,
-        logout // [NOUVEAU]
+        logout
     };
 
 })();

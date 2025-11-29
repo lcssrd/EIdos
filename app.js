@@ -11,25 +11,25 @@
         uiService.setupModalListeners(); // Configure les boutons "OK/Annuler" des modales
 
         // 2. Initialiser le service patient (permissions, liste des patients, patient actif)
-        // Note : initialize() utilise maintenant fetchWithCredentials pour s'authentifier via Cookie
+        // Note : initialize() utilise maintenant fetchWithCredentials (via apiService) pour s'authentifier via Cookie
         const initialized = await patientService.initialize();
         
         // 3. Si l'initialisation échoue (ex: étudiant sans chambre ou non connecté), arrêter ici.
         if (!initialized) {
-            console.warn("Initialisation du patientService arrêtée.");
-            // Les écouteurs de base (logout, etc.) sont quand même attachés
+            console.warn("Initialisation du patientService arrêtée ou session invalide.");
+            // Les écouteurs de base (logout, etc.) sont quand même attachés pour permettre de quitter proprement
             setupBaseEventListeners();
             return;
         }
 
-        // 4. Configurer tous les écouteurs d'événements
+        // 4. Configurer tous les écouteurs d'événements principaux
         setupEventListeners();
 
-        // 5. Charger le premier onglet (lu depuis localStorage)
+        // 5. Charger le premier onglet (lu depuis localStorage ou défaut)
         const activeTabId = localStorage.getItem('activeTab') || 'administratif';
         uiService.changeTab(activeTabId);
         
-        // 6. Démarrer le tutoriel si c'est la première visite
+        // 6. Démarrer le tutoriel si c'est la première visite (flag localStorage)
         if (!localStorage.getItem('tutorialCompleted')) {
             setTimeout(() => uiService.startTutorial(), 1000);
         }
@@ -37,36 +37,41 @@
 
     /**
      * Configure les écouteurs de base (toujours actifs, même si l'init échoue).
+     * Permet notamment la déconnexion même en cas de bug de chargement.
      */
     function setupBaseEventListeners() {
-        // [MODIFIÉ] Gestion de la déconnexion
+        // Gestion de la déconnexion
         document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
             e.preventDefault();
             
             // 1. Nettoyage des préférences UI locales
             localStorage.removeItem('activePatientId');
             localStorage.removeItem('activeTab');
-            // Note: On ne touche pas à 'isLoggedIn', c'est apiService.logout() qui s'en charge
+            // Note: On ne touche pas manuellement à 'isLoggedIn' ici, 
+            // c'est apiService.logout() qui s'en charge après l'appel serveur.
             
             // 2. Appel au service pour déconnexion serveur (Suppression du Cookie) et redirection
             await apiService.logout(); 
         });
 
+        // Gestion du bouton "Mon Compte" (désactivé pour les étudiants)
         document.getElementById('account-management-btn')?.addEventListener('click', (e) => {
             if (patientService.getUserPermissions().isStudent) {
                 e.preventDefault();
             }
         });
 
+        // Gestion du plein écran
         document.getElementById('toggle-fullscreen-btn')?.addEventListener('click', uiService.toggleFullscreen);
     }
 
     /**
      * Configure tous les écouteurs d'événements pour l'application principale.
+     * N'est appelé que si l'utilisateur est correctement authentifié et initialisé.
      */
     function setupEventListeners() {
         
-        // --- Écouteurs de base (redondant mais sûr) ---
+        // --- Écouteurs de base (redondance de sécurité) ---
         setupBaseEventListeners();
         
         // --- Header (Sauvegarde, Chargement, etc.) ---
@@ -104,7 +109,7 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; 
+            event.target.value = ''; // Reset pour permettre de réimporter le même fichier
         });
         
         // --- Navigation (Onglets & Patients) ---
@@ -122,7 +127,7 @@
             }
         });
         
-        // --- Sauvegarde automatique (Debounce) ---
+        // --- Sauvegarde automatique (Debounce sur input/change) ---
         const mainContent = document.querySelector('main');
         mainContent.addEventListener('input', patientService.debouncedSave);
         mainContent.addEventListener('change', patientService.debouncedSave);
@@ -133,7 +138,7 @@
             headerForm.addEventListener('change', patientService.debouncedSave);
         }
 
-        // --- Mises à jour auto de l'UI ---
+        // --- Mises à jour auto de l'UI (Dates, IMC, Sync champs) ---
         document.getElementById('patient-entry-date').addEventListener('input', () => {
             uiService.updateJourHosp();
             uiService.refreshAllRelativeDates();
@@ -141,16 +146,19 @@
         document.getElementById('patient-dob').addEventListener('input', uiService.updateAgeDisplay);
         document.getElementById('admin-dob').addEventListener('input', uiService.updateAgeDisplay);
 
-        uiService.setupSync();
+        uiService.setupSync(); // Synchro Nom/Prénom/DDN entre Header et Admin
         
         document.getElementById('vie-poids').addEventListener('input', uiService.calculateAndDisplayIMC);
         document.getElementById('vie-taille').addEventListener('input', uiService.calculateAndDisplayIMC);
 
-        // --- Ajout d'entrées ---
+        // --- Boutons d'Ajout d'entrées (Observations, Trans, Prescr...) ---
         document.getElementById('add-observation-btn').addEventListener('click', () => {
             const data = uiService.readObservationForm();
             if (data) {
                 uiService.addObservation(data, false);
+                // Note: L'ajout au DOM déclenche 'input' sur main, donc le save auto, 
+                // mais on peut forcer si nécessaire. Ici uiService modifie le DOM.
+                patientService.debouncedSave();
             }
         });
         document.getElementById('add-transmission-btn').addEventListener('click', () => {
@@ -179,7 +187,7 @@
         document.getElementById('sort-observations-btn').addEventListener('click', () => uiService.toggleSort('observations'));
         document.getElementById('sort-transmissions-btn').addEventListener('click', () => uiService.toggleSort('transmissions'));
 
-        // --- Suppression d'entrées ---
+        // --- Suppression d'entrées (Délégation d'événements) ---
         document.getElementById('observations-list').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
             if (deleteBtn && !patientService.getUserPermissions().isStudent) {
@@ -213,12 +221,12 @@
             }
         });
         
-        // --- Pancarte ---
+        // --- Graphique Pancarte ---
         document.getElementById('pancarte-tbody').addEventListener('change', (e) => {
             if (e.target.tagName === 'INPUT') uiService.updatePancarteChart();
         });
         
-        // --- Logique Comptes Rendus ---
+        // --- Logique Comptes Rendus (Modale) ---
         document.getElementById('cr-card-grid').addEventListener('click', (e) => {
             const card = e.target.closest('.cr-card');
             if (!card) return;
@@ -234,10 +242,11 @@
             patientService.handleCrModalSave(crId, crText);
         });
 
-        // --- Logique Barres IV ---
+        // --- Logique Barres IV (Interactions Souris) ---
         document.addEventListener('mousedown', uiService.handleIVMouseDown);
         document.addEventListener('mousemove', uiService.handleIVMouseMove);
         document.addEventListener('mouseup', uiService.handleIVMouseUp);
+        // Événement personnalisé déclenché par uiService après une interaction IV
         document.addEventListener('uiNeedsSave', patientService.debouncedSave);
 
         // --- Tutoriel ---
