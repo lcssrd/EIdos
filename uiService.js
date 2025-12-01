@@ -16,7 +16,7 @@
     let highlightedElement = null;
     let activeTutorialSteps = []; 
 
-    // --- VARIABLES ET FONCTIONS ZOOM ---
+    // --- VARIABLES ET FONCTIONS ZOOM (TABLEAU PRESCRIPTIONS) ---
     let currentZoomLevel = 48; // Valeur par défaut en pixels (correspond au CSS)
 
     function initZoomControls() {
@@ -178,7 +178,7 @@
         const allergyInput = document.getElementById('atcd-allergies');
         if (allergyInput) allergyInput.addEventListener('input', checkAllergyStatus);
 
-        // Initialisation des contrôles de zoom
+        // Initialisation des contrôles de zoom du tableau
         initZoomControls();
     }
 
@@ -1173,6 +1173,7 @@
         endLabel.style.left = `${startPercent + widthPercent}%`;
     }
 
+    // --- MISE A JOUR GRAPHIQUE AVEC ZOOM & SCROLLBAR ---
     function updatePancarteChart() {
         const table = document.getElementById('pancarte-table');
         const entryDateVal = document.getElementById('patient-entry-date').value;
@@ -1197,9 +1198,92 @@
             }
             return { label: paramName, data, type: 'line', tension: 0.2, borderWidth: 2, spanGaps: true, pointBackgroundColor: dataSetsConfig[paramName].borderColor || '#000', ...dataSetsConfig[paramName] };
         }).filter(ds => ds !== null);
+        
         const ctx = document.getElementById('pancarteChart').getContext('2d');
         if (pancarteChartInstance) pancarteChartInstance.destroy();
-        pancarteChartInstance = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 }, y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 }, y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 }, y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } }, y4: { position: 'right', title: { display: true, text: 'SpO2' }, grid: { drawOnChartArea: false }, min: 50, max: 100 } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }} } } });
+        
+        // --- LOGIQUE SCROLLBAR SYNCHRONISEE ---
+        const scrollbar = document.getElementById('pancarte-scrollbar');
+        
+        // Fonction pour mettre à jour la barre de défilement quand le graphique bouge
+        const updateScrollbar = (chart) => {
+            const xScale = chart.scales.x;
+            const min = xScale.min;
+            const max = xScale.max;
+            // Limites absolues (indices de labels)
+            const limitMin = 0; 
+            const limitMax = labels.length - 1;
+            
+            // Calcul de la taille de la fenêtre actuelle
+            const windowSize = max - min;
+            
+            // Configuration du range
+            scrollbar.min = limitMin;
+            // Le maximum du scrollbar est tel que : value + windowSize <= limitMax
+            scrollbar.max = limitMax - windowSize; 
+            scrollbar.value = min;
+            
+            // Désactiver si tout est visible
+            const isFullyVisible = (max - min) >= (limitMax - limitMin - 0.1); // Marge d'erreur flottante
+            scrollbar.disabled = isFullyVisible;
+            scrollbar.style.opacity = isFullyVisible ? '0.5' : '1';
+        };
+
+        pancarteChartInstance = new Chart(ctx, { 
+            type: 'bar', 
+            data: { labels, datasets }, 
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                scales: { 
+                    x: {
+                        min: 0,
+                        // Afficher par défaut les 10 premiers points (environ 3 jours)
+                        // Si l'écran est petit, cela rendra le graphique lisible immédiatement
+                        max: Math.min(9, labels.length - 1) 
+                    },
+                    y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 }, 
+                    y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 }, 
+                    y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 }, 
+                    y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } }, 
+                    y4: { position: 'right', title: { display: true, text: 'SpO2' }, grid: { drawOnChartArea: false }, min: 50, max: 100 } 
+                }, 
+                plugins: { 
+                    legend: { position: 'bottom' }, 
+                    tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }},
+                    zoom: {
+                        limits: {
+                            x: { min: 0, max: labels.length - 1 }
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            onPan: ({chart}) => updateScrollbar(chart)
+                        },
+                        zoom: {
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
+                            mode: 'x',
+                            onZoom: ({chart}) => updateScrollbar(chart)
+                        }
+                    }
+                } 
+            } 
+        });
+
+        // Initialisation de la scrollbar
+        setTimeout(() => updateScrollbar(pancarteChartInstance), 100);
+
+        // Ecouteur d'événement pour la scrollbar (Déplacement du graphique)
+        scrollbar.oninput = () => {
+            const val = parseFloat(scrollbar.value);
+            const xScale = pancarteChartInstance.scales.x;
+            const currentWindowSize = xScale.max - xScale.min;
+            
+            pancarteChartInstance.options.scales.x.min = val;
+            pancarteChartInstance.options.scales.x.max = val + currentWindowSize;
+            pancarteChartInstance.update('none'); // Update performant sans animation complète
+        };
     }
 
     function startTutorial(pageType = 'simul') {
