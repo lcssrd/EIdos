@@ -334,7 +334,14 @@
         if (!userPermissions.transmissions) { const form = document.getElementById('new-transmission-form-2'); if (form) form.style.display = 'none'; }
         if (!userPermissions.comptesRendus) crModalSaveBtn.style.display = 'none';
         if (!userPermissions.prescriptions_add) { const form = document.getElementById('new-prescription-form'); if (form) form.style.display = 'none'; }
-        if (!userPermissions.diagramme) { const form = document.getElementById('new-care-form'); if (form) form.style.display = 'none'; }
+        
+        // [MODIFICATION] Désactivation du diagramme de soins
+        if (!userPermissions.diagramme) { 
+            const form = document.getElementById('new-care-form'); 
+            if (form) form.style.display = 'none'; 
+            document.querySelectorAll('#care-diagram-table input[type="checkbox"]').forEach(cb => cb.disabled = true);
+        }
+
         if (!userPermissions.pancarte) document.querySelectorAll('#pancarte-table input, #glycemie-table input').forEach(el => el.disabled = true);
         if (!userPermissions.biologie) document.querySelectorAll('#bio-table input').forEach(el => el.disabled = true);
     }
@@ -938,6 +945,9 @@
     }
 
     function handleIVDblClick(e) {
+        // [CORRECTION] Vérification de la permission validate avant suppression d'un élément
+        if (window.patientService && !window.patientService.getUserPermissions().prescriptions_validate) return;
+        
         const bar = e.currentTarget;
         showDeleteConfirmation("Effacer cette administration ?", () => {
             const cell = bar.parentElement;
@@ -947,6 +957,9 @@
     }
 
     function handleIVMouseDown(e) {
+        // [CORRECTION] Vérification de la permission validate avant toute interaction
+        if (window.patientService && !window.patientService.getUserPermissions().prescriptions_validate) return;
+
         if (e.target.classList.contains('iv-bar-container')) {
             ivInteraction.mode = 'draw';
             const cell = e.target;

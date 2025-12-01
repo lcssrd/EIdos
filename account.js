@@ -570,6 +570,9 @@
                 });
             }
 
+            // [CORRECTION] Assignation immédiate du plan pour que les fonctions suivantes (renderStudentTable) aient la bonne donnée
+            currentPlan = data.plan;
+
             // UI Standard
             const planNameEl = document.getElementById('current-plan-name');
             const planDescEl = document.getElementById('plan-description');
@@ -581,7 +584,10 @@
                         document.getElementById('tab-centre').style.display = 'flex';
                         renderCentreDetails(data.organisation);
                     } else {
-                        planNameEl.textContent = `Plan ${data.organisation.plan} (Formateur)`;
+                        // MODIFICATION: Affichage spécifique pour formateur invité
+                        planNameEl.textContent = `Plan ${data.plan.charAt(0).toUpperCase() + data.plan.slice(1)}`;
+                        // Affichage du nom du centre
+                        planDescEl.innerHTML = `Votre compte dépend de <strong>${data.organisation.name}</strong>`;
                     }
                 } else {
                     planNameEl.textContent = data.plan.charAt(0).toUpperCase() + data.plan.slice(1);
@@ -593,7 +599,6 @@
                 planDescEl.textContent = "Compte découverte.";
             }
             
-            currentPlan = data.plan;
             updateSubscriptionButtons(data.plan, data.organisation?.quote_url, data.organisation?.quote_price);
 
         } catch (err) { console.error(err); }
@@ -601,7 +606,34 @@
 
     function renderStudentTable(students) {
         const tbody = document.getElementById('permissions-tbody');
-        document.getElementById('student-list-title').textContent = `Gestion des étudiants (${students.length})`;
+        
+        // --- MODIFICATION : COMPTEUR ÉTUDIANTS ---
+        const limits = { 'free': 0, 'independant': 5, 'promo': 40, 'centre': Infinity };
+        // 'centre' est illimité, on met Infinity pour la logique
+        
+        const limit = limits[currentPlan] || 0;
+        const count = students.length;
+        const limitText = (limit === Infinity) ? "Illimité" : limit;
+        
+        // Couleur du badge selon si on approche de la limite
+        let badgeColor = "bg-indigo-100 text-indigo-800";
+        if (limit !== Infinity && count >= limit) {
+            badgeColor = "bg-red-100 text-red-800";
+        } else if (limit !== Infinity && count >= limit * 0.8) {
+            badgeColor = "bg-yellow-100 text-yellow-800";
+        }
+
+        // Mise à jour du titre du tableau avec le compteur
+        const titleEl = document.getElementById('student-list-title');
+        if (titleEl) {
+            titleEl.innerHTML = `
+                Gestion des étudiants 
+                <span class="ml-3 text-sm font-bold ${badgeColor} px-3 py-1 rounded-full border border-opacity-20 shadow-sm" style="font-family: 'Inter', sans-serif;">
+                    ${count} / ${limitText}
+                </span>
+            `;
+        }
+        // --- FIN MODIFICATION ---
         
         if (students.length === 0) {
             tbody.innerHTML = `<tr><td colspan="15" class="p-4 text-center text-gray-500">Aucun étudiant.</td></tr>`;
@@ -634,7 +666,10 @@
         document.getElementById('centre-plan-details').textContent = `Licences: ${organisation.licences_utilisees} / ${organisation.licences_max || 'Infini'}`;
         
         const listContainer = document.getElementById('formateurs-list-container');
-        document.getElementById('formateurs-loading').style.display = 'none';
+        
+        // MODIFICATION : Vérification de sécurité pour formateurs-loading
+        const loadingEl = document.getElementById('formateurs-loading');
+        if (loadingEl) loadingEl.style.display = 'none';
 
         let html = '';
         if (organisation.invitations && organisation.invitations.length > 0) {
