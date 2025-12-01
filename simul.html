@@ -235,8 +235,20 @@
                         
                         <div id="prescriptions" class="content-section">
                             <div class="card p-6">
-                                 <h2 class="card-header">Prescriptions Médicales</h2>
-                                 <div class="overflow-x-auto mt-4">
+                                <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+                                    <h2 class="text-xl font-bold text-indigo-800">Prescriptions Médicales</h2>
+                                    
+                                    <div class="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
+                                        <button type="button" id="zoom-out-btn" class="p-1 px-2 text-gray-600 hover:text-indigo-600 hover:bg-white rounded transition-colors" title="Dézoomer">
+                                            <i class="fas fa-search-minus"></i>
+                                        </button>
+                                        <span class="text-xs font-mono text-gray-500 w-12 text-center" id="zoom-level-text">100%</span>
+                                        <button type="button" id="zoom-in-btn" class="p-1 px-2 text-gray-600 hover:text-indigo-600 hover:bg-white rounded transition-colors" title="Zoomer">
+                                            <i class="fas fa-search-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="overflow-x-auto mt-4">
                                      <table class="w-full border-collapse text-sm diagram" id="prescription-table">
                                          <thead id="prescription-thead" class="bg-gray-100 text-gray-600">
                                          </thead>

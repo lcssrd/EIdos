@@ -16,6 +16,34 @@
     let highlightedElement = null;
     let activeTutorialSteps = []; 
 
+    // --- VARIABLES ET FONCTIONS ZOOM ---
+    let currentZoomLevel = 48; // Valeur par défaut en pixels (correspond au CSS)
+
+    function initZoomControls() {
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const zoomText = document.getElementById('zoom-level-text');
+
+        if (zoomInBtn && zoomOutBtn) {
+            zoomInBtn.addEventListener('click', () => updateZoom(10));
+            zoomOutBtn.addEventListener('click', () => updateZoom(-10));
+        }
+
+        function updateZoom(delta) {
+            // Bornes du zoom : min 20px (très dense), max 120px (très large)
+            const newLevel = Math.max(20, Math.min(120, currentZoomLevel + delta));
+            if (newLevel !== currentZoomLevel) {
+                currentZoomLevel = newLevel;
+                // Mise à jour de la variable CSS
+                document.documentElement.style.setProperty('--hour-col-width', `${currentZoomLevel}px`);
+                
+                // Mise à jour du texte indicateur (48px = 100%)
+                const percentage = Math.round((currentZoomLevel / 48) * 100);
+                if(zoomText) zoomText.textContent = `${percentage}%`;
+            }
+        }
+    }
+
     // --- DONNÉES DU TUTORIEL ---
     
     const tutorialStepsSimul = [
@@ -149,6 +177,9 @@
         toastText = document.getElementById('toast-text');
         const allergyInput = document.getElementById('atcd-allergies');
         if (allergyInput) allergyInput.addEventListener('input', checkAllergyStatus);
+
+        // Initialisation des contrôles de zoom
+        initZoomControls();
     }
 
     function checkAllergyStatus() {
@@ -964,10 +995,15 @@
             ivInteraction.mode = 'draw';
             const cell = e.target;
             const rect = cell.getBoundingClientRect();
-            const intervalWidthPx = rect.width / (11 * 24 * 4);
+            
+            // Calcul du pas de grille basé sur la largeur actuelle (Zoom support)
+            const totalIntervals = 1056; 
+            const intervalWidthPx = rect.width / totalIntervals;
+            
             const rawStartXPx = e.clientX - rect.left;
             const snappedInterval = Math.round(rawStartXPx / intervalWidthPx);
             const startX = snappedInterval * intervalWidthPx;
+            
             const newBar = document.createElement('div');
             newBar.className = 'iv-bar';
             const rowType = cell.closest('tr').dataset.type;
@@ -996,34 +1032,65 @@
         }
     }
 
+    // --- CORRECTION CLAMPING & PRECISION ---
     function handleIVMouseMove(e) {
         if (!ivInteraction.active) return;
         e.preventDefault();
+
         const { mode, targetBar, targetCell, startX, startWidth, startLeft, startLeftPx } = ivInteraction;
         const cellRect = targetCell.getBoundingClientRect();
+        
+        // Sécurité division par zéro
+        if (cellRect.width === 0) return;
+
         const dx = e.clientX - startX;
-        const intervalWidthPx = cellRect.width / (11 * 24 * 4);
+        
+        // Calcul dynamique du pas de grille
+        const totalIntervals = 1056; 
+        const intervalWidthPx = cellRect.width / totalIntervals;
+
         if (mode === 'draw' || mode === 'resize') {
             if (mode === 'draw' && targetCell.classList.contains('marker-container')) {
+                // Mode Marqueur
                 let rawLeftPx = startLeftPx + dx;
+                
+                // Snap
                 const snappedInterval = Math.round(rawLeftPx / intervalWidthPx);
-                let newLeft = snappedInterval * intervalWidthPx;
-                newLeft = Math.max(0, Math.min(newLeft, cellRect.width - targetBar.offsetWidth)); 
-                targetBar.style.left = `${(newLeft / cellRect.width) * 100}%`;
+                let newLeftPx = snappedInterval * intervalWidthPx;
+
+                // Clamp (bornage)
+                newLeftPx = Math.max(0, Math.min(newLeftPx, cellRect.width - targetBar.offsetWidth)); 
+                
+                const newLeftPercent = (newLeftPx / cellRect.width) * 100;
+                targetBar.style.left = `${newLeftPercent}%`;
+
             } else { 
+                // Mode Durée
                 let rawWidthPx = startWidth + dx;
+                
                 const snappedIntervals = Math.max(1, Math.round(rawWidthPx / intervalWidthPx));
-                let newWidth = snappedIntervals * intervalWidthPx;
-                newWidth = Math.min(newWidth, cellRect.width - targetBar.offsetLeft);
-                targetBar.style.width = `${(newWidth / cellRect.width) * 100}%`;
+                let newWidthPx = snappedIntervals * intervalWidthPx;
+
+                // Clamp width
+                const currentBarLeftPx = parseFloat(targetBar.style.left) / 100 * cellRect.width;
+                newWidthPx = Math.min(newWidthPx, cellRect.width - currentBarLeftPx);
+
+                const newWidthPercent = (newWidthPx / cellRect.width) * 100;
+                targetBar.style.width = `${newWidthPercent}%`;
             }
         } else if (mode === 'move') {
             let rawLeftPx = startLeft + dx;
+            
             const snappedInterval = Math.round(rawLeftPx / intervalWidthPx);
-            let newLeft = snappedInterval * intervalWidthPx;
-            newLeft = Math.max(0, Math.min(newLeft, cellRect.width - targetBar.offsetWidth));
-            targetBar.style.left = `${(newLeft / cellRect.width) * 100}%`;
+            let newLeftPx = snappedInterval * intervalWidthPx;
+
+            // Clamp
+            newLeftPx = Math.max(0, Math.min(newLeftPx, cellRect.width - targetBar.offsetWidth));
+            
+            const newLeftPercent = (newLeftPx / cellRect.width) * 100;
+            targetBar.style.left = `${newLeftPercent}%`;
         }
+
         updateIVBarDetails(targetBar, targetCell);
     }
 
@@ -1032,6 +1099,7 @@
         const { targetBar, targetCell } = ivInteraction;
         if (targetBar && targetCell) {
             const cellRect = targetCell.getBoundingClientRect();
+            // Recalcul précis au relâchement pour alignement parfait
             const intervalWidthPx = cellRect.width / (11 * 24 * 4);
             const rawLeftPx = targetBar.offsetLeft;
             const snappedLeftInterval = Math.round(rawLeftPx / intervalWidthPx);
@@ -1053,33 +1121,54 @@
         document.dispatchEvent(new CustomEvent('uiNeedsSave'));
     }
     
+    // --- UX : TOOLTIPS AMÉLIORÉS ---
     function updateIVBarDetails(bar, cell) {
         if (!bar || !cell) return;
         const tableStartDateStr = document.getElementById('patient-entry-date').value;
         if (!tableStartDateStr) return;
         const barId = bar.dataset.barId;
         if (!barId) return; 
+
         const tableStartDate = new Date(tableStartDateStr + 'T00:00:00');
         const totalTimelineMinutes = 11 * 24 * 60;
+        
         const startPercent = parseFloat(bar.style.left);
         const widthPercent = parseFloat(bar.style.width);
+        
         const startOffsetMinutes = (startPercent / 100) * totalTimelineMinutes;
         const durationMinutes = (widthPercent / 100) * totalTimelineMinutes;
+        
         const rawStartDateTime = new Date(tableStartDate.getTime());
         rawStartDateTime.setMinutes(rawStartDateTime.getMinutes() + startOffsetMinutes);
+        
         const rawEndDateTime = new Date(rawStartDateTime.getTime());
         rawEndDateTime.setMinutes(rawEndDateTime.getMinutes() + durationMinutes);
+        
         const startDateTime = utils.roundDateTo15Min(rawStartDateTime);
         const endDateTime = utils.roundDateTo15Min(rawEndDateTime);
+        
         const formatTime = (date) => date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-        if (cell.classList.contains('marker-container')) bar.title = `Prise: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
-        else bar.title = `Début: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}\nFin: ${endDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
+        const formatDate = (date) => date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+
+        // Tooltip avec instruction
+        let tooltipText = "";
+        if (cell.classList.contains('marker-container')) {
+            tooltipText = `Prise : ${formatDate(startDateTime)} à ${formatTime(startDateTime)}`;
+        } else {
+            tooltipText = `Début : ${formatDate(startDateTime)} ${formatTime(startDateTime)}\nFin : ${formatDate(endDateTime)} ${formatTime(endDateTime)}`;
+        }
+        tooltipText += "\n(Double-clic pour supprimer)";
+        bar.title = tooltipText;
+
+        // Labels visuels
         let startLabel = cell.querySelector(`.iv-time-label.start[data-bar-id="${barId}"]`);
         if (!startLabel) { startLabel = document.createElement('span'); startLabel.className = 'iv-time-label start'; startLabel.dataset.barId = barId; cell.appendChild(startLabel); }
         let endLabel = cell.querySelector(`.iv-time-label.end[data-bar-id="${barId}"]`);
         if (!endLabel) { endLabel = document.createElement('span'); endLabel.className = 'iv-time-label end'; endLabel.dataset.barId = barId; cell.appendChild(endLabel); }
+        
         startLabel.textContent = formatTime(startDateTime);
         endLabel.textContent = formatTime(endDateTime);
+        
         startLabel.style.left = `${startPercent}%`;
         endLabel.style.left = `${startPercent + widthPercent}%`;
     }
