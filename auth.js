@@ -1,8 +1,8 @@
 (function() {
     "use strict";
 
-    // URL de l'API (Mise à jour pour le sous-domaine)
-    const API_URL = 'https://api.eidos-simul.fr'; 
+    // MODIFICATION : L'URL est vide pour utiliser le proxy Vercel (Current Domain)
+    const API_URL = ''; 
 
     // --- Sélections DOM ---
     const loginSection = document.getElementById('login-section');

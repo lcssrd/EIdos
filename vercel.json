@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://api.eidos-simul.fr/api/:match*"
+    },
+    {
+      "source": "/auth/:match*",
+      "destination": "https://api.eidos-simul.fr/auth/:match*"
+    }
+  ]
+}
