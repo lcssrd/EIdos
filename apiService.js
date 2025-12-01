@@ -1,10 +1,13 @@
 (function() {
     "use strict";
 
-    // MODIFICATION 1 : L'URL de l'API est vide pour utiliser le proxy Vercel (Current Domain)
-    const API_URL = ''; 
+    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT ---
+    // Si l'adresse contient 'vercel.app' OU 'pages.dev', on utilise le proxy (vide).
+    // Sinon (eidos-simul.fr ou localhost), on utilise l'API directe.
+    const IS_PROXY_ENV = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pages.dev');
+    const API_URL = IS_PROXY_ENV ? '' : 'https://api.eidos-simul.fr';
     
-    // MODIFICATION 2 : URL spécifique pour les Sockets (Connexion directe obligatoire)
+    // Pour les sockets, c'est toujours l'URL directe (les proxies gratuits gèrent mal les WebSockets)
     const SOCKET_URL = 'https://api.eidos-simul.fr';
 
     // Variable pour stocker la connexion socket
@@ -56,7 +59,6 @@
     // --- Fonctions API "publiques" ---
 
     function connectSocket() {
-        // MODIFICATION 3 : Utilisation de SOCKET_URL au lieu de API_URL
         socket = io(SOCKET_URL, {
             withCredentials: true, 
         });

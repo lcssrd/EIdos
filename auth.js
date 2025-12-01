@@ -1,8 +1,11 @@
 (function() {
     "use strict";
 
-    // MODIFICATION : L'URL est vide pour utiliser le proxy Vercel (Current Domain)
-    const API_URL = ''; 
+    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT ---
+    // Si l'adresse contient 'vercel.app' OU 'pages.dev', on utilise le proxy (vide).
+    // Sinon (eidos-simul.fr ou localhost), on utilise l'API directe.
+    const IS_PROXY_ENV = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pages.dev');
+    const API_URL = IS_PROXY_ENV ? '' : 'https://api.eidos-simul.fr';
 
     // --- Sélections DOM ---
     const loginSection = document.getElementById('login-section');
@@ -123,7 +126,6 @@
             }
 
             if (data.success) {
-                // On stocke juste un indicateur pour l'UI, pas de token sensible
                 localStorage.setItem('isLoggedIn', 'true');
                 window.location.href = 'simul.html';
             } else {
@@ -161,7 +163,6 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody)
-                // Pas besoin de credentials ici (pas encore de cookie)
             });
 
             const data = await response.json();

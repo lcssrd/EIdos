@@ -1,0 +1,5 @@
+# Proxy pour l'API (redirige /api/... vers le backend en gardant l'URL du navigateur)
+/api/* https://api.eidos-simul.fr/api/:splat  200
+
+# Proxy pour l'Authentification
+/auth/* https://api.eidos-simul.fr/auth/:splat  200
