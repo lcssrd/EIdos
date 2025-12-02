@@ -1,10 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap');
 
-/* --- NOUVEAU : Variables pour le Zoom --- */
-:root {
-    --hour-col-width: 48px; /* Largeur par défaut */
-}
-
 /* NOUVEAU : Keyframes pour les animations du bouton */
 @keyframes fadeInStatus {
     from {
@@ -240,15 +235,6 @@ textarea.info-value {
     cursor: move;
     z-index: 10;
 }
-/* --- UX BARRE : Indiquer le survol et la possibilité de suppression --- */
-.iv-bar:hover {
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 4px rgba(0,0,0,0.5);
-    z-index: 20; 
-}
-.iv-bar[title*="supprimer"]:hover {
-    cursor: help; 
-}
-
 .resize-handle {
     position: absolute;
     right: -2px;
@@ -337,19 +323,17 @@ body.is-drawing-iv, body.is-resizing-iv, body.is-moving-iv {
 }
 
 
-/* --- MODIFICATION : Small-col utilise la variable pour le zoom --- */
 .small-col {
-    min-width: var(--hour-col-width);
-    width: var(--hour-col-width);
-    text-align: center;
-    padding-left: 0.125rem; 
-    padding-right: 0.125rem;
-    font-size: 0.75rem;
-    transition: width 0.2s ease, min-width 0.2s ease;
+min-width: 48px;   
+width: 48px;       
+text-align: center;
+padding-left: 0.125rem; 
+padding-right: 0.125rem;
+font-size: 0.75rem;
 }
 .small-col input[type="checkbox"] {
-    display: block;
-    margin: 0.35rem auto; 
+display: block;
+margin: 0.35rem auto; 
 }
 
 

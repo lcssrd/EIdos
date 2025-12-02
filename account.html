@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
     <title>EIdos-simul - Gestion de compte</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%2300A693'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12' /%3E%3C/svg%3E">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap" rel="stylesheet">
     
@@ -85,37 +84,6 @@
         .toggle-checkbox:checked + .toggle-label {
             background-color: #68D391;
         }
-
-        /* --- NOUVEAUX STYLES DASHBOARD ADMIN --- */
-        .kpi-card {
-            background: white;
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-        }
-        .kpi-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-top: 0.5rem;
-        }
-        .kpi-label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-        .log-line {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.8rem;
-            padding: 2px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .log-error { color: #dc2626; }
-        .log-warn { color: #d97706; }
-        .log-info { color: #2563eb; }
         
     </style>
 
@@ -169,6 +137,7 @@
 
                     <section id="content-security" class="account-section active">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Sécurité</h1>
+                        
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             
                             <div class="card p-6">
@@ -416,6 +385,81 @@
                             </div>
                         </div>
                     </section>
+                    
+                    <section id="content-admin" class="account-section">
+                        <h1 class="text-3xl font-bold text-red-800 mb-6 flex items-center">
+                            <i class="fas fa-shield-alt mr-3"></i> Interface Super Admin
+                        </h1>
+                        
+                        <div class="mb-6 border-b border-gray-200">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="admin-tabs-nav">
+                                <li class="mr-2">
+                                    <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 active text-red-600 border-red-600" data-target="admin-users">Utilisateurs</button>
+                                </li>
+                                <li class="mr-2">
+                                    <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-target="admin-patients">Dossiers Patients</button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div id="admin-users" class="admin-tab-content">
+                            <div class="card p-6 h-[600px]"> <div class="flex h-full border border-gray-200 rounded-lg overflow-hidden">
+                                    <div class="w-1/3 miller-column bg-gray-50" id="admin-col-orgs">
+                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Centres & Indépendants</div>
+                                        <div id="admin-list-orgs">
+                                            <p class="p-4 text-sm text-gray-500">Chargement...</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="w-1/3 miller-column bg-white border-l" id="admin-col-trainers">
+                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Formateurs</div>
+                                        <div id="admin-list-trainers">
+                                            <p class="p-4 text-sm text-gray-400 italic">Sélectionnez un centre...</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="w-1/3 miller-column bg-gray-50 border-l" id="admin-col-students">
+                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Étudiants</div>
+                                        <div id="admin-list-students">
+                                            <p class="p-4 text-sm text-gray-400 italic">Sélectionnez un formateur...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between" id="admin-user-actions" style="display: none;">
+                                <div>
+                                    <span class="font-bold text-red-800 block">Utilisateur sélectionné :</span>
+                                    <span id="admin-selected-user-email" class="text-red-600 text-sm">...</span>
+                                </div>
+                                <button id="admin-delete-user-btn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-trash mr-2"></i> Supprimer cet utilisateur
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="admin-patients" class="admin-tab-content hidden">
+                            <div class="card p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-lg font-bold text-gray-800">Tous les dossiers sauvegardés</h2>
+                                    <button id="admin-refresh-patients" class="text-blue-600 hover:text-blue-800"><i class="fas fa-sync-alt"></i> Actualiser</button>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left text-gray-500">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">Nom du dossier</th>
+                                                <th scope="col" class="px-6 py-3">Créateur</th>
+                                                <th scope="col" class="px-6 py-3 text-center">Public</th>
+                                                <th scope="col" class="px-6 py-3 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-patients-tbody">
+                                            </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
 
                     <section id="content-contact" class="account-section">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Contacter le développeur</h1>
@@ -448,219 +492,7 @@
 
                         </div>
                     </section>
-
-                    <section id="content-admin" class="account-section">
-                        <div class="flex justify-between items-center mb-6">
-                            <h1 class="text-3xl font-bold text-red-800 flex items-center">
-                                <i class="fas fa-user-shield mr-3"></i> Administration
-                            </h1>
-                            <div id="maintenance-badge" class="hidden px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold border border-red-200 shadow-sm animate-pulse">
-                                <i class="fas fa-tools mr-2"></i> MAINTENANCE ACTIVE
-                            </div>
-                        </div>
-                        
-                        <div class="mb-6 border-b border-gray-200 bg-white rounded-t-lg shadow-sm">
-                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="admin-tabs-nav">
-                                <li class="mr-2"><button class="inline-block p-4 border-b-2 rounded-t-lg text-red-600 border-red-600 active" data-target="admin-dashboard"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</button></li>
-                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-users"><i class="fas fa-users mr-2"></i>Utilisateurs</button></li>
-                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-patients"><i class="fas fa-folder-open mr-2"></i>Dossiers</button></li>
-                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-communication"><i class="fas fa-bullhorn mr-2"></i>Comms & Devis</button></li>
-                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-tech"><i class="fas fa-server mr-2"></i>Technique</button></li>
-                            </ul>
-                        </div>
-
-                        <div id="admin-dashboard" class="admin-tab-content">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                                <div class="kpi-card border-l-4 border-blue-500">
-                                    <div class="flex justify-between items-start">
-                                        <span class="kpi-label">Utilisateurs Total</span>
-                                        <i class="fas fa-users text-blue-200 text-xl"></i>
-                                    </div>
-                                    <span class="kpi-value" id="kpi-total-users">-</span>
-                                </div>
-                                <div class="kpi-card border-l-4 border-teal-500">
-                                    <div class="flex justify-between items-start">
-                                        <span class="kpi-label">Formateurs</span>
-                                        <i class="fas fa-chalkboard-teacher text-teal-200 text-xl"></i>
-                                    </div>
-                                    <span class="kpi-value" id="kpi-formateurs">-</span>
-                                </div>
-                                <div class="kpi-card border-l-4 border-green-500">
-                                    <div class="flex justify-between items-start">
-                                        <span class="kpi-label">Dossiers Sauvegardés</span>
-                                        <i class="fas fa-save text-green-200 text-xl"></i>
-                                    </div>
-                                    <span class="kpi-value" id="kpi-patients">-</span>
-                                </div>
-                                <div class="kpi-card border-l-4 border-purple-500">
-                                    <div class="flex justify-between items-start">
-                                        <span class="kpi-label">Uptime Serveur</span>
-                                        <i class="fas fa-clock text-purple-200 text-xl"></i>
-                                    </div>
-                                    <span class="kpi-value text-xl mt-3" id="kpi-uptime">-</span>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div class="card p-6">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-4">Dernières Inscriptions</h3>
-                                    <div id="admin-recent-users" class="space-y-3"></div>
-                                </div>
-                                <div class="card p-6">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-4">Répartition des Abonnements</h3>
-                                    <div class="relative h-64 w-full">
-                                        <canvas id="adminPlanChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="admin-users" class="admin-tab-content hidden">
-                            <div class="card p-4 mb-6 bg-blue-50 border-blue-200">
-                                <div class="relative">
-                                    <input type="text" id="admin-user-search" class="w-full p-3 pl-10 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Rechercher par email ou login (ex: prof@ifsi.fr)...">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <i class="fas fa-search text-gray-400"></i>
-                                    </div>
-                                </div>
-                                <div id="admin-search-results" class="mt-4 hidden bg-white rounded-lg shadow border border-gray-200 max-h-60 overflow-y-auto">
-                                    </div>
-                            </div>
-
-                            <div class="card p-6 h-[600px]">
-                                <h3 class="text-sm font-bold text-gray-500 uppercase mb-2">Navigation Hiérarchique</h3>
-                                <div class="flex h-full border border-gray-200 rounded-lg overflow-hidden">
-                                    <div class="w-1/3 miller-column bg-gray-50" id="admin-col-orgs">
-                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Structure</div>
-                                        <div id="admin-list-orgs"><p class="p-4 text-sm text-gray-500">Chargement...</p></div>
-                                    </div>
-                                    <div class="w-1/3 miller-column bg-white border-l" id="admin-col-trainers">
-                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Formateurs</div>
-                                        <div id="admin-list-trainers"><p class="p-4 text-sm text-gray-400 italic">Sélectionnez...</p></div>
-                                    </div>
-                                    <div class="w-1/3 miller-column bg-gray-50 border-l" id="admin-col-students">
-                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Étudiants</div>
-                                        <div id="admin-list-students"><p class="p-4 text-sm text-gray-400 italic">Sélectionnez...</p></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between hidden" id="admin-user-actions">
-                                <div>
-                                    <span class="font-bold text-gray-800 block">Utilisateur : <span id="admin-selected-user-email" class="text-blue-600">...</span></span>
-                                    <span class="text-xs text-gray-500" id="admin-selected-user-id">ID: ...</span>
-                                </div>
-                                <div class="space-x-2">
-                                    <button id="admin-impersonate-btn" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700"><i class="fas fa-mask mr-1"></i> Se connecter en tant que</button>
-                                    <button id="admin-edit-user-btn" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700"><i class="fas fa-edit mr-1"></i> Modifier</button>
-                                    <button id="admin-delete-user-btn" class="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"><i class="fas fa-trash mr-1"></i> Supprimer</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="admin-patients" class="admin-tab-content hidden">
-                            <div class="card p-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h2 class="text-lg font-bold text-gray-800">Base de données Patients</h2>
-                                    <button id="admin-refresh-patients" class="text-blue-600 hover:text-blue-800"><i class="fas fa-sync-alt"></i> Actualiser</button>
-                                </div>
-                                
-                                <div class="overflow-x-auto min-h-[400px]">
-                                    <table class="w-full text-sm text-left text-gray-500">
-                                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                            <tr>
-                                                <th class="px-6 py-3">Nom du dossier</th>
-                                                <th class="px-6 py-3">Créateur</th>
-                                                <th class="px-6 py-3">Dernière Modif.</th>
-                                                <th class="px-6 py-3 text-center">Public</th>
-                                                <th class="px-6 py-3 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="admin-patients-tbody"></tbody>
-                                    </table>
-                                </div>
-
-                                <div class="flex justify-between items-center mt-4 border-t pt-4">
-                                    <span class="text-sm text-gray-700">Page <span id="admin-patient-page" class="font-bold">1</span> sur <span id="admin-patient-total-pages">1</span></span>
-                                    <div class="inline-flex mt-2 xs:mt-0">
-                                        <button id="admin-prev-page" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-l hover:bg-gray-900">Précédent</button>
-                                        <button id="admin-next-page" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 border-0 border-l border-gray-700 rounded-r hover:bg-gray-900">Suivant</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="admin-communication" class="admin-tab-content hidden">
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <div class="card p-6 border-l-4 border-yellow-400">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-bullhorn mr-2 text-yellow-600"></i>Message Système (Broadcast)</h3>
-                                    <p class="text-sm text-gray-600 mb-4">Affiche un bandeau d'alerte en temps réel sur l'écran de TOUS les utilisateurs connectés.</p>
-                                    <textarea id="admin-broadcast-msg" class="styled-input w-full mb-3" rows="2" placeholder="Ex: Maintenance prévue à 22h..."></textarea>
-                                    <button id="admin-broadcast-btn" class="w-full bg-yellow-500 text-white font-bold py-2 rounded hover:bg-yellow-600">Diffuser le message</button>
-                                </div>
-
-                                <div class="card p-6 border-l-4 border-blue-400">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-envelope mr-2 text-blue-600"></i>Emailing Ciblé</h3>
-                                    <div class="space-y-3">
-                                        <select id="admin-email-target" class="styled-input w-full">
-                                            <option value="all">Tous les utilisateurs</option>
-                                            <option value="formateurs">Tous les formateurs</option>
-                                            <option value="specific">Utilisateur spécifique...</option>
-                                        </select>
-                                        <input type="email" id="admin-email-specific" class="styled-input w-full hidden" placeholder="Email du destinataire">
-                                        <input type="text" id="admin-email-subject" class="styled-input w-full" placeholder="Sujet">
-                                        <textarea id="admin-email-body" class="styled-input w-full" rows="3" placeholder="Message HTML autorisé..."></textarea>
-                                        <button id="admin-send-email-btn" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">Envoyer</button>
-                                    </div>
-                                </div>
-
-                                <div class="card p-6 border-l-4 border-indigo-400 lg:col-span-2">
-                                    <h3 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-file-invoice-dollar mr-2 text-indigo-600"></i>Générateur de Devis Rapide</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Client</label>
-                                            <input type="email" id="quote-client-email" class="styled-input w-full mt-1" placeholder="client@ecole.fr">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Montant (€)</label>
-                                            <input type="number" id="quote-amount" class="styled-input w-full mt-1" placeholder="500">
-                                        </div>
-                                        <div class="md:col-span-2">
-                                            <label class="block text-sm font-medium text-gray-700">Détails de l'offre</label>
-                                            <textarea id="quote-details" class="styled-input w-full mt-1" rows="2" placeholder="Licence Centre 1 an, 10 formateurs..."></textarea>
-                                        </div>
-                                    </div>
-                                    <button id="admin-send-quote-btn" class="mt-4 bg-indigo-600 text-white font-bold px-6 py-2 rounded hover:bg-indigo-700 flex items-center">
-                                        <i class="fas fa-paper-plane mr-2"></i> Envoyer la proposition
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="admin-tech" class="admin-tab-content hidden">
-                            <div class="card p-4 mb-6 flex items-center justify-between bg-gray-50 border-gray-200">
-                                <div>
-                                    <h3 class="font-bold text-gray-800">Mode Maintenance</h3>
-                                    <p class="text-sm text-gray-600">Empêche les nouvelles connexions (sauf Admin).</p>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="admin-maintenance-toggle" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-                                </label>
-                            </div>
-
-                            <div class="card p-0 overflow-hidden bg-[#1e1e1e] text-gray-300 font-mono text-xs rounded-lg shadow-inner h-[500px] flex flex-col">
-                                <div class="flex justify-between items-center p-2 bg-[#2d2d2d] border-b border-[#3d3d3d]">
-                                    <span class="font-bold">Serveur Logs (Dernières erreurs)</span>
-                                    <button id="admin-refresh-logs" class="text-xs bg-[#3d3d3d] hover:bg-[#4d4d4d] px-2 py-1 rounded">Rafraîchir</button>
-                                </div>
-                                <div id="admin-logs-container" class="flex-1 overflow-y-auto p-4 space-y-1">
-                                    <p class="text-gray-500">Chargement des logs...</p>
-                                </div>
-                            </div>
-                        </div>
-
-                    </section> </main>
+                </main>
             </div>
         </div>
     </div>
@@ -668,66 +500,25 @@
     <div id="custom-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden" style="z-index: 10001;">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
             <h3 class="text-lg font-bold text-gray-800" id="custom-confirm-title">Confirmation requise</h3>
-            <p class="mt-2 text-sm text-gray-600" id="custom-confirm-message">Êtes-vous sûr ?</p>
+            <p class="mt-2 text-sm text-gray-600" id="custom-confirm-message">Êtes-vous sûr de vouloir effectuer cette action ?</p>
             <div class="mt-6 flex justify-end space-x-3">
-                <button id="custom-confirm-cancel" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">Annuler</button>
-                <button id="custom-confirm-ok" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700">Confirmer</button>
+                <button id="custom-confirm-cancel" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">Annuler</button>
+                <button id="custom-confirm-ok" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">Confirmer</button>
             </div>
         </div>
     </div>
 
     <div id="room-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden" style="z-index: 10002;">
         <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="room-modal-box">
-            <h3 class="text-lg font-bold text-gray-800" id="room-modal-title">Gérer les chambres</h3>
-            <p class="mt-1 text-sm text-gray-500">Sélectionnez les chambres accessibles.</p>
+            <h3 class="text-lg font-bold text-gray-800" id="room-modal-title">Gérer les chambres pour...</h3>
+            <p class="mt-1 text-sm text-gray-500">Sélectionnez les chambres auxquelles cet étudiant aura accès.</p>
             <form id="room-modal-form" class="mt-4">
                 <input type="hidden" id="room-modal-login">
-                <div id="room-modal-list" class="grid grid-cols-5 gap-2"></div>
+                <div id="room-modal-list" class="grid grid-cols-5 gap-2">
+                    </div>
                 <div class="mt-6 flex justify-end space-x-3">
                     <button id="room-modal-cancel" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">Annuler</button>
                     <button id="room-modal-save" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700">Enregistrer</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="admin-user-edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden" style="z-index: 10005;">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg m-4 transform transition-all scale-95 opacity-0" id="admin-user-edit-box">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-user-edit text-blue-600 mr-2"></i>Édition Admin</h3>
-                <button id="admin-user-edit-close" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
-            </div>
-            
-            <form id="admin-user-edit-form" class="space-y-4">
-                <input type="hidden" id="admin-edit-user-id">
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Email (Correction)</label>
-                    <input type="email" id="admin-edit-email" class="styled-input w-full mt-1">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Plan d'abonnement (Force)</label>
-                    <select id="admin-edit-plan" class="styled-input w-full mt-1">
-                        <option value="free">Free</option>
-                        <option value="independant">Indépendant</option>
-                        <option value="promo">Promo</option>
-                        <option value="centre">Centre</option>
-                        <option value="student">Étudiant (Fixe)</option>
-                    </select>
-                </div>
-
-                <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <label class="flex items-center space-x-3 cursor-pointer">
-                        <input type="checkbox" id="admin-edit-suspended" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                        <span class="text-red-800 font-bold">Suspendre le compte</span>
-                    </label>
-                    <p class="text-xs text-red-600 mt-1 ml-8">L'utilisateur ne pourra plus se connecter.</p>
-                </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" id="admin-user-edit-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">Annuler</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Sauvegarder</button>
                 </div>
             </form>
         </div>
@@ -740,4 +531,5 @@
     <script src="account.js"></script>
 
 </body>
+
 </html>

@@ -1,11 +1,8 @@
 (function() {
     "use strict";
 
-    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT ---
-    // Si l'adresse contient 'vercel.app' OU 'pages.dev', on utilise le proxy (vide).
-    // Sinon (eidos-simul.fr ou localhost), on utilise l'API directe.
-    const IS_PROXY_ENV = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pages.dev');
-    const API_URL = IS_PROXY_ENV ? '' : 'https://api.eidos-simul.fr';
+    // URL de l'API (Backend sur Render)
+    const API_URL = 'https://eidos-api.onrender.com'; 
 
     // --- Sélections DOM ---
     const loginSection = document.getElementById('login-section');
@@ -97,7 +94,7 @@
     if (resetPasswordForm) resetPasswordForm.addEventListener('submit', handleResetPassword);
 
     /**
-     * Connexion
+     * Connexion [MODIFIÉ]
      */
     async function handleLogin(e) {
         e.preventDefault();
@@ -116,17 +113,21 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ identifier, password }),
-                credentials: 'include' // [IMPORTANT] Accepte le cookie HttpOnly
+                credentials: 'include' // [CRUCIAL] Accepte le cookie du serveur
             });
 
             const data = await response.json();
 
             if (!response.ok) {
+                // Gestion des erreurs Zod (details) ou erreur générique
                 throw new Error(data.details || data.error || 'Identifiants invalides');
             }
 
             if (data.success) {
+                // [MODIFIÉ] On ne stocke PLUS le token JWT.
+                // On stocke juste un indicateur non-sensible pour l'UI
                 localStorage.setItem('isLoggedIn', 'true');
+                
                 window.location.href = 'simul.html';
             } else {
                 throw new Error('Erreur de connexion inconnue.');
@@ -203,7 +204,7 @@
     }
     
     /**
-     * Vérification du code
+     * Vérification du code [MODIFIÉ]
      */
     async function handleVerify(e) {
         e.preventDefault();
@@ -224,7 +225,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, code }),
-                credentials: 'include' // [IMPORTANT] Accepte le cookie après vérification réussie
+                credentials: 'include' // [CRUCIAL] Accepte le cookie
             });
 
             const data = await response.json();
@@ -233,6 +234,7 @@
                 throw new Error(data.error || 'Erreur lors de la vérification');
             }
 
+            // [MODIFIÉ] Vérification du succès uniquement
             if (data.success) {
                 localStorage.setItem('isLoggedIn', 'true');
                 
@@ -310,6 +312,10 @@
             btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
+
+    // ... Fonctions ForgotPassword et ResetPassword identiques à l'original, juste fetch ...
+    // (Pas de changement majeur requis sauf si vous voulez ajouter credentials: 'include' par sécurité,
+    // mais ces routes ne nécessitent pas d'être authentifié).
 
     async function handleForgotPassword(e) {
         e.preventDefault();

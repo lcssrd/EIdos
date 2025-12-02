@@ -4,50 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
     <title>EIdos-simul - Dossier Patient Informatisé</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%2300A693'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12' /%3E%3C/svg%3E">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
-    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 
     <link href="style.css" rel="stylesheet">
 
     <script defer src="https://cloud.umami.is/script.js" data-website-id="a33bd886-5e06-4a52-b1d6-1c3181d1214f"></script>
 
-    <style>
-        /* Style personnalisé pour la barre de défilement du graphique */
-        #pancarte-scrollbar {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            outline: none;
-            opacity: 0.7;
-            transition: opacity .2s;
-        }
-        #pancarte-scrollbar:hover {
-            opacity: 1;
-        }
-        #pancarte-scrollbar::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 40px; /* Largeur du thumb pour simuler une barre de scroll */
-            height: 12px;
-            background: #9ca3af;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        #pancarte-scrollbar::-moz-range-thumb {
-            width: 40px;
-            height: 12px;
-            background: #9ca3af;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body class="flex h-screen bg-gray-100">
     <aside id="sidebar" class="w-64 bg-white shadow-xl flex flex-col flex-shrink-0 m-4 rounded-2xl h-[calc(100vh-2rem)] transition-all duration-300 ease-in-out">
@@ -270,20 +235,7 @@
                         
                         <div id="prescriptions" class="content-section">
                             <div class="card p-6">
-                                <div class="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
-                                    <h2 class="text-xl font-bold text-indigo-800">Prescriptions Médicales</h2>
-                                    
-                                    <div class="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
-                                        <button type="button" id="zoom-out-btn" class="p-1 px-2 text-gray-600 hover:text-indigo-600 hover:bg-white rounded transition-colors" title="Dézoomer">
-                                            <i class="fas fa-search-minus"></i>
-                                        </button>
-                                        <span class="text-xs font-mono text-gray-500 w-12 text-center" id="zoom-level-text">100%</span>
-                                        <button type="button" id="zoom-in-btn" class="p-1 px-2 text-gray-600 hover:text-indigo-600 hover:bg-white rounded transition-colors" title="Zoomer">
-                                            <i class="fas fa-search-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
+                                 <h2 class="card-header">Prescriptions Médicales</h2>
                                  <div class="overflow-x-auto mt-4">
                                      <table class="w-full border-collapse text-sm diagram" id="prescription-table">
                                          <thead id="prescription-thead" class="bg-gray-100 text-gray-600">
@@ -358,25 +310,8 @@
                         </div>
                         <div id="pancarte" class="content-section">
                             <div class="card p-6">
-                                <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
-                                    <h2 class="card-header border-b-0 pb-0 mb-0">Graphique des Constantes</h2>
-                                    
-                                    <div class="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
-                                        <button type="button" id="zoom-out-pancarte-btn" class="p-1 px-2 text-gray-600 hover:text-orange-600 hover:bg-white rounded transition-colors" title="Dézoomer">
-                                            <i class="fas fa-search-minus"></i>
-                                        </button>
-                                        <span class="text-xs font-mono text-gray-500 w-12 text-center" id="zoom-level-pancarte-text">100%</span>
-                                        <button type="button" id="zoom-in-pancarte-btn" class="p-1 px-2 text-gray-600 hover:text-orange-600 hover:bg-white rounded transition-colors" title="Zoomer">
-                                            <i class="fas fa-search-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="relative h-96 w-full">
-                                    <canvas id="pancarteChart"></canvas>
-                                </div>
-                                <div class="mt-2">
-                                    <input type="range" id="pancarte-scrollbar" min="0" max="100" value="0" step="1" disabled>
-                                </div>
+                                <h2 class="card-header">Graphique des Constantes</h2>
+                                <div class="relative h-96 w-full"><canvas id="pancarteChart"></canvas></div>
                             </div>
                             <div class="card p-6">
                                 <h2 class="card-header">Tableau de Surveillance (Pancarte)</h2>

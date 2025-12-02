@@ -4,6 +4,7 @@
     let pancarteChartInstance;
     let loadPatientModal, loadPatientBox, loadPatientListContainer;
     let confirmModal, confirmModalBox, confirmTitle, confirmMessage, confirmCancelBtn, confirmOkBtn;
+    // MODIFICATION : Remplacement de crModalTextarea par crModalContent
     let crModal, crModalBox, crModalTitle, crModalContent, crModalSaveBtn, crModalCloseBtn, crModalActiveIdInput;
     let saveStatusButton, saveStatusIcon, saveStatusText;
     let toastElement, toastIcon, toastText;
@@ -16,106 +17,77 @@
     let highlightedElement = null;
     let activeTutorialSteps = []; 
 
-    // --- VARIABLES ET FONCTIONS ZOOM (TABLEAU PRESCRIPTIONS) ---
-    let currentZoomLevel = 48; // Valeur par défaut en pixels (correspond au CSS)
-
-    function initZoomControls() {
-        const zoomInBtn = document.getElementById('zoom-in-btn');
-        const zoomOutBtn = document.getElementById('zoom-out-btn');
-        const zoomText = document.getElementById('zoom-level-text');
-
-        if (zoomInBtn && zoomOutBtn) {
-            zoomInBtn.addEventListener('click', () => updateZoom(10));
-            zoomOutBtn.addEventListener('click', () => updateZoom(-10));
-        }
-
-        function updateZoom(delta) {
-            // Bornes du zoom : min 20px (très dense), max 120px (très large)
-            const newLevel = Math.max(20, Math.min(120, currentZoomLevel + delta));
-            if (newLevel !== currentZoomLevel) {
-                currentZoomLevel = newLevel;
-                // Mise à jour de la variable CSS
-                document.documentElement.style.setProperty('--hour-col-width', `${currentZoomLevel}px`);
-                
-                // Mise à jour du texte indicateur (48px = 100%)
-                const percentage = Math.round((currentZoomLevel / 48) * 100);
-                if(zoomText) zoomText.textContent = `${percentage}%`;
-            }
-        }
-    }
-
-    // --- [NOUVEAU] VARIABLES ET FONCTIONS ZOOM (GRAPHIQUE PANCARTE) ---
-    function initPancarteZoomControls() {
-        const zoomInBtn = document.getElementById('zoom-in-pancarte-btn');
-        const zoomOutBtn = document.getElementById('zoom-out-pancarte-btn');
-
-        if (zoomInBtn && zoomOutBtn) {
-            zoomInBtn.addEventListener('click', () => {
-                if (pancarteChartInstance) {
-                    pancarteChartInstance.zoom(1.1); // Zoom in +10%
-                }
-            });
-            zoomOutBtn.addEventListener('click', () => {
-                if (pancarteChartInstance) {
-                    pancarteChartInstance.zoom(0.9); // Zoom out -10%
-                }
-            });
-        }
-    }
-
     // --- DONNÉES DU TUTORIEL ---
     
     const tutorialStepsSimul = [
+        // ÉTAPE 1 : INTRODUCTION
         {
             element: '#sidebar > div:first-child', 
             text: "Bienvenue dans le tutoriel EIdos-simul !\n\nNous allons parcourir ensemble les fonctionnalités principales de l'interface. \nCliquez sur 'Suivant' pour commencer.",
             position: 'right'
         },
+        // ÉTAPE 2 : SIDEBAR
         {
             element: '#sidebar', 
             text: "La Barre Latérale.\n\nC'est ici que s'affichent vos patients (les chambres). Cliquez sur un patient pour charger son dossier et commencer à travailler dessus.",
             position: 'right'
         },
+        
+        // --- DÉTAIL DU HEADER ---
+        
+        // ÉTAPE 3 : SYNCHRONISATION
         {
             element: '#save-status-button',
             text: "Synchronisation.\n\nCe badge indique si vos données sont enregistrées. La sauvegarde est automatique, mais vous pouvez cliquer dessus pour forcer une synchronisation manuelle si besoin.",
             position: 'bottom'
         },
+        // ÉTAPE 4 : SAUVEGARDE (ARCHIVAGE) -> Sera sauté si étudiant/free
         {
             element: '#save-patient-btn',
             text: "Archiver le Cas.\n\nSauvegardez l'état exact du dossier actuel dans vos archives. C'est idéal pour créer et conserver vos scénarios pédagogiques.",
             position: 'bottom'
         },
+        // ÉTAPE 5 : CHARGEMENT -> Sera sauté si étudiant/free
         {
             element: '#load-patient-btn',
             text: "Charger un Cas.\n\nOuvre votre bibliothèque. Vous pouvez y choisir un dossier archivé (ou un cas public) pour l'installer dans la chambre actuelle.",
             position: 'bottom'
         },
+        // ÉTAPE 6 : EFFACEMENT LOCAL -> Sera sauté si étudiant
         {
             element: '#clear-current-patient-btn',
             text: "Remise à Zéro.\n\nAttention : ce bouton efface intégralement le contenu du dossier que vous consultez actuellement. Les autres chambres ne sont pas affectées.",
             position: 'bottom'
         },
+
+        // --- SUITE DU TUTO ---
+
+        // ÉTAPE 7 : EN-TÊTE PATIENT
         {
             element: '#patient-header-form',
             text: "L'Identité du Patient.\n\nRemplissez ces champs (Nom, Prénom, Date d'entrée) dès le début. La Date d'Entrée est cruciale pour le calcul automatique des jours (J0, J1...).",
             position: 'bottom'
         },
+        // ÉTAPE 8 : NAVIGATION ONGLETS
         {
             element: '#tabs-nav-container',
             text: "Le Dossier Patient.\n\nNaviguez à travers les différentes sections du DPI : Administratif, Prescriptions, Transmissions, Résultats de biologie, etc.",
             position: 'bottom'
         },
+        // ÉTAPE 9 : PRESCRIPTIONS
         {
             element: '#tabs-nav button[data-tab-id="prescriptions"]',
             text: "L'Onglet Prescriptions.\n\nC'est ici que vous prescrivez médicaments et soins, et que vous définissez les horaires d'administration sur la frise temporelle.",
             position: 'bottom'
         },
+        // ÉTAPE 10 : DIAGRAMME
         {
             element: '#tabs-nav button[data-tab-id="diagramme"]',
             text: "Le Diagramme de Soins.\n\nL'espace pour valider la réalisation des soins infirmiers et de confort (toilettes, surveillance) tout au long de la journée.",
             position: 'bottom'
         },
+        
+        // --- BOUTONS DU BAS (MENU GAUCHE) ---
         {
             element: '#account-management-btn',
             text: "Gestion de Compte.\n\nAccédez à votre profil, gérez votre abonnement et créez les comptes de vos étudiants ici.",
@@ -136,6 +108,7 @@
             text: "Déconnexion.\n\nPour fermer votre session en toute sécurité à la fin de votre travail.",
             position: 'right'
         },
+        // FIN
         {
             element: '#sidebar > div:first-child',
             text: "C'est terminé !\n\nVous connaissez maintenant les bases d'EIdos-simul. À vous de jouer !",
@@ -177,11 +150,13 @@
         crModal = document.getElementById('cr-modal');
         crModalBox = document.getElementById('cr-modal-box');
         crModalTitle = document.getElementById('cr-modal-title');
+        // MODIFICATION : Récupération de la div éditable au lieu du textarea
         crModalContent = document.getElementById('cr-modal-content');
         crModalSaveBtn = document.getElementById('cr-modal-save-btn');
         crModalCloseBtn = document.getElementById('cr-modal-close-btn');
         crModalActiveIdInput = document.getElementById('cr-modal-active-id');
         
+        // Tutorial UI
         tutorialOverlay = document.getElementById('tutorial-overlay');
         tutorialStepBox = document.getElementById('tutorial-step-box');
         tutorialText = document.getElementById('tutorial-text');
@@ -196,11 +171,6 @@
         toastText = document.getElementById('toast-text');
         const allergyInput = document.getElementById('atcd-allergies');
         if (allergyInput) allergyInput.addEventListener('input', checkAllergyStatus);
-
-        // Initialisation des contrôles de zoom du tableau Prescriptions
-        initZoomControls();
-        // [AJOUT] Initialisation des contrôles de zoom de la Pancarte
-        initPancarteZoomControls();
     }
 
     function checkAllergyStatus() {
@@ -325,36 +295,45 @@
     }
 
     function applyPermissions(userPermissions) {
+        
+        // 1. GESTION DU BADGE DE RÔLE (Couleurs douces et texte)
         const roleBadge = document.getElementById('user-role-badge');
         if (roleBadge) {
             roleBadge.classList.remove('hidden');
             const span = roleBadge.querySelector('span');
             const icon = roleBadge.querySelector('i');
             
+            // Reset des classes de couleur (on garde la base)
             roleBadge.className = 'flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm mr-2 transition-all duration-300';
             
             if (userPermissions.isSuperAdmin) {
                 span.textContent = 'Super Admin';
                 icon.className = 'fas fa-user-shield';
+                // Orange doux et transparent
                 roleBadge.classList.add('bg-orange-50', 'text-orange-700', 'border-orange-200');
             } else if (userPermissions.role === 'owner') {
                 span.textContent = 'Gestionnaire';
                 icon.className = 'fas fa-building';
+                // Violet doux
                 roleBadge.classList.add('bg-purple-50', 'text-purple-700', 'border-purple-200');
             } else if (userPermissions.role === 'formateur' || userPermissions.role === 'user') {
                 span.textContent = 'Formateur';
                 icon.className = 'fas fa-chalkboard-teacher';
+                // Bleu doux
                 roleBadge.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200');
             } else if (userPermissions.isStudent) {
                 span.textContent = 'Étudiant';
                 icon.className = 'fas fa-user-graduate';
+                // Vert doux
                 roleBadge.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
             } else {
                 roleBadge.classList.add('hidden');
             }
         }
 
+        // 2. Gestion stricte des boutons Import/Export JSON
         const jsonButtons = ['#import-json-btn', '#export-json-btn'];
+        
         if (userPermissions.isSuperAdmin) {
             jsonButtons.forEach(selector => {
                 const btn = document.querySelector(selector);
@@ -369,14 +348,18 @@
             });
         }
 
+        // 3. Gestion des droits d'enregistrement (Role 'user' = Free = Lecture seule sur la persistance)
         if (userPermissions.role === 'user') {
             const saveBtn = document.getElementById('save-patient-btn');
             if (saveBtn) saveBtn.style.display = 'none';
+            
+            // On masque aussi le statut car ils ne peuvent pas sauvegarder
             if (saveStatusButton) saveStatusButton.style.display = 'none';
         }
         
         if (!userPermissions.isStudent) { crModalSaveBtn.style.display = 'inline-flex'; return; }
         
+        // 4. Permissions Etudiant
         const studentForbiddenButtons = ['#save-patient-btn', '#load-patient-btn', '#import-json-btn', '#export-json-btn', '#clear-current-patient-btn', '#clear-all-data-btn', '#account-management-btn'];
         studentForbiddenButtons.forEach(selector => { const btn = document.querySelector(selector); if (btn) btn.style.display = 'none'; });
         if (!userPermissions.header) disableSectionInputs('patient-header-form');
@@ -386,14 +369,7 @@
         if (!userPermissions.transmissions) { const form = document.getElementById('new-transmission-form-2'); if (form) form.style.display = 'none'; }
         if (!userPermissions.comptesRendus) crModalSaveBtn.style.display = 'none';
         if (!userPermissions.prescriptions_add) { const form = document.getElementById('new-prescription-form'); if (form) form.style.display = 'none'; }
-        
-        // [MODIFICATION] Désactivation du diagramme de soins
-        if (!userPermissions.diagramme) { 
-            const form = document.getElementById('new-care-form'); 
-            if (form) form.style.display = 'none'; 
-            document.querySelectorAll('#care-diagram-table input[type="checkbox"]').forEach(cb => cb.disabled = true);
-        }
-
+        if (!userPermissions.diagramme) { const form = document.getElementById('new-care-form'); if (form) form.style.display = 'none'; }
         if (!userPermissions.pancarte) document.querySelectorAll('#pancarte-table input, #glycemie-table input').forEach(el => el.disabled = true);
         if (!userPermissions.biologie) document.querySelectorAll('#bio-table input').forEach(el => el.disabled = true);
     }
@@ -426,6 +402,7 @@
         document.querySelectorAll('#bio-table thead input[type="date"]').forEach(input => { input.value = ''; delete input.dataset.dateOffset; });
         document.getElementById('glycemie-tbody').innerHTML = '';
         document.getElementById('pancarte-tbody').innerHTML = '';
+        // Vide aussi le contenu du modal CR
         if(crModalContent) crModalContent.innerHTML = '';
         
         checkAllergyStatus();
@@ -489,10 +466,8 @@
         if (state.careDiagramRows && Array.isArray(state.careDiagramRows)) {
             state.careDiagramRows.forEach(row => addCareDiagramRow(row));
         } else if (state['care-diagram-tbody_html']) {
-            // [AUDIT: CORRECTION XSS]
-            const safeHtml = DOMPurify.sanitize(state['care-diagram-tbody_html']);
             const tempContainer = document.createElement('div');
-            tempContainer.innerHTML = `<table><tbody>${safeHtml}</tbody></table>`;
+            tempContainer.innerHTML = `<table><tbody>${state['care-diagram-tbody_html']}</tbody></table>`;
             const rows = tempContainer.querySelectorAll('tr');
             rows.forEach(row => {
                 const nameSpan = row.querySelector('td:first-child span');
@@ -581,6 +556,7 @@
         if (!crData) return;
         for (const crId in crData) {
             const card = document.querySelector(`.cr-card[data-cr-id="${crId}"]`);
+            // MODIFICATION : Vérifie si le contenu HTML n'est pas vide
             if (card && crData[crId] && crData[crId].trim() !== '' && crData[crId] !== '<br>') {
                 const icon = card.querySelector('.cr-check-icon');
                 if (icon) icon.classList.remove('hidden');
@@ -969,23 +945,26 @@
     function deletePrescription(button) { const row = button.closest('tr'); if (row) { row.remove(); return true; } return false; }
     function deleteCareDiagramRow(button) { const row = button.closest('tr'); if (row) { row.remove(); return true; } return false; }
 
+    // MODIFICATION : Mise à jour pour utiliser la div éditable et innerHTML
     function openCrModal(crId, crTitle, crText) {
         crModalTitle.textContent = crTitle; 
         crModalActiveIdInput.value = crId; 
+        // Utilisation de innerHTML pour le formatage, avec DOMPurify pour la sécurité
         crModalContent.innerHTML = DOMPurify.sanitize(crText) || ''; 
         crModal.classList.remove('hidden'); 
         setTimeout(() => { 
             crModalBox.classList.remove('scale-95', 'opacity-0'); 
-            crModalContent.focus(); 
+            crModalContent.focus(); // Focus sur la div
         }, 10);
     }
     
+    // MODIFICATION : Mise à jour pour vider le HTML
     function closeCrModal() {
         crModalBox.classList.add('scale-95', 'opacity-0'); 
         setTimeout(() => { 
             crModal.classList.add('hidden'); 
             crModalActiveIdInput.value = ''; 
-            crModalContent.innerHTML = ''; 
+            crModalContent.innerHTML = ''; // Vider le HTML
         }, 200);
     }
     
@@ -997,9 +976,6 @@
     }
 
     function handleIVDblClick(e) {
-        // [CORRECTION] Vérification de la permission validate avant suppression d'un élément
-        if (window.patientService && !window.patientService.getUserPermissions().prescriptions_validate) return;
-        
         const bar = e.currentTarget;
         showDeleteConfirmation("Effacer cette administration ?", () => {
             const cell = bar.parentElement;
@@ -1009,22 +985,14 @@
     }
 
     function handleIVMouseDown(e) {
-        // [CORRECTION] Vérification de la permission validate avant toute interaction
-        if (window.patientService && !window.patientService.getUserPermissions().prescriptions_validate) return;
-
         if (e.target.classList.contains('iv-bar-container')) {
             ivInteraction.mode = 'draw';
             const cell = e.target;
             const rect = cell.getBoundingClientRect();
-            
-            // Calcul du pas de grille basé sur la largeur actuelle (Zoom support)
-            const totalIntervals = 1056; 
-            const intervalWidthPx = rect.width / totalIntervals;
-            
+            const intervalWidthPx = rect.width / (11 * 24 * 4);
             const rawStartXPx = e.clientX - rect.left;
             const snappedInterval = Math.round(rawStartXPx / intervalWidthPx);
             const startX = snappedInterval * intervalWidthPx;
-            
             const newBar = document.createElement('div');
             newBar.className = 'iv-bar';
             const rowType = cell.closest('tr').dataset.type;
@@ -1053,65 +1021,34 @@
         }
     }
 
-    // --- CORRECTION CLAMPING & PRECISION ---
     function handleIVMouseMove(e) {
         if (!ivInteraction.active) return;
         e.preventDefault();
-
         const { mode, targetBar, targetCell, startX, startWidth, startLeft, startLeftPx } = ivInteraction;
         const cellRect = targetCell.getBoundingClientRect();
-        
-        // Sécurité division par zéro
-        if (cellRect.width === 0) return;
-
         const dx = e.clientX - startX;
-        
-        // Calcul dynamique du pas de grille
-        const totalIntervals = 1056; 
-        const intervalWidthPx = cellRect.width / totalIntervals;
-
+        const intervalWidthPx = cellRect.width / (11 * 24 * 4);
         if (mode === 'draw' || mode === 'resize') {
             if (mode === 'draw' && targetCell.classList.contains('marker-container')) {
-                // Mode Marqueur
                 let rawLeftPx = startLeftPx + dx;
-                
-                // Snap
                 const snappedInterval = Math.round(rawLeftPx / intervalWidthPx);
-                let newLeftPx = snappedInterval * intervalWidthPx;
-
-                // Clamp (bornage)
-                newLeftPx = Math.max(0, Math.min(newLeftPx, cellRect.width - targetBar.offsetWidth)); 
-                
-                const newLeftPercent = (newLeftPx / cellRect.width) * 100;
-                targetBar.style.left = `${newLeftPercent}%`;
-
+                let newLeft = snappedInterval * intervalWidthPx;
+                newLeft = Math.max(0, Math.min(newLeft, cellRect.width - targetBar.offsetWidth)); 
+                targetBar.style.left = `${(newLeft / cellRect.width) * 100}%`;
             } else { 
-                // Mode Durée
                 let rawWidthPx = startWidth + dx;
-                
                 const snappedIntervals = Math.max(1, Math.round(rawWidthPx / intervalWidthPx));
-                let newWidthPx = snappedIntervals * intervalWidthPx;
-
-                // Clamp width
-                const currentBarLeftPx = parseFloat(targetBar.style.left) / 100 * cellRect.width;
-                newWidthPx = Math.min(newWidthPx, cellRect.width - currentBarLeftPx);
-
-                const newWidthPercent = (newWidthPx / cellRect.width) * 100;
-                targetBar.style.width = `${newWidthPercent}%`;
+                let newWidth = snappedIntervals * intervalWidthPx;
+                newWidth = Math.min(newWidth, cellRect.width - targetBar.offsetLeft);
+                targetBar.style.width = `${(newWidth / cellRect.width) * 100}%`;
             }
         } else if (mode === 'move') {
             let rawLeftPx = startLeft + dx;
-            
             const snappedInterval = Math.round(rawLeftPx / intervalWidthPx);
-            let newLeftPx = snappedInterval * intervalWidthPx;
-
-            // Clamp
-            newLeftPx = Math.max(0, Math.min(newLeftPx, cellRect.width - targetBar.offsetWidth));
-            
-            const newLeftPercent = (newLeftPx / cellRect.width) * 100;
-            targetBar.style.left = `${newLeftPercent}%`;
+            let newLeft = snappedInterval * intervalWidthPx;
+            newLeft = Math.max(0, Math.min(newLeft, cellRect.width - targetBar.offsetWidth));
+            targetBar.style.left = `${(newLeft / cellRect.width) * 100}%`;
         }
-
         updateIVBarDetails(targetBar, targetCell);
     }
 
@@ -1120,7 +1057,6 @@
         const { targetBar, targetCell } = ivInteraction;
         if (targetBar && targetCell) {
             const cellRect = targetCell.getBoundingClientRect();
-            // Recalcul précis au relâchement pour alignement parfait
             const intervalWidthPx = cellRect.width / (11 * 24 * 4);
             const rawLeftPx = targetBar.offsetLeft;
             const snappedLeftInterval = Math.round(rawLeftPx / intervalWidthPx);
@@ -1142,59 +1078,37 @@
         document.dispatchEvent(new CustomEvent('uiNeedsSave'));
     }
     
-    // --- UX : TOOLTIPS AMÉLIORÉS ---
     function updateIVBarDetails(bar, cell) {
         if (!bar || !cell) return;
         const tableStartDateStr = document.getElementById('patient-entry-date').value;
         if (!tableStartDateStr) return;
         const barId = bar.dataset.barId;
         if (!barId) return; 
-
         const tableStartDate = new Date(tableStartDateStr + 'T00:00:00');
         const totalTimelineMinutes = 11 * 24 * 60;
-        
         const startPercent = parseFloat(bar.style.left);
         const widthPercent = parseFloat(bar.style.width);
-        
         const startOffsetMinutes = (startPercent / 100) * totalTimelineMinutes;
         const durationMinutes = (widthPercent / 100) * totalTimelineMinutes;
-        
         const rawStartDateTime = new Date(tableStartDate.getTime());
         rawStartDateTime.setMinutes(rawStartDateTime.getMinutes() + startOffsetMinutes);
-        
         const rawEndDateTime = new Date(rawStartDateTime.getTime());
         rawEndDateTime.setMinutes(rawEndDateTime.getMinutes() + durationMinutes);
-        
         const startDateTime = utils.roundDateTo15Min(rawStartDateTime);
         const endDateTime = utils.roundDateTo15Min(rawEndDateTime);
-        
         const formatTime = (date) => date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-        const formatDate = (date) => date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-
-        // Tooltip avec instruction
-        let tooltipText = "";
-        if (cell.classList.contains('marker-container')) {
-            tooltipText = `Prise : ${formatDate(startDateTime)} à ${formatTime(startDateTime)}`;
-        } else {
-            tooltipText = `Début : ${formatDate(startDateTime)} ${formatTime(startDateTime)}\nFin : ${formatDate(endDateTime)} ${formatTime(endDateTime)}`;
-        }
-        tooltipText += "\n(Double-clic pour supprimer)";
-        bar.title = tooltipText;
-
-        // Labels visuels
+        if (cell.classList.contains('marker-container')) bar.title = `Prise: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
+        else bar.title = `Début: ${startDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}\nFin: ${endDateTime.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short'})}`;
         let startLabel = cell.querySelector(`.iv-time-label.start[data-bar-id="${barId}"]`);
         if (!startLabel) { startLabel = document.createElement('span'); startLabel.className = 'iv-time-label start'; startLabel.dataset.barId = barId; cell.appendChild(startLabel); }
         let endLabel = cell.querySelector(`.iv-time-label.end[data-bar-id="${barId}"]`);
         if (!endLabel) { endLabel = document.createElement('span'); endLabel.className = 'iv-time-label end'; endLabel.dataset.barId = barId; cell.appendChild(endLabel); }
-        
         startLabel.textContent = formatTime(startDateTime);
         endLabel.textContent = formatTime(endDateTime);
-        
         startLabel.style.left = `${startPercent}%`;
         endLabel.style.left = `${startPercent + widthPercent}%`;
     }
 
-    // --- MISE A JOUR GRAPHIQUE AVEC ZOOM & SCROLLBAR ---
     function updatePancarteChart() {
         const table = document.getElementById('pancarte-table');
         const entryDateVal = document.getElementById('patient-entry-date').value;
@@ -1219,109 +1133,12 @@
             }
             return { label: paramName, data, type: 'line', tension: 0.2, borderWidth: 2, spanGaps: true, pointBackgroundColor: dataSetsConfig[paramName].borderColor || '#000', ...dataSetsConfig[paramName] };
         }).filter(ds => ds !== null);
-        
         const ctx = document.getElementById('pancarteChart').getContext('2d');
         if (pancarteChartInstance) pancarteChartInstance.destroy();
-        
-        // --- LOGIQUE SCROLLBAR SYNCHRONISEE ---
-        const scrollbar = document.getElementById('pancarte-scrollbar');
-        const zoomText = document.getElementById('zoom-level-pancarte-text'); // [AJOUT]
-
-        // Fonction pour mettre à jour la barre de défilement quand le graphique bouge
-        const updateScrollbarAndText = (chart) => {
-            const xScale = chart.scales.x;
-            const min = xScale.min;
-            const max = xScale.max;
-            // Limites absolues (indices de labels)
-            const limitMin = 0; 
-            const limitMax = labels.length - 1;
-            
-            // Calcul de la taille de la fenêtre actuelle
-            const windowSize = max - min;
-            
-            // Configuration du range
-            scrollbar.min = limitMin;
-            // Le maximum du scrollbar est tel que : value + windowSize <= limitMax
-            scrollbar.max = limitMax - windowSize; 
-            scrollbar.value = min;
-            
-            // Désactiver si tout est visible
-            const isFullyVisible = (max - min) >= (limitMax - limitMin - 0.1); // Marge d'erreur flottante
-            scrollbar.disabled = isFullyVisible;
-            scrollbar.style.opacity = isFullyVisible ? '0.5' : '1';
-
-            // [NOUVEAU] Mise à jour du texte de zoom
-            if (zoomText && windowSize > 0) {
-                const totalPoints = labels.length;
-                // Calcul inverse : moins on voit de points (windowSize petit), plus le zoom est grand
-                // Base 100% = voir ~10 points (comme défini dans max: Math.min(9, ...))
-                // Si on voit 33 points -> 30%
-                // Si on voit 1 point -> 1000%
-                const defaultWindow = 10;
-                // Ou utiliser la formule : (Total / Window) * 30
-                // Avec 33 points total, window 10 => (33/10)*30 = 99% ~ 100%. C'est cohérent.
-                const percentageAlternative = Math.round((labels.length / windowSize) * 30);
-                
-                zoomText.textContent = `${percentageAlternative}%`;
-            }
-        };
-
-        pancarteChartInstance = new Chart(ctx, { 
-            type: 'bar', 
-            data: { labels, datasets }, 
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                scales: { 
-                    x: {
-                        min: 0,
-                        // Afficher par défaut les 10 premiers points (environ 3 jours)
-                        // Si l'écran est petit, cela rendra le graphique lisible immédiatement
-                        max: Math.min(9, labels.length - 1) 
-                    },
-                    y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 }, 
-                    y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 }, 
-                    y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 }, 
-                    y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } }, 
-                    y4: { position: 'right', title: { display: true, text: 'SpO2' }, grid: { drawOnChartArea: false }, min: 50, max: 100 } 
-                }, 
-                plugins: { 
-                    legend: { position: 'bottom' }, 
-                    tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }},
-                    zoom: {
-                        limits: {
-                            x: { min: 0, max: labels.length - 1 }
-                        },
-                        pan: {
-                            enabled: true,
-                            mode: 'x',
-                            onPan: ({chart}) => updateScrollbarAndText(chart)
-                        },
-                        zoom: {
-                            wheel: { enabled: true },
-                            pinch: { enabled: true },
-                            mode: 'x',
-                            onZoom: ({chart}) => updateScrollbarAndText(chart)
-                        }
-                    }
-                } 
-            } 
-        });
-
-        // Initialisation de la scrollbar
-        setTimeout(() => updateScrollbarAndText(pancarteChartInstance), 100);
-
-        // Ecouteur d'événement pour la scrollbar (Déplacement du graphique)
-        scrollbar.oninput = () => {
-            const val = parseFloat(scrollbar.value);
-            const xScale = pancarteChartInstance.scales.x;
-            const currentWindowSize = xScale.max - xScale.min;
-            
-            pancarteChartInstance.options.scales.x.min = val;
-            pancarteChartInstance.options.scales.x.max = val + currentWindowSize;
-            pancarteChartInstance.update('none'); // Update performant sans animation complète
-        };
+        pancarteChartInstance = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { position: 'left', title: { display: true, text: 'Tension (mmHg)' }, min: 0, max: 200 }, y1: { position: 'right', title: { display: true, text: 'Pouls' }, grid: { drawOnChartArea: false }, min: 0, max: 200 }, y2: { position: 'right', title: { display: true, text: 'Douleur' }, grid: { drawOnChartArea: false }, max: 10, min: 0 }, y3: { position: 'right', title: { display: true, text: 'Température' }, grid: { drawOnChartArea: false }, min: 36, max: 41, ticks: { stepSize: 0.5 } }, y4: { position: 'right', title: { display: true, text: 'SpO2' }, grid: { drawOnChartArea: false }, min: 50, max: 100 } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.dataset.label === 'Tension (mmHg)' && ctx.raw?.length === 2 ? `${ctx.dataset.label}: ${ctx.raw[1]}/${ctx.raw[0]}` : `${ctx.dataset.label}: ${ctx.formattedValue}` }} } } });
     }
+
+    // --- TUTORIAL LOGIC ---
 
     function startTutorial(pageType = 'simul') {
         currentStepIndex = 0;
@@ -1340,6 +1157,7 @@
         tutorialOverlay.classList.add('hidden');
         if (highlightedElement) { 
             highlightedElement.classList.remove('tutorial-highlight'); 
+            // Reset styles if specific overrides were used
             if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
                 highlightedElement.style = ''; 
             }
@@ -1349,6 +1167,7 @@
     }
 
     function showTutorialStep(index) {
+        // Clean up previous highlight
         if (highlightedElement) { 
             highlightedElement.classList.remove('tutorial-highlight'); 
             if (highlightedElement.closest('#header-buttons') || highlightedElement.id === 'save-status-button') {
@@ -1364,6 +1183,7 @@
         const step = activeTutorialSteps[index];
         const element = document.querySelector(step.element);
 
+        // CHECK VISIBILITY TO SKIP HIDDEN ELEMENTS (e.g. for Students)
         let isVisible = false;
         if (element) {
             const style = window.getComputedStyle(element);
@@ -1383,20 +1203,24 @@
 
         tutorialText.textContent = step.text;
         
+        // Button Logic
         if (index === activeTutorialSteps.length - 1) {
             tutorialNextBtn.textContent = "Terminer";
         } else {
             tutorialNextBtn.textContent = "Suivant";
         }
 
+        // Highlighting
         element.classList.add('tutorial-highlight');
         highlightedElement = element;
 
+        // Specific z-index fixes for floating/fixed elements
         if (element.closest('#header-buttons') || element.id === 'save-status-button') { 
             element.style.setProperty('z-index', '9997', 'important'); 
             element.style.setProperty('position', 'relative', 'important'); 
         }
 
+        // Positioning the box
         const rect = element.getBoundingClientRect();
         const boxRect = tutorialStepBox.getBoundingClientRect();
         const margin = 15; 
@@ -1424,6 +1248,7 @@
                 left = rect.left + (rect.width / 2) - (boxRect.width / 2);
         }
 
+        // Boundary checks to keep box in viewport
         if (top < margin) top = margin; 
         if (left < margin) left = margin; 
         if (top + boxRect.height > window.innerHeight - margin) top = window.innerHeight - boxRect.height - margin; 
@@ -1436,7 +1261,9 @@
     function incrementTutorialStep() {
         const currentStep = activeTutorialSteps[currentStepIndex];
         
+        // Check for special actions before moving
         if (currentStep && currentStep.action === 'redirect_account') {
+            // End this tutorial part without setting the completed flag
             endTutorial(false); 
             window.location.href = 'account.html?tutorial=true';
             return;

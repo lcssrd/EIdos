@@ -1,25 +1,27 @@
 (function() {
     "use strict";
 
-    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT ---
-    // Si l'adresse contient 'vercel.app' OU 'pages.dev', on utilise le proxy (vide).
-    // Sinon (eidos-simul.fr ou localhost), on utilise l'API directe.
-    const IS_PROXY_ENV = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pages.dev');
-    const API_URL = IS_PROXY_ENV ? '' : 'https://api.eidos-simul.fr';
+    // URL de l'API
+    const API_URL = 'https://eidos-api.onrender.com';
     
-    // Pour les sockets, c'est toujours l'URL directe (les proxies gratuits gèrent mal les WebSockets)
-    const SOCKET_URL = 'https://api.eidos-simul.fr';
-
     // Variable pour stocker la connexion socket
     let socket = null;
 
     // --- Fonctions d'authentification "privées" ---
 
+    // [MODIFIÉ] On ne manipule plus le token directement
     function getAuthToken() {
+        // Cette fonction ne sert plus à récupérer le token brut.
+        // On peut l'utiliser pour vérifier si un cookie existe (via document.cookie si non HttpOnly)
+        // ou simplement retourner true si on suppose l'utilisateur connecté.
+        // Pour l'instant, on retourne null si on est sûr d'être déconnecté (ex: flag localStorage)
         return localStorage.getItem('isLoggedIn') === 'true';
     }
 
+    // [MODIFIÉ] Suppression du Header Authorization
     function getAuthHeaders() {
+        // Le token est désormais envoyé automatiquement par le navigateur dans le Cookie.
+        // On ne met QUE le Content-Type et l'ID du socket si nécessaire.
         const headers = {
             'Content-Type': 'application/json'
         };
@@ -34,6 +36,7 @@
     function handleAuthError(response) {
         if (response.status === 401) {
             console.error("Session expirée ou invalide.");
+            // On nettoie le flag local
             localStorage.removeItem('isLoggedIn');
             window.location.href = 'auth.html'; 
             return true;
@@ -41,14 +44,20 @@
         return false;
     }
 
-    // Helper pour fetch avec credentials (Cookies)
+    // [NOUVEAU] Helper pour fetch avec credentials (Cookies)
+    /**
+     * Effectue une requête fetch en incluant automatiquement les cookies.
+     */
     async function fetchWithCredentials(url, options = {}) {
         const defaultOptions = {
+            // [CRUCIAL] Dit au navigateur d'envoyer les cookies HttpOnly avec la requête
             credentials: 'include', 
         };
         
+        // Fusion des options
         const finalOptions = { ...defaultOptions, ...options };
         
+        // Si des headers sont fournis, on s'assure de ne pas écraser l'objet headers existant
         if (options.headers) {
             finalOptions.headers = { ...options.headers };
         }
@@ -58,9 +67,12 @@
 
     // --- Fonctions API "publiques" ---
 
+    // [MODIFIÉ] Connexion Socket.io avec Cookies
     function connectSocket() {
-        socket = io(SOCKET_URL, {
-            withCredentials: true, 
+        // Plus besoin de token dans auth
+        socket = io(API_URL, {
+            withCredentials: true, // [CRUCIAL] Pour que le handshake socket envoie les cookies
+            // auth: { token: ... } // SUPPRIMÉ
         });
 
         socket.on('connect', () => {
@@ -81,6 +93,7 @@
         return socket;
     }
 
+    // [MODIFIÉ] Utilise fetchWithCredentials
     async function fetchUserPermissions() {
         try {
             const response = await fetchWithCredentials(`${API_URL}/api/auth/me`, {
@@ -95,6 +108,7 @@
             return await response.json();
         } catch (err) {
             console.error(err);
+            // Si erreur réseau ou autre, on redirige si on soupçonne une perte de session
             if (err.message.includes("401")) {
                 window.location.href = 'auth.html';
             }
@@ -105,7 +119,7 @@
     async function fetchPatientList() {
         try {
             const headers = getAuthHeaders();
-            delete headers['Content-Type']; 
+            delete headers['Content-Type']; // Pas de body pour un GET
 
             const response = await fetchWithCredentials(`${API_URL}/api/patients`, { 
                 method: 'GET',
@@ -237,13 +251,21 @@
         }
     }
 
+    // --- LOGIQUE ADMIN (Si nécessaire) ---
+    // Si vous avez des fonctions admin ici, appliquez la même logique :
+    // fetchWithCredentials(...) au lieu de fetch(...)
+
+    // [NOUVEAU] Fonction de Déconnexion
     async function logout() {
         try {
+            // Appelle le backend pour supprimer le cookie
             await fetchWithCredentials(`${API_URL}/auth/logout`, { method: 'POST' });
         } catch (e) {
             console.error("Erreur logout réseau", e);
         } finally {
+            // Nettoyage local et redirection
             localStorage.removeItem('isLoggedIn');
+            // Autres nettoyages si besoin (activePatientId, etc. géré par app.js)
             window.location.href = 'auth.html';
         }
     }
@@ -259,7 +281,7 @@
         saveCaseData,
         deleteSavedCase,
         clearAllChamberData,
-        logout
+        logout // [NOUVEAU]
     };
 
 })();
