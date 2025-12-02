@@ -1,8 +1,12 @@
 (function () {
     "use strict";
 
-    // URL de l'API (Mise à jour pour le sous-domaine)
-    const API_URL = 'https://api.eidos-simul.fr';
+    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT (MODIFIÉE POUR CONTOURNEMENT PARE-FEU) ---
+    // Si on est en local, on tape l'API directe.
+    // Si on est en production (eidos-simul.fr, vercel, etc.), on utilise le chemin relatif ''
+    // Cela force le navigateur à passer par le domaine principal (autorisé) qui fera proxy vers l'API.
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
 
     // --- AUTHENTIFICATION ---
 
@@ -722,6 +726,7 @@
             if (plan === activePlan) {
                 card.classList.add('shadow-xl', 'border-2', styles[plan].border);
                 card.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl');
+                badge.classList.remove('hidden');
                 badge.classList.remove('hidden');
                 badge.classList.add(...styles[plan].badge);
                 btn.disabled = true;

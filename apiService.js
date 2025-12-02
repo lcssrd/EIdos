@@ -1,14 +1,17 @@
 (function() {
     "use strict";
 
-    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT ---
-    // Si l'adresse contient 'vercel.app' OU 'pages.dev', on utilise le proxy (vide).
-    // Sinon (eidos-simul.fr ou localhost), on utilise l'API directe.
-    const IS_PROXY_ENV = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pages.dev');
-    const API_URL = IS_PROXY_ENV ? '' : 'https://api.eidos-simul.fr';
+    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT (MODIFIÉE POUR CONTOURNEMENT PARE-FEU) ---
+    // Si on est en local, on tape l'API directe.
+    // Si on est en production (eidos-simul.fr, vercel, etc.), on utilise le chemin relatif ''
+    // Cela force le navigateur à passer par le domaine principal (autorisé) qui fera proxy vers l'API.
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // Pour les sockets, c'est toujours l'URL directe (les proxies gratuits gèrent mal les WebSockets)
-    const SOCKET_URL = 'https://api.eidos-simul.fr';
+    const API_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
+    
+    // Pour les sockets, on tente aussi de passer par le proxy si on est en prod
+    // (Cela permet de contourner le pare-feu entreprise qui bloque le sous-domaine api)
+    const SOCKET_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
 
     // Variable pour stocker la connexion socket
     let socket = null;
@@ -59,8 +62,11 @@
     // --- Fonctions API "publiques" ---
 
     function connectSocket() {
+        // En prod, SOCKET_URL est vide, donc socket.io se connecte au domaine courant (proxy)
         socket = io(SOCKET_URL, {
             withCredentials: true, 
+            path: '/socket.io/', // Chemin standard, intercepté par le proxy si configuré
+            transports: ['polling', 'websocket'] // Force le polling d'abord (passe mieux les pare-feux)
         });
 
         socket.on('connect', () => {
@@ -68,7 +74,7 @@
         });
 
         socket.on('connect_error', (err) => {
-            console.error('Erreur de connexion socket :', err.message);
+            console.warn('Erreur de connexion socket (Temps réel désactivé) :', err.message);
             if (err.message.includes('Authentification')) {
                 handleAuthError({ status: 401 });
             }

@@ -1,11 +1,12 @@
 (function() {
     "use strict";
 
-    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT ---
-    // Si l'adresse contient 'vercel.app' OU 'pages.dev', on utilise le proxy (vide).
-    // Sinon (eidos-simul.fr ou localhost), on utilise l'API directe.
-    const IS_PROXY_ENV = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pages.dev');
-    const API_URL = IS_PROXY_ENV ? '' : 'https://api.eidos-simul.fr';
+    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT (MODIFIÉE POUR CONTOURNEMENT PARE-FEU) ---
+    // Si on est en local, on tape l'API directe.
+    // Si on est en production (eidos-simul.fr, vercel, etc.), on utilise le chemin relatif ''
+    // Cela force le navigateur à passer par le domaine principal (autorisé) qui fera proxy vers l'API.
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const API_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
 
     // --- Sélections DOM ---
     const loginSection = document.getElementById('login-section');
