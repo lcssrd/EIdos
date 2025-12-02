@@ -358,7 +358,19 @@
                         </div>
                         <div id="pancarte" class="content-section">
                             <div class="card p-6">
-                                <h2 class="card-header">Graphique des Constantes</h2>
+                                <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
+                                    <h2 class="card-header border-b-0 pb-0 mb-0">Graphique des Constantes</h2>
+                                    
+                                    <div class="flex items-center space-x-2 bg-gray-100 p-1 rounded-lg">
+                                        <button type="button" id="zoom-out-pancarte-btn" class="p-1 px-2 text-gray-600 hover:text-orange-600 hover:bg-white rounded transition-colors" title="Dézoomer">
+                                            <i class="fas fa-search-minus"></i>
+                                        </button>
+                                        <span class="text-xs font-mono text-gray-500 w-12 text-center" id="zoom-level-pancarte-text">100%</span>
+                                        <button type="button" id="zoom-in-pancarte-btn" class="p-1 px-2 text-gray-600 hover:text-orange-600 hover:bg-white rounded transition-colors" title="Zoomer">
+                                            <i class="fas fa-search-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="relative h-96 w-full">
                                     <canvas id="pancarteChart"></canvas>
                                 </div>

@@ -44,6 +44,25 @@
         }
     }
 
+    // --- [NOUVEAU] VARIABLES ET FONCTIONS ZOOM (GRAPHIQUE PANCARTE) ---
+    function initPancarteZoomControls() {
+        const zoomInBtn = document.getElementById('zoom-in-pancarte-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-pancarte-btn');
+
+        if (zoomInBtn && zoomOutBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                if (pancarteChartInstance) {
+                    pancarteChartInstance.zoom(1.1); // Zoom in +10%
+                }
+            });
+            zoomOutBtn.addEventListener('click', () => {
+                if (pancarteChartInstance) {
+                    pancarteChartInstance.zoom(0.9); // Zoom out -10%
+                }
+            });
+        }
+    }
+
     // --- DONNÉES DU TUTORIEL ---
     
     const tutorialStepsSimul = [
@@ -178,8 +197,10 @@
         const allergyInput = document.getElementById('atcd-allergies');
         if (allergyInput) allergyInput.addEventListener('input', checkAllergyStatus);
 
-        // Initialisation des contrôles de zoom du tableau
+        // Initialisation des contrôles de zoom du tableau Prescriptions
         initZoomControls();
+        // [AJOUT] Initialisation des contrôles de zoom de la Pancarte
+        initPancarteZoomControls();
     }
 
     function checkAllergyStatus() {
@@ -1204,9 +1225,10 @@
         
         // --- LOGIQUE SCROLLBAR SYNCHRONISEE ---
         const scrollbar = document.getElementById('pancarte-scrollbar');
-        
+        const zoomText = document.getElementById('zoom-level-pancarte-text'); // [AJOUT]
+
         // Fonction pour mettre à jour la barre de défilement quand le graphique bouge
-        const updateScrollbar = (chart) => {
+        const updateScrollbarAndText = (chart) => {
             const xScale = chart.scales.x;
             const min = xScale.min;
             const max = xScale.max;
@@ -1227,6 +1249,21 @@
             const isFullyVisible = (max - min) >= (limitMax - limitMin - 0.1); // Marge d'erreur flottante
             scrollbar.disabled = isFullyVisible;
             scrollbar.style.opacity = isFullyVisible ? '0.5' : '1';
+
+            // [NOUVEAU] Mise à jour du texte de zoom
+            if (zoomText && windowSize > 0) {
+                const totalPoints = labels.length;
+                // Calcul inverse : moins on voit de points (windowSize petit), plus le zoom est grand
+                // Base 100% = voir ~10 points (comme défini dans max: Math.min(9, ...))
+                // Si on voit 33 points -> 30%
+                // Si on voit 1 point -> 1000%
+                const defaultWindow = 10;
+                // Ou utiliser la formule : (Total / Window) * 30
+                // Avec 33 points total, window 10 => (33/10)*30 = 99% ~ 100%. C'est cohérent.
+                const percentageAlternative = Math.round((labels.length / windowSize) * 30);
+                
+                zoomText.textContent = `${percentageAlternative}%`;
+            }
         };
 
         pancarteChartInstance = new Chart(ctx, { 
@@ -1258,13 +1295,13 @@
                         pan: {
                             enabled: true,
                             mode: 'x',
-                            onPan: ({chart}) => updateScrollbar(chart)
+                            onPan: ({chart}) => updateScrollbarAndText(chart)
                         },
                         zoom: {
                             wheel: { enabled: true },
                             pinch: { enabled: true },
                             mode: 'x',
-                            onZoom: ({chart}) => updateScrollbar(chart)
+                            onZoom: ({chart}) => updateScrollbarAndText(chart)
                         }
                     }
                 } 
@@ -1272,7 +1309,7 @@
         });
 
         // Initialisation de la scrollbar
-        setTimeout(() => updateScrollbar(pancarteChartInstance), 100);
+        setTimeout(() => updateScrollbarAndText(pancarteChartInstance), 100);
 
         // Ecouteur d'événement pour la scrollbar (Déplacement du graphique)
         scrollbar.oninput = () => {
