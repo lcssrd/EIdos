@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
-    <title>EIdos-simul - Gestion de compte</title>
+    <title>EIdos - Gestion de compte</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap" rel="stylesheet">
     
     <link href="style.css" rel="stylesheet">
     
@@ -44,47 +43,8 @@
         }
         .account-section.active {
             display: block;
-            animation: fadeIn 0.5s ease-in-out;
+            animation: fadeIn 0.5s ease-in-out; /* Réutilise l'animation de style.css */
         }
-
-        /* Styles pour les colonnes Admin (Miller Columns) */
-        .miller-column {
-            height: 500px;
-            overflow-y: auto;
-            border-right: 1px solid #e5e7eb;
-        }
-        .miller-column:last-child {
-            border-right: none;
-        }
-        .miller-item {
-            padding: 10px 15px;
-            cursor: pointer;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.2s;
-        }
-        .miller-item:hover {
-            background-color: #f9fafb;
-        }
-        .miller-item.active {
-            background-color: #0d9488;
-            color: white;
-        }
-        .miller-item.active .text-gray-500 {
-            color: #ccfbf1; /* Light teal text for subtitles when active */
-        }
-        
-        /* Toggle switch style */
-        .toggle-checkbox:checked {
-            right: 0;
-            border-color: #68D391;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #68D391;
-        }
-        
     </style>
 
 </head>
@@ -118,9 +78,6 @@
                 </button>
                 <button type="button" id="tab-contact" class="account-tab-btn">
                     <i class="fas fa-envelope"></i> Contacter le développeur
-                </button>
-                <button type="button" id="tab-admin" class="account-tab-btn text-red-600 hover:bg-red-50" style="display: none;">
-                    <i class="fas fa-user-shield"></i> Super Admin
                 </button>
             </nav>
             <div class="p-2 border-t border-gray-100">
@@ -183,7 +140,7 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
+                            </div>
 
                         <div class="card p-6 mt-8 border-red-300">
                             <h2 class="card-header header-rose">Zone de danger</h2>
@@ -210,61 +167,129 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8 items-start">
+                            
                             <div class="card relative bg-white p-6 flex flex-col border-t-4 border-yellow-300 h-full transition-all duration-200">
-                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">
+                                    Actuel
+                                </span>
                                 <h3 class="text-2xl font-semibold text-yellow-700">Free</h3>
                                 <p class="text-4xl font-extrabold my-4">Gratuit</p>
                                 <p class="text-gray-500 mb-6 min-h-[4rem]">Pour la découverte et l'utilisation basique.</p>
                                 <ul class="space-y-3 text-gray-600 flex-grow">
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Découverte du logiciel</span></li>
-                                    <li class="flex items-start"><i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i><span>Pas de sauvegarde en ligne</span></li>
-                                    <li class="flex items-start"><i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i><span>Pas de comptes étudiants</span></li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Découverte du logiciel</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Pas de sauvegarde en ligne</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Pas de comptes étudiants</span>
+                                    </li>
                                 </ul>
-                                <button id="sub-btn-free" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-yellow-700 bg-yellow-50 hover:bg-yellow-100 sub-plan-btn transition-all">Choisir ce plan</button>
+                                <button id="sub-btn-free" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-yellow-700 bg-yellow-50 hover:bg-yellow-100 sub-plan-btn transition-all">
+                                    Choisir ce plan
+                                </button>
                             </div>
 
                             <div class="card relative bg-white p-6 flex flex-col border-t-4 border-teal-600 h-full transition-all duration-200">
-                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">
+                                    Actuel
+                                </span>
                                 <h3 class="text-2xl font-semibold text-teal-700">Indépendant</h3>
                                 <p class="text-4xl font-extrabold my-4 text-gray-900">__€ <span class="text-lg font-normal text-gray-500">/ mois</span></p>
                                 <p class="text-gray-500 mb-6 min-h-[4rem]">Pour formateurs solo ou en test.</p>
                                 <ul class="space-y-3 text-gray-600 flex-grow">
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients (20)</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Jusqu'à 5 comptes étudiants</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Sauvegardes en ligne</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Archives patients (20)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Jusqu'à 5 comptes étudiants</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Gestion des permissions</span>
+                                    </li>
                                 </ul>
-                                <button id="sub-btn-independant" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 sub-plan-btn transition-all">Choisir ce plan</button>
+                                <button id="sub-btn-independant" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 sub-plan-btn transition-all">
+                                    Choisir ce plan
+                                </button>
                             </div>
                             
                             <div class="card relative bg-white p-6 flex flex-col border-t-4 border-blue-600 h-full transition-all duration-200">
-                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">
+                                    Actuel
+                                </span>
                                 <h3 class="text-2xl font-semibold text-blue-700">Promo</h3>
                                 <p class="text-4xl font-extrabold my-4 text-gray-900">__€ <span class="text-lg font-normal text-gray-500">/ mois</span></p>
                                 <p class="text-gray-500 mb-6 min-h-[4rem]">Pour gérer une promotion ou classe complète.</p>
                                 <ul class="space-y-3 text-gray-600 flex-grow">
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients (50)</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Jusqu'à 40 comptes étudiants</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Sauvegardes en ligne</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Archives patients (50)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Jusqu'à 40 comptes étudiants</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Gestion des permissions</span>
+                                    </li>
                                 </ul>
-                                <button id="sub-btn-promo" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 sub-plan-btn transition-all shadow-lg hover:shadow-xl">Choisir ce plan</button>
+                                <button id="sub-btn-promo" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 sub-plan-btn transition-all shadow-lg hover:shadow-xl">
+                                    Choisir ce plan
+                                </button>
                             </div>
 
                             <div class="card relative bg-white p-6 flex flex-col border-t-4 border-indigo-600 h-full transition-all duration-200">
-                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">
+                                    Actuel
+                                </span>
                                 <h3 class="text-2xl font-semibold text-indigo-700">Centre</h3>
                                 <p class="text-4xl font-extrabold my-4 text-gray-900">Sur devis</p>
                                 <p class="text-gray-500 mb-6 min-h-[4rem]">Pour les centres de formation (IFSI, etc).</p>
                                 <ul class="space-y-3 text-gray-600 flex-grow">
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Comptes multi-formateurs</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients illimitées</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Étudiants illimités</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
-                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Support prioritaire</span></li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Sauvegardes en ligne</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Comptes multi-formateurs</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Archives patients illimitées</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Étudiants illimités</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Gestion des permissions</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+                                        <span>Support prioritaire</span>
+                                    </li>
                                 </ul>
-                                <button id="sub-btn-centre" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-gray-700 bg-gray-200 sub-plan-btn transition-all">Nous contacter</button>
+                                <button id="sub-btn-centre" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-gray-700 bg-gray-200 sub-plan-btn transition-all">
+                                    Nous contacter
+                                </button>
                             </div>
                         </div>
                     </section>
@@ -305,7 +330,6 @@
                             </div>
                         </div>
                     </section>
-
                     <section id="content-invitations" class="account-section">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Invitations et Gestion (Étudiants)</h1>
 
@@ -343,7 +367,7 @@
                                 </h2>
                                 <div class="mt-6 space-y-3 text-sm text-gray-700">
                                     <p><strong>Gestion des mots de passe :</strong></p>
-                                    <p>Pour des raisons de sécurité, EIdos-simul <strong>ne stocke jamais les mots de passe</strong> des étudiants en clair. Ils sont chiffrés (hachés) et ne peuvent pas être récupérés.</p>
+                                    <p>Pour des raisons de sécurité, EIdos <strong>ne stocke jamais les mots de passe</strong> des étudiants en clair. Ils sont chiffrés (hachés) et ne peuvent pas être récupérés.</p>
                                     <ul class="list-disc list-inside space-y-1">
                                         <li>Vous devez <strong>noter le mot de passe</strong> au moment où vous le saisissez ou le générez.</li>
                                         <li>Communiquez-le ensuite de manière sécurisée à l'étudiant.</li>
@@ -351,7 +375,7 @@
                                     <p class="font-semibold">En cas d'oubli, vous ne pourrez pas réinitialiser le mot de passe. Vous devrez <strong class="text-red-600">supprimer le compte</strong> de l'étudiant depuis le tableau ci-dessous et en créer un nouveau.</p>
                                 </div>
                             </div>
-                        </div>
+                            </div>
                         <div class="card p-6 mt-8">
                             <h2 class="card-header header-indigo" id="student-list-title">Gestion des étudiants (0)</h2>
                             <div class="overflow-x-auto mt-4">
@@ -363,14 +387,18 @@
                                             <th class="p-2 text-center" title="Permet de modifier l'onglet Administratif">Administratif</th>
                                             <th class="p-2 text-center" title="Permet de modifier l'onglet Mode de Vie & ATCD">Vie & ATCD</th>
                                             <th class="p-2 text-center" title="Permet d'ajouter/supprimer des observations">Observations</th>
+                                            
+                                            <th class="p-2 text-center" title="Permet d'ajouter/supprimer des comptes rendus">Comptes Rendus</th>
+                                            
                                             <th class="p-2 text-center" title="Permet d'ajouter une nouvelle prescription">Prescr. (Ajout)</th>
                                             <th class="p-2 text-center" title="Permet de supprimer une prescription">Prescr. (Suppr.)</th>
                                             <th class="p-2 text-center" title="Permet de placer/déplacer les marqueurs de prise (losanges/barres)">Prescr. (Valid.)</th>
+                                            
                                             <th class="p-2 text-center" title="Permet d'ajouter/supprimer des transmissions">Transmissions</th>
                                             <th class="p-2 text-center" title="Permet de modifier la Pancarte">Pancarte</th>
                                             <th class="p-2 text-center" title="Permet de modifier le Diagramme de soins">Diagramme Soins</th>
                                             <th class="p-2 text-center" title="Permet de modifier les résultats de Biologie">Biologie</th>
-                                            <th class="p-2 text-center" title="Permet d'ajouter/supprimer des comptes rendus">Comptes Rendus</th>                                            
+                                            
                                             <th class="p-2 text-center">Chambres</th>
                                             
                                             <th class="p-2 text-center" colspan="15">Actions</th>
@@ -386,81 +414,6 @@
                         </div>
                     </section>
                     
-                    <section id="content-admin" class="account-section">
-                        <h1 class="text-3xl font-bold text-red-800 mb-6 flex items-center">
-                            <i class="fas fa-shield-alt mr-3"></i> Interface Super Admin
-                        </h1>
-                        
-                        <div class="mb-6 border-b border-gray-200">
-                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="admin-tabs-nav">
-                                <li class="mr-2">
-                                    <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 active text-red-600 border-red-600" data-target="admin-users">Utilisateurs</button>
-                                </li>
-                                <li class="mr-2">
-                                    <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" data-target="admin-patients">Dossiers Patients</button>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div id="admin-users" class="admin-tab-content">
-                            <div class="card p-6 h-[600px]"> <div class="flex h-full border border-gray-200 rounded-lg overflow-hidden">
-                                    <div class="w-1/3 miller-column bg-gray-50" id="admin-col-orgs">
-                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Centres & Indépendants</div>
-                                        <div id="admin-list-orgs">
-                                            <p class="p-4 text-sm text-gray-500">Chargement...</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="w-1/3 miller-column bg-white border-l" id="admin-col-trainers">
-                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Formateurs</div>
-                                        <div id="admin-list-trainers">
-                                            <p class="p-4 text-sm text-gray-400 italic">Sélectionnez un centre...</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="w-1/3 miller-column bg-gray-50 border-l" id="admin-col-students">
-                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Étudiants</div>
-                                        <div id="admin-list-students">
-                                            <p class="p-4 text-sm text-gray-400 italic">Sélectionnez un formateur...</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between" id="admin-user-actions" style="display: none;">
-                                <div>
-                                    <span class="font-bold text-red-800 block">Utilisateur sélectionné :</span>
-                                    <span id="admin-selected-user-email" class="text-red-600 text-sm">...</span>
-                                </div>
-                                <button id="admin-delete-user-btn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
-                                    <i class="fas fa-trash mr-2"></i> Supprimer cet utilisateur
-                                </button>
-                            </div>
-                        </div>
-
-                        <div id="admin-patients" class="admin-tab-content hidden">
-                            <div class="card p-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h2 class="text-lg font-bold text-gray-800">Tous les dossiers sauvegardés</h2>
-                                    <button id="admin-refresh-patients" class="text-blue-600 hover:text-blue-800"><i class="fas fa-sync-alt"></i> Actualiser</button>
-                                </div>
-                                <div class="overflow-x-auto">
-                                    <table class="w-full text-sm text-left text-gray-500">
-                                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                            <tr>
-                                                <th scope="col" class="px-6 py-3">Nom du dossier</th>
-                                                <th scope="col" class="px-6 py-3">Créateur</th>
-                                                <th scope="col" class="px-6 py-3 text-center">Public</th>
-                                                <th scope="col" class="px-6 py-3 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="admin-patients-tbody">
-                                            </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
                     <section id="content-contact" class="account-section">
                         <h1 class="text-3xl font-bold text-gray-800 mb-6">Contacter le développeur</h1>
                         
@@ -472,7 +425,7 @@
                                 </span>
                                 <h2 class="text-2xl font-semibold text-gray-800 mb-3">Email Professionnel</h2>
                                 <p class="text-gray-600 mb-6">Pour toute demande commerciale, support technique ou collaboration.</p>
-                                <p id="contact-email" class="text-lg font-medium text-teal-700 bg-teal-50 p-3 rounded-lg">lucas.seraudie@eidos-simul.fr</p>
+                                <p id="contact-email" class="text-lg font-medium text-teal-700 bg-teal-50 p-3 rounded-lg">[Email à remplir]</p>
                                 <button id="copy-email-btn" type="button" class="mt-6 w-full py-3 px-4 rounded-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-all">
                                     Copier l'email
                                 </button>

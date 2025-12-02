@@ -1,10 +1,10 @@
 (function () {
     "use strict";
 
+    // URL de l'API (Backend sur Render)
     const API_URL = 'https://eidos-api.onrender.com';
-    // MODIFIÉ : Suppression de la constante ADMIN_EMAIL
 
-    // --- AUTHENTIFICATION ---
+    // --- Fonctions utilitaires d'authentification ---
 
     function getAuthToken() {
         const token = localStorage.getItem('authToken');
@@ -18,7 +18,9 @@
 
     function getAuthHeaders() {
         const token = getAuthToken();
-        if (!token) throw new Error("Token non trouvé.");
+        if (!token) {
+            throw new Error("Token non trouvé, impossible de créer les headers.");
+        }
         return {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -27,6 +29,7 @@
 
     function handleAuthError(response) {
         if (response.status === 401) {
+            console.error("Token invalide ou expiré, redirection vers login.");
             localStorage.removeItem('authToken');
             window.location.href = 'auth.html';
             return true;
@@ -34,50 +37,37 @@
         return false;
     }
 
-    // --- SYSTÈME DE MODALE (Confirmation & Alertes) ---
+    // --- Fonctions de Modale ---
     let confirmCallback = null;
 
     function showDeleteConfirmation(message, callback) {
         const modal = document.getElementById('custom-confirm-modal');
         const modalBox = document.getElementById('custom-confirm-box');
+        const titleEl = document.getElementById('custom-confirm-title');
+        const messageEl = document.getElementById('custom-confirm-message');
         const cancelBtn = document.getElementById('custom-confirm-cancel');
         const okBtn = document.getElementById('custom-confirm-ok');
-
-        document.getElementById('custom-confirm-title').textContent = 'Confirmation requise';
-        document.getElementById('custom-confirm-message').textContent = message;
 
         cancelBtn.classList.remove('hidden');
-        okBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-        okBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+        okBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500');
+        okBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
         okBtn.textContent = 'Confirmer';
 
+        titleEl.textContent = 'Confirmation requise';
+        messageEl.textContent = message;
+
         confirmCallback = callback;
+
         modal.classList.remove('hidden');
-        setTimeout(() => modalBox.classList.remove('scale-95', 'opacity-0'), 10);
-    }
-
-    function showCustomAlert(title, message) {
-        const modal = document.getElementById('custom-confirm-modal');
-        const modalBox = document.getElementById('custom-confirm-box');
-        const cancelBtn = document.getElementById('custom-confirm-cancel');
-        const okBtn = document.getElementById('custom-confirm-ok');
-
-        cancelBtn.classList.add('hidden');
-        okBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
-        okBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-        okBtn.textContent = 'Fermer';
-
-        document.getElementById('custom-confirm-title').textContent = title;
-        document.getElementById('custom-confirm-message').textContent = message;
-
-        confirmCallback = null;
-        modal.classList.remove('hidden');
-        setTimeout(() => modalBox.classList.remove('scale-95', 'opacity-0'), 10);
+        setTimeout(() => {
+            modalBox.classList.remove('scale-95', 'opacity-0');
+        }, 10);
     }
 
     function hideConfirmation() {
         const modal = document.getElementById('custom-confirm-modal');
         const modalBox = document.getElementById('custom-confirm-box');
+
         modalBox.classList.add('scale-95', 'opacity-0');
         setTimeout(() => {
             modal.classList.add('hidden');
@@ -85,24 +75,49 @@
         }, 200);
     }
 
+    function showCustomAlert(title, message) {
+        const modal = document.getElementById('custom-confirm-modal');
+        const modalBox = document.getElementById('custom-confirm-box');
+        const titleEl = document.getElementById('custom-confirm-title');
+        const messageEl = document.getElementById('custom-confirm-message');
+        const cancelBtn = document.getElementById('custom-confirm-cancel');
+        const okBtn = document.getElementById('custom-confirm-ok');
+
+        cancelBtn.classList.add('hidden');
+        okBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+        okBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500');
+        okBtn.textContent = 'Fermer';
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        confirmCallback = null;
+
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            modalBox.classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    }
+
     function setupModalListeners() {
         document.getElementById('custom-confirm-ok').addEventListener('click', () => {
-            if (typeof confirmCallback === 'function') confirmCallback();
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
             hideConfirmation();
         });
         document.getElementById('custom-confirm-cancel').addEventListener('click', hideConfirmation);
     }
 
-    // --- GESTION GÉNÉRALE DE L'INTERFACE ---
+    // --- Logique de la page de gestion de compte ---
 
     let tabButtons = {};
     let tabContents = {};
     let currentPlan = 'free';
     let studentCount = 0;
-    let currentUserEmail = '';
 
-    // Variables pour la modale des chambres (Restaurées)
     let roomModal, roomModalBox, roomModalForm, roomModalList, roomModalTitle, roomModalLoginInput;
+
 
     function switchTab(tabId) {
         Object.values(tabButtons).forEach(btn => btn.classList.remove('active'));
@@ -114,396 +129,171 @@
         }
     }
 
-    // --- LOGIQUE SUPER ADMIN ---
-
-    let adminState = {
-        organisations: [],
-        independants: [],
-        selectedOrgId: null, 
-        selectedUserId: null,
-        selectedUserEmail: null
-    };
-
-    function initAdminInterface() {
-        const adminTabBtn = document.getElementById('tab-admin');
-        const adminContent = document.getElementById('content-admin');
-        
-        adminTabBtn.style.display = 'flex';
-        
-        tabButtons.admin = adminTabBtn;
-        tabContents.admin = adminContent;
-
-        adminTabBtn.addEventListener('click', () => {
-            switchTab('admin');
-            loadAdminStructure();
-        });
-
-        document.querySelectorAll('#admin-tabs-nav button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('#admin-tabs-nav button').forEach(b => {
-                    b.className = "inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300";
-                });
-                document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
-
-                e.target.className = "inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 active text-red-600 border-red-600";
-                const targetId = e.target.dataset.target;
-                document.getElementById(targetId).classList.remove('hidden');
-
-                if (targetId === 'admin-patients') {
-                    loadAdminPatients();
-                }
-            });
-        });
-
-        document.getElementById('admin-delete-user-btn').addEventListener('click', handleAdminDeleteUser);
-        document.getElementById('admin-refresh-patients').addEventListener('click', loadAdminPatients);
-    }
-
-    async function loadAdminStructure() {
-        try {
-            const response = await fetch(`${API_URL}/api/admin/structure`, { headers: getAuthHeaders() });
-            if (!response.ok) throw new Error("Erreur chargement structure");
-            const data = await response.json();
-            
-            adminState.organisations = data.organisations;
-            adminState.independants = data.independants;
-            
-            renderAdminCol1();
-            document.getElementById('admin-list-trainers').innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Sélectionnez un centre...</p>';
-            document.getElementById('admin-list-students').innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Sélectionnez un formateur...</p>';
-            document.getElementById('admin-user-actions').style.display = 'none';
-            
-        } catch (err) {
-            showCustomAlert("Erreur Admin", err.message);
-        }
-    }
-
-    function renderAdminCol1() {
-        const container = document.getElementById('admin-list-orgs');
-        let html = '';
-
-        html += `
-            <div class="miller-item font-medium" onclick="handleAdminSelectOrg('independants', this)">
-                <span><i class="fas fa-user-tie mr-2 text-teal-600"></i> Indépendants</span>
-                <span class="text-xs bg-gray-200 px-2 py-1 rounded-full text-gray-600">${adminState.independants.length}</span>
-            </div>
-        `;
-
-        adminState.organisations.forEach(org => {
-            html += `
-                <div class="miller-item" onclick="handleAdminSelectOrg('${org._id}', this)">
-                    <div>
-                        <div class="font-medium text-gray-800">${org.name}</div>
-                        <div class="text-xs text-gray-500">Plan: ${org.plan} (${org.licences_utilisees}/${org.licences_max})</div>
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-400"></i>
-                </div>
-            `;
-        });
-
-        container.innerHTML = html;
-    }
-
-    window.handleAdminSelectOrg = async function(idOrType, el) {
-        document.querySelectorAll('#admin-list-orgs .miller-item').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
-
-        adminState.selectedOrgId = idOrType;
-        const trainersContainer = document.getElementById('admin-list-trainers');
-        trainersContainer.innerHTML = '<p class="p-4 text-sm text-gray-500">Chargement...</p>';
-        document.getElementById('admin-list-students').innerHTML = ''; 
-        document.getElementById('admin-user-actions').style.display = 'none';
-
-        let usersToDisplay = [];
-
-        if (idOrType === 'independants') {
-            usersToDisplay = adminState.independants;
-        } else {
-            try {
-                const response = await fetch(`${API_URL}/api/admin/centre/${idOrType}/formateurs`, { headers: getAuthHeaders() });
-                if (!response.ok) throw new Error("Erreur chargement formateurs");
-                usersToDisplay = await response.json();
-            } catch (err) {
-                trainersContainer.innerHTML = `<p class="text-red-500 p-4">${err.message}</p>`;
-                return;
-            }
-        }
-
-        renderAdminCol2(usersToDisplay);
-    };
-
-    // --- NOUVEAU : Fonction utilitaire pour les badges de plan ---
-    function getPlanBadge(plan) {
-        const styles = {
-            'free': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-            'independant': 'bg-teal-100 text-teal-800 border-teal-200',
-            'promo': 'bg-blue-100 text-blue-800 border-blue-200',
-            'centre': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-            'student': 'bg-gray-100 text-gray-800 border-gray-200'
+    function updateSubscriptionButtons(activePlan, quoteUrl, quotePrice) {
+        const planButtons = {
+            'free': document.getElementById('sub-btn-free'),
+            'independant': document.getElementById('sub-btn-independant'),
+            'promo': document.getElementById('sub-btn-promo'),
+            'centre': document.getElementById('sub-btn-centre')
         };
-        const label = plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : 'Inconnu';
-        const style = styles[plan] || styles['free'];
-        return `<span class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${style}">${label}</span>`;
-    }
 
-    // --- MODIFIÉ : Fonction pour inclure le badge de plan ---
-    function renderAdminCol2(users) {
-        const container = document.getElementById('admin-list-trainers');
-        if (users.length === 0) {
-            container.innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Aucun utilisateur trouvé.</p>';
-            return;
-        }
+        const planStyles = {
+            'free': {
+                borderActive: 'border-yellow-300',
+                badgeActive: ['bg-yellow-300', 'text-yellow-800'],
+                btnActive: ['bg-yellow-100', 'text-yellow-800', 'font-semibold'],
+                btnInactive: ['bg-yellow-50', 'hover:bg-yellow-100', 'text-yellow-700']
+            },
+            'independant': {
+                borderActive: 'border-teal-600',
+                badgeActive: ['bg-teal-600', 'text-white'],
+                btnActive: ['bg-teal-100', 'text-teal-800', 'font-semibold'],
+                btnInactive: ['bg-teal-600', 'hover:bg-teal-700', 'text-white']
+            },
+            'promo': {
+                borderActive: 'border-blue-600',
+                badgeActive: ['bg-blue-600', 'text-white'],
+                btnActive: ['bg-blue-100', 'text-blue-800', 'font-semibold'],
+                btnInactive: ['bg-blue-600', 'hover:bg-blue-700', 'text-white']
+            },
+            'centre': {
+                borderActive: 'border-indigo-600',
+                badgeActive: ['bg-indigo-600', 'text-white'],
+                btnActive: ['bg-indigo-100', 'text-indigo-800', 'font-semibold'],
+                btnInactiveQuote: ['bg-green-600', 'hover:bg-green-700', 'text-white'],
+                btnInactiveContact: ['bg-indigo-600', 'hover:bg-indigo-700', 'text-white']
+            }
+        };
 
-        let html = '';
-        users.forEach(u => {
-            const isOwner = u.is_owner;
-            const icon = isOwner ? '<i class="fas fa-crown text-yellow-500 mr-2" title="Propriétaire"></i>' : '<i class="fas fa-user mr-2 text-gray-400"></i>';
-            const roleLabel = isOwner ? 'Propriétaire' : (u.role === 'formateur' ? 'Formateur' : 'Utilisateur');
-            
-            // Récupération du plan (par défaut 'free' si non défini)
-            const userPlan = u.subscription || 'free';
-            const planBadge = getPlanBadge(userPlan);
+        for (const [plan, button] of Object.entries(planButtons)) {
+            const card = button.closest('.card');
+            const badge = card.querySelector('.js-active-plan-badge');
 
-            html += `
-                <div class="miller-item" onclick="handleAdminSelectTrainer('${u._id}', '${u.email}', this)">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium text-sm truncate flex items-center" title="${u.email}">
-                            ${icon}
-                            <span class="truncate">${u.email}</span>
-                        </div>
-                        <div class="text-xs text-gray-500 flex items-center mt-1">
-                            ${roleLabel}
-                            ${planBadge}
-                        </div>
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-400 ml-2"></i>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
+            card.classList.remove('shadow-xl', 'border-2', ...Object.values(planStyles).map(s => s.borderActive));
+            card.classList.add('hover:scale-[1.02]', 'hover:shadow-xl');
 
-    window.handleAdminSelectTrainer = async function(userId, userEmail, el) {
-        document.querySelectorAll('#admin-list-trainers .miller-item').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
+            badge.classList.add('hidden');
+            badge.classList.remove(...Object.values(planStyles).flatMap(s => s.badgeActive));
 
-        adminState.selectedUserId = userId;
-        adminState.selectedUserEmail = userEmail;
+            button.disabled = false;
+            button.innerHTML = 'Choisir ce plan';
+            button.classList.remove(
+                ...Object.values(planStyles).flatMap(s => s.btnActive),
+                ...Object.values(planStyles).flatMap(s => s.btnInactive),
+                ...(planStyles.centre.btnInactiveQuote),
+                ...(planStyles.centre.btnInactiveContact),
+                'cursor-not-allowed'
+            );
 
-        const actionPanel = document.getElementById('admin-user-actions');
-        document.getElementById('admin-selected-user-email').textContent = userEmail;
-        actionPanel.style.display = 'flex';
-
-        const studentsContainer = document.getElementById('admin-list-students');
-        studentsContainer.innerHTML = '<p class="p-4 text-sm text-gray-500">Chargement...</p>';
-
-        try {
-            const response = await fetch(`${API_URL}/api/admin/creator/${userId}/students`, { headers: getAuthHeaders() });
-            if (!response.ok) throw new Error("Erreur chargement étudiants");
-            const students = await response.json();
-            renderAdminCol3(students);
-        } catch (err) {
-            studentsContainer.innerHTML = `<p class="text-red-500 p-4">${err.message}</p>`;
-        }
-    };
-
-    function renderAdminCol3(students) {
-        const container = document.getElementById('admin-list-students');
-        if (students.length === 0) {
-            container.innerHTML = '<p class="p-4 text-sm text-gray-400 italic">Aucun étudiant.</p>';
-            return;
-        }
-
-        let html = '';
-        students.forEach(s => {
-            html += `
-                <div class="miller-item" onclick="handleAdminSelectStudent('${s._id}', '${s.login}', this)">
-                    <div>
-                        <div class="font-medium text-sm"><i class="fas fa-graduation-cap mr-2 text-gray-400"></i>${s.login}</div>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
-    }
-
-    window.handleAdminSelectStudent = function(userId, login, el) {
-        document.querySelectorAll('#admin-list-students .miller-item').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
-        
-        adminState.selectedUserId = userId;
-        adminState.selectedUserEmail = `Étudiant: ${login}`;
-        
-        document.getElementById('admin-selected-user-email').textContent = adminState.selectedUserEmail;
-        document.getElementById('admin-user-actions').style.display = 'flex';
-    };
-
-    async function handleAdminDeleteUser() {
-        if (!adminState.selectedUserId) return;
-
-        showDeleteConfirmation(
-            `ADMIN: Êtes-vous sûr de vouloir supprimer l'utilisateur ${adminState.selectedUserEmail} et TOUTES ses données associées ?`,
-            async () => {
-                try {
-                    const response = await fetch(`${API_URL}/api/admin/user/${adminState.selectedUserId}`, {
-                        method: 'DELETE',
-                        headers: getAuthHeaders()
-                    });
-                    if (!response.ok) throw new Error("Erreur lors de la suppression");
-                    
-                    showCustomAlert("Succès", "Utilisateur supprimé.");
-                    loadAdminStructure(); 
-                } catch (err) {
-                    showCustomAlert("Erreur", err.message);
+            if (plan === 'centre') {
+                if (quoteUrl) {
+                    button.innerHTML = `Activer votre devis (${quotePrice || 'Voir devis'})`;
+                    button.classList.add(...planStyles.centre.btnInactiveQuote);
+                    button.onclick = () => { window.location.href = quoteUrl; };
+                } else {
+                    button.innerHTML = 'Demander un devis';
+                    button.classList.add(...planStyles.centre.btnInactiveContact);
+                    button.onclick = () => { switchTab('contact'); };
                 }
+            } else {
+                button.classList.add(...planStyles[plan].btnInactive);
             }
-        );
-    }
+        }
 
-    async function loadAdminPatients() {
-        const tbody = document.getElementById('admin-patients-tbody');
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">Chargement...</td></tr>';
+        if (planButtons[activePlan]) {
+            const styles = planStyles[activePlan];
+            const activeButton = planButtons[activePlan];
+            const activeCard = activeButton.closest('.card');
+            const activeBadge = activeCard.querySelector('.js-active-plan-badge');
 
-        try {
-            const response = await fetch(`${API_URL}/api/admin/patients`, { headers: getAuthHeaders() });
-            if (!response.ok) throw new Error("Impossible de charger les patients");
-            const patients = await response.json();
+            activeCard.classList.add('shadow-xl', 'border-2', styles.borderActive);
+            activeCard.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl');
 
-            if (patients.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center p-4">Aucun dossier trouvé.</td></tr>';
-                return;
+            activeBadge.classList.remove('hidden');
+            activeBadge.classList.add(...styles.badgeActive);
+
+            activeButton.disabled = true;
+            activeButton.innerHTML = '<i class="fas fa-check mr-2"></i> Plan actuel';
+            activeButton.classList.remove(...Object.values(planStyles).flatMap(s => s.btnInactive));
+            activeButton.classList.add(...styles.btnActive, 'cursor-not-allowed');
+
+            if (activePlan === 'centre') {
+                activeButton.onclick = null;
             }
-
-            let html = '';
-            patients.forEach(p => {
-                const creator = p.user ? (p.user.email || p.user.login || 'Inconnu') : 'Supprimé';
-                const isPublic = p.isPublic;
-                
-                html += `
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                            ${isPublic ? '<i class="fas fa-globe text-yellow-500 mr-2" title="Public"></i>' : ''}
-                            ${p.sidebar_patient_name}
-                        </td>
-                        <td class="px-6 py-4">${creator}</td>
-                        <td class="px-6 py-4 text-center">
-                            <label class="inline-flex relative items-center cursor-pointer">
-                                <input type="checkbox" class="sr-only peer toggle-checkbox" 
-                                       onchange="handleAdminTogglePublic('${p.patientId}', this)" 
-                                       ${isPublic ? 'checked' : ''}>
-                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 toggle-label"></div>
-                            </label>
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button class="font-medium text-red-600 hover:underline" onclick="handleAdminDeletePatient('${p.patientId}', '${p.sidebar_patient_name}')">
-                                <i class="fas fa-trash"></i> Supprimer
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-red-500">${err.message}</td></tr>`;
         }
     }
 
-    window.handleAdminTogglePublic = async function(patientId, checkbox) {
-        const originalState = !checkbox.checked; 
-        try {
-            const response = await fetch(`${API_URL}/api/admin/patients/${patientId}/public`, {
-                method: 'PUT',
-                headers: getAuthHeaders()
-            });
-            if (!response.ok) throw new Error("Erreur update");
-        } catch (err) {
-            checkbox.checked = originalState;
-            showCustomAlert("Erreur", "Impossible de changer le statut public.");
-        }
-    };
-
-    window.handleAdminDeletePatient = function(patientId, name) {
-        showDeleteConfirmation(
-            `ADMIN: Supprimer définitivement le dossier "${name}" ?`,
-            async () => {
-                try {
-                    const response = await fetch(`${API_URL}/api/admin/patients/${patientId}`, {
-                        method: 'DELETE',
-                        headers: getAuthHeaders()
-                    });
-                    if (!response.ok) throw new Error("Erreur suppression");
-                    loadAdminPatients(); 
-                } catch (err) {
-                    showCustomAlert("Erreur", err.message);
-                }
-            }
-        );
-    };
-
-
-    // --- CHARGEMENT DONNÉES COMPTE (CLASSIQUE) ---
 
     async function loadAccountDetails() {
-        document.getElementById('tab-invitations').style.display = 'none';
-        document.getElementById('tab-centre').style.display = 'none';
+        const invitationsTab = document.getElementById('tab-invitations');
+        const centreTab = document.getElementById('tab-centre');
+        invitationsTab.style.display = 'none';
+        centreTab.style.display = 'none';
 
         try {
             const headers = getAuthHeaders();
             delete headers['Content-Type'];
 
             const response = await fetch(`${API_URL}/api/account/details`, { headers });
+
             if (handleAuthError(response)) return;
-            if (!response.ok) throw new Error("Impossible de charger les détails.");
+            if (!response.ok) {
+                throw new Error("Impossible de charger les détails du compte.");
+            }
 
             const data = await response.json();
-            currentUserEmail = data.email;
-
-            // MODIFIÉ : Vérification basée sur le flag is_super_admin
-            if (data.is_super_admin) {
-                initAdminInterface();
-            }
 
             const planNameEl = document.getElementById('current-plan-name');
             const planDescEl = document.getElementById('plan-description');
+
             let displayPlan = data.plan;
 
             if (data.role === 'formateur' && data.organisation) {
                 displayPlan = data.organisation.plan;
                 planNameEl.textContent = `Plan ${displayPlan} (via ${data.organisation.name})`;
                 planDescEl.textContent = `Vous êtes rattaché en tant que formateur.`;
-                document.getElementById('tab-invitations').style.display = 'flex';
+
+                invitationsTab.style.display = 'flex';
                 renderStudentTable(data.students || []);
 
             } else if (data.role === 'owner' && data.organisation) {
                 displayPlan = data.organisation.plan;
                 planNameEl.textContent = `Plan ${displayPlan} (Propriétaire)`;
                 planDescEl.textContent = `Vous gérez l'abonnement pour "${data.organisation.name}".`;
-                document.getElementById('tab-invitations').style.display = 'flex';
-                document.getElementById('tab-centre').style.display = 'flex';
+
+                invitationsTab.style.display = 'flex';
+                centreTab.style.display = 'flex';
                 renderStudentTable(data.students || []);
                 renderCentreDetails(data.organisation);
 
             } else {
                 displayPlan = data.plan;
                 studentCount = data.students ? data.students.length : 0;
+
                 if (displayPlan === 'promo') {
                     planNameEl.textContent = "Promo (Formateur)";
                     planDescEl.textContent = `Vous pouvez inviter jusqu'à 40 étudiants (${studentCount} / 40).`;
-                    document.getElementById('tab-invitations').style.display = 'flex';
+                    invitationsTab.style.display = 'flex';
                 } else if (displayPlan === 'independant') {
                     planNameEl.textContent = "Indépendant";
                     planDescEl.textContent = `Sauvegardes illimitées, et jusqu'à 5 étudiants (${studentCount} / 5).`;
-                    document.getElementById('tab-invitations').style.display = 'flex';
+                    invitationsTab.style.display = 'flex';
                 } else {
                     planNameEl.textContent = "Free";
-                    planDescEl.textContent = "Fonctionnalités de base, aucune sauvegarde de données.";
+                    planDescEl.textContent = "Fonctionnalités de base, aucune sauvegarde de données, pas de comptes étudiants.";
                 }
-                if (displayPlan !== 'free') renderStudentTable(data.students || []);
+
+                if (displayPlan !== 'free') {
+                    renderStudentTable(data.students || []);
+                }
             }
 
             currentPlan = displayPlan;
-            updateSubscriptionButtons(displayPlan, data.organisation?.quote_url, data.organisation?.quote_price);
+
+            const quoteUrl = data.organisation ? data.organisation.quote_url : null;
+            const quotePrice = data.organisation ? data.organisation.quote_price : null;
+            updateSubscriptionButtons(displayPlan, quoteUrl, quotePrice);
+
 
         } catch (err) {
             console.error(err);
@@ -511,150 +301,95 @@
         }
     }
 
-    function updateSubscriptionButtons(activePlan, quoteUrl, quotePrice) {
-        const buttons = {
-            'free': document.getElementById('sub-btn-free'),
-            'independant': document.getElementById('sub-btn-independant'),
-            'promo': document.getElementById('sub-btn-promo'),
-            'centre': document.getElementById('sub-btn-centre')
-        };
-
-        const styles = {
-            'free': { badge: ['bg-yellow-300', 'text-yellow-800'], border: 'border-yellow-300' },
-            'independant': { badge: ['bg-teal-600', 'text-white'], border: 'border-teal-600' },
-            'promo': { badge: ['bg-blue-600', 'text-white'], border: 'border-blue-600' },
-            'centre': { badge: ['bg-indigo-600', 'text-white'], border: 'border-indigo-600' }
-        };
-        
-        Object.keys(buttons).forEach(plan => {
-            const btn = buttons[plan];
-            if(!btn) return;
-            const card = btn.closest('.card');
-            const badge = card.querySelector('.js-active-plan-badge');
-
-            card.classList.remove('shadow-xl', 'border-2', styles[plan].border);
-            card.classList.add('hover:scale-[1.02]', 'hover:shadow-xl');
-            
-            badge.classList.add('hidden');
-            badge.classList.remove(...styles[plan].badge);
-
-            btn.disabled = false;
-            btn.innerHTML = 'Choisir ce plan';
-            btn.className = btn.className.replace(/cursor-not-allowed|bg-.*-100|text-.*-800|opacity-75/g, ''); 
-            
-            if (plan === 'centre') {
-                 btn.classList.add('bg-gray-200', 'text-gray-700');
-                 btn.classList.remove('bg-indigo-600', 'text-white');
-            } else {
-                 btn.classList.remove('cursor-not-allowed');
-            }
-        });
-
-        if (buttons[activePlan]) {
-            const btn = buttons[activePlan];
-            const card = btn.closest('.card');
-            const badge = card.querySelector('.js-active-plan-badge');
-            const planStyle = styles[activePlan];
-            
-            card.classList.add('shadow-xl', 'border-2', planStyle.border);
-            card.classList.remove('hover:scale-[1.02]', 'hover:shadow-xl');
-            
-            badge.classList.remove('hidden');
-            badge.classList.add(...planStyle.badge);
-            
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-check mr-2"></i> Plan actuel';
-            btn.classList.add('cursor-not-allowed', 'opacity-75');
-        }
-        
-        const centerBtn = buttons['centre'];
-        if(activePlan === 'centre' && quoteUrl) {
-             centerBtn.innerHTML = `Activer devis (${quotePrice})`;
-             centerBtn.onclick = () => window.location.href = quoteUrl;
-             centerBtn.disabled = false;
-             centerBtn.classList.remove('cursor-not-allowed', 'opacity-75');
-        } else if (activePlan !== 'centre') {
-             centerBtn.onclick = () => switchTab('contact');
-        }
-    }
-
-    // MODIFIÉ : Fonction mise à jour pour gérer l'affichage des invitations ET la sécurité du loading
     function renderCentreDetails(organisation) {
         document.getElementById('centre-plan-name').textContent = `Plan ${organisation.plan} ("${organisation.name}")`;
         document.getElementById('centre-plan-details').textContent = `Licences formateur utilisées : ${organisation.licences_utilisees} / ${organisation.licences_max || 'Illimitées'}`;
-        
+
         const listContainer = document.getElementById('formateurs-list-container');
-        
-        // Protection contre l'erreur "Cannot read properties of null (reading 'style')"
+
         const loadingEl = document.getElementById('formateurs-loading');
         if (loadingEl) {
             loadingEl.style.display = 'none';
         }
 
         let html = '';
-
-        // 1. Affichage des invitations en attente
-        if (organisation.invitations && organisation.invitations.length > 0) {
-            html += `<div class="mb-4">
-                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Invitations en attente</h4>
-                <div class="space-y-2">`;
-            
-            html += organisation.invitations.map(inv => `
-                <div class="flex items-center justify-between p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <div class="flex items-center">
-                        <i class="fas fa-clock text-yellow-500 mr-2"></i>
-                        <div>
-                            <span class="text-sm font-medium text-gray-700 block">${inv.email}</span>
-                            <span class="text-xs text-gray-500">Envoyée le ${new Date(inv.expires_at).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-                    <button type="button" class="delete-invitation-btn text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors" data-id="${inv._id}" data-email="${inv.email}">
-                        <i class="fas fa-times mr-1"></i> Annuler
+        if (!organisation.formateurs || organisation.formateurs.length === 0) {
+            html = '<p class="text-sm text-gray-500">Vous n\'avez pas encore invité de formateur.</p>';
+        } else {
+            html = organisation.formateurs.map(formateur => `
+                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md border">
+                    <span class="text-sm font-medium text-gray-700">${formateur.email}</span>
+                    <button type="button" class="remove-formateur-btn text-xs text-red-500 hover:text-red-700" data-email="${formateur.email}" title="Retirer ce formateur">
+                        <i class="fas fa-trash"></i> Retirer
                     </button>
                 </div>
             `).join('');
-            
-            html += `</div></div>`;
         }
-
-        // 2. Affichage des formateurs actifs
-        html += `<h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Formateurs actifs</h4>`;
-        
-        if (!organisation.formateurs || organisation.formateurs.length === 0) {
-            html += '<p class="text-sm text-gray-500 italic">Aucun formateur actif.</p>';
-        } else {
-            html += `<div class="space-y-2">` + organisation.formateurs.map(f => `
-                <div class="flex items-center justify-between p-2 bg-gray-50 rounded-md border border-gray-200">
-                    <div class="flex items-center">
-                        <i class="fas fa-user-check text-teal-600 mr-2"></i>
-                        <span class="text-sm font-medium text-gray-700">${f.email}</span>
-                    </div>
-                    <button type="button" class="remove-formateur-btn text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors" data-email="${f.email}">
-                        <i class="fas fa-trash mr-1"></i> Retirer
-                    </button>
-                </div>
-            `).join('') + `</div>`;
-        }
-        
         listContainer.innerHTML = html;
     }
 
+
+    /**
+     * Construit le tableau HTML des étudiants et de leurs permissions (MODIFIÉ avec Toggles)
+     */
     function renderStudentTable(students) {
         const tbody = document.getElementById('permissions-tbody');
-        document.getElementById('student-list-title').textContent = `Gestion des étudiants (${students.length})`;
-        
+        const title = document.getElementById('student-list-title');
+        title.textContent = `Gestion des étudiants (${students.length})`;
+
+        const createBtn = document.getElementById('create-student-submit-btn');
+        const loginInput = document.getElementById('student-login');
+        const passwordInput = document.getElementById('student-password');
+
+        let limitReached = false;
+        let limitMessage = "";
+
+        if (currentPlan === 'independant' && students.length >= 5) {
+            limitReached = true;
+            limitMessage = "Limite de 5 étudiants atteinte pour le plan Indépendant.";
+        } else if (currentPlan === 'promo' && students.length >= 40) {
+            limitReached = true;
+            limitMessage = "Limite de 40 étudiants atteinte pour le plan Promo.";
+        }
+
+        if (limitReached) {
+            createBtn.disabled = true;
+            loginInput.disabled = true;
+            passwordInput.disabled = true;
+            createBtn.title = limitMessage;
+            createBtn.classList.add('cursor-not-allowed', 'bg-gray-400');
+            createBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+        } else {
+            createBtn.disabled = false;
+            loginInput.disabled = false;
+            passwordInput.disabled = false;
+            createBtn.title = "";
+            createBtn.classList.remove('cursor-not-allowed', 'bg-gray-400');
+            createBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+        }
+
+
         if (students.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="15" class="p-4 text-center text-gray-500">Aucun étudiant.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="15" class="p-4 text-center text-gray-500">Vous n'avez pas encore créé de compte étudiant.</td></tr>`;
             return;
         }
 
-        const permissionsList = ['header', 'admin', 'vie', 'observations', 'comptesRendus', 'prescriptions_add', 'prescriptions_delete', 'prescriptions_validate', 'transmissions', 'pancarte', 'diagramme', 'biologie'];
-        
         let html = '';
+
+        const permissionsList = [
+            'header', 'admin', 'vie', 'observations',
+            'comptesRendus',
+            'prescriptions_add', 'prescriptions_delete', 'prescriptions_validate',
+            'transmissions', 'pancarte', 'diagramme', 'biologie'
+        ];
+
         students.forEach(student => {
-            html += `<tr><td class="p-2 font-medium align-middle">${student.login}</td>`;
+            html += `<tr>`;
+            html += `<td class="p-2 font-medium align-middle">${student.login}</td>`;
+
             permissionsList.forEach(perm => {
                 const isChecked = student.permissions && student.permissions[perm];
+                // --- MODIFICATION : REMPLACEMENT DES CHECKBOXES PAR DES TOGGLES ---
                 html += `<td class="p-2 text-center align-middle">
                            <label class="relative inline-flex items-center cursor-pointer">
                              <input type="checkbox" class="sr-only peer" data-login="${student.login}" data-permission="${perm}" ${isChecked ? 'checked' : ''}>
@@ -662,61 +397,434 @@
                            </label>
                          </td>`;
             });
-            const roomCount = (student.allowedRooms || []).length;
-            html += `<td class="p-2 text-center align-middle"><button type="button" class="manage-rooms-btn text-sm text-indigo-600 hover:underline" data-login="${student.login}" data-name="${student.login}" data-rooms='${JSON.stringify(student.allowedRooms || [])}'>Gérer (${roomCount})</button></td>`;
-            html += `<td class="p-2 text-center align-middle"><button data-login="${student.login}" class="delete-student-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr>`;
+
+            const allowedRooms = student.allowedRooms || [];
+            const roomCount = allowedRooms.length;
+            html += `<td class="p-2 text-center align-middle">
+                       <button type="button" 
+                               class="manage-rooms-btn text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+                               data-login="${student.login}"
+                               data-name="${student.login}" 
+                               data-rooms='${JSON.stringify(allowedRooms)}'>
+                         Gérer (${roomCount}/10)
+                       </button>
+                     </td>`;
+
+            html += `<td class="p-2 text-center align-middle">
+                       <button title="Supprimer cet étudiant" data-login="${student.login}" class="delete-student-btn text-red-500 hover:text-red-700">
+                         <i class="fas fa-trash"></i>
+                       </button>
+                     </td>`;
+            html += `</tr>`;
         });
+
         tbody.innerHTML = html;
     }
-
-    // --- HANDLERS ---
 
     function generateRandomString(length) {
         const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
-        for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
         return result;
     }
+
+    // --- Gestionnaires d'événements ---
 
     async function handleInviteFormateur(e) {
         e.preventDefault();
         const email = document.getElementById('invite-email').value;
+        const button = document.getElementById('invite-formateur-btn');
+
+        if (!email) {
+            showCustomAlert("Erreur", "Veuillez saisir une adresse e-mail.");
+            return;
+        }
+
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Envoi...';
+
         try {
-            const response = await fetch(`${API_URL}/api/organisation/invite`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
-            if (!response.ok) throw new Error((await response.json()).error);
-            showCustomAlert("Succès", "Invitation envoyée.");
+            const headers = getAuthHeaders();
+            const response = await fetch(`${API_URL}/api/organisation/invite`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ email: email })
+            });
+
+            if (handleAuthError(response)) return;
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Impossible d'envoyer l'invitation.");
+            }
+
+            showCustomAlert("Invitation envoyée", `Un e-mail d'invitation a été envoyé à ${email}.`);
+            document.getElementById('invite-formateur-form').reset();
             loadAccountDetails();
-        } catch (err) { showCustomAlert("Erreur", err.message); }
+
+        } catch (err) {
+            showCustomAlert("Erreur", err.message);
+        } finally {
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Envoyer l\'invitation';
+        }
+    }
+
+    async function handleFormateursListClick(e) {
+        const removeBtn = e.target.closest('.remove-formateur-btn');
+        if (!removeBtn) return;
+
+        const email = removeBtn.dataset.email;
+        showDeleteConfirmation(
+            `Êtes-vous sûr de vouloir retirer le formateur "${email}" de votre centre ? Son compte ne sera pas supprimé, mais il perdra l'accès à l'abonnement du centre.`,
+            async () => {
+                try {
+                    const headers = getAuthHeaders();
+                    const response = await fetch(`${API_URL}/api/organisation/remove`, {
+                        method: 'POST', 
+                        headers: headers,
+                        body: JSON.stringify({ email: email })
+                    });
+
+                    if (handleAuthError(response)) return;
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || "Impossible de retirer le formateur.");
+                    }
+
+                    showCustomAlert("Formateur retiré", `${email} a été retiré de votre centre.`);
+                    loadAccountDetails();
+
+                } catch (err) {
+                    showCustomAlert("Erreur", err.message);
+                }
+            }
+        );
+    }
+
+
+    function handleCopyEmail() {
+        const emailText = document.getElementById('contact-email').textContent;
+
+        if (emailText === '[Email à remplir]') {
+            showCustomAlert('Information', "L'adresse email n'a pas encore été configurée.");
+            return;
+        }
+
+        navigator.clipboard.writeText(emailText).then(() => {
+            showCustomAlert('Copié !', "L'adresse email a été copiée dans le presse-papiers.");
+        }).catch(err => {
+            console.error('Erreur de copie: ', err);
+            showCustomAlert('Erreur', "Impossible de copier l'adresse. Veuillez le faire manuellement.");
+        });
+    }
+
+    function handleGenerateCredentials(e) {
+        e.preventDefault();
+        const generatedLogin = `etu${Math.floor(1000 + Math.random() * 9000)}`;
+        const generatedPassword = generateRandomString(8);
+
+        document.getElementById('student-login').value = generatedLogin;
+        document.getElementById('student-password').value = generatedPassword;
     }
 
     async function handleCreateStudent(e) {
         e.preventDefault();
+
+        if (currentPlan === 'independant' && studentCount >= 5) {
+            showCustomAlert("Limite atteinte", "Vous avez atteint la limite de 5 étudiants pour le plan Indépendant.");
+            return;
+        }
+        if (currentPlan === 'promo' && studentCount >= 40) {
+            showCustomAlert("Limite atteinte", "Vous avez atteint la limite de 40 étudiants pour le plan Promo.");
+            return;
+        }
+
         const login = document.getElementById('student-login').value;
         const password = document.getElementById('student-password').value;
-        if(currentPlan === 'independant' && studentCount >= 5) return showCustomAlert("Limite", "5 étudiants max.");
-        if(currentPlan === 'promo' && studentCount >= 40) return showCustomAlert("Limite", "40 étudiants max.");
+
+        if (!login || !password) {
+            showCustomAlert("Erreur", "Veuillez saisir un identifiant et un mot de passe.");
+            return;
+        }
 
         try {
-            const response = await fetch(`${API_URL}/api/account/invite`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ login, password }) });
-            if (!response.ok) throw new Error((await response.json()).error);
-            showCustomAlert("Succès", `Étudiant ${login} créé.`);
+            const headers = getAuthHeaders();
+            const response = await fetch(`${API_URL}/api/account/invite`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ login, password })
+            });
+
+            if (handleAuthError(response)) return;
+
+            if (!response.ok) {
+                let errorMsg = "Impossible de créer l'étudiant.";
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.error || response.statusText;
+                } catch (e) {
+                    errorMsg = response.statusText;
+                }
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+
+            showCustomAlert("Succès", `Le compte pour "${login}" a été créé.`);
+
             document.getElementById('create-student-form').reset();
+
             loadAccountDetails();
-        } catch (err) { showCustomAlert("Erreur", err.message); }
+
+        } catch (err) {
+            showCustomAlert("Erreur", err.message);
+        }
     }
 
-    async function handleDeleteAccount() {
-        showDeleteConfirmation("Supprimer définitivement votre compte ?", async () => {
-            try {
-                const response = await fetch(`${API_URL}/api/account/delete`, { method: 'DELETE', headers: getAuthHeaders() });
-                if (!response.ok) throw new Error("Erreur");
-                localStorage.clear();
-                window.location.href = 'auth.html';
-            } catch (err) { showCustomAlert("Erreur", err.message); }
-        });
+    async function handleChangePassword(e) {
+        e.preventDefault();
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (newPassword !== confirmPassword) {
+            showCustomAlert("Erreur", "Les nouveaux mots de passe ne correspondent pas.");
+            return;
+        }
+
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${API_URL}/api/account/change-password`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            if (handleAuthError(response)) return;
+
+            if (!response.ok) {
+                let errorMsg = "Impossible de changer le mot de passe.";
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.error || response.statusText;
+                } catch (e) {
+                    errorMsg = response.statusText;
+                }
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+
+            showCustomAlert("Succès", "Votre mot de passe a été mis à jour.");
+            document.getElementById('change-password-form').reset();
+
+        } catch (err) {
+            showCustomAlert("Erreur", err.message);
+        }
     }
 
-    // --- GESTION MODALE CHAMBRES (RESTAURÉE) ---
+    async function handleChangeEmail(e) {
+        e.preventDefault();
+
+        const newEmail = document.getElementById('new-email').value;
+        const password = document.getElementById('current-password-for-email').value;
+
+        if (!newEmail || !password) {
+            showCustomAlert("Erreur", "Veuillez remplir tous les champs.");
+            return;
+        }
+
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${API_URL}/api/account/request-change-email`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ newEmail: newEmail, password: password })
+            });
+
+            if (handleAuthError(response)) return;
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Impossible de traiter la demande.");
+            }
+
+            showCustomAlert("Demande envoyée", `Un e-mail de vérification a été envoyé à ${newEmail}. Veuillez cliquer sur le lien pour confirmer le changement.`);
+            document.getElementById('change-email-form').reset();
+
+        } catch (err) {
+            showCustomAlert("Erreur", err.message);
+        }
+    }
+
+
+    function handleDeleteAccount() {
+        showDeleteConfirmation(
+            "Êtes-vous absolument sûr ? Cette action est irréversible et supprimera toutes vos données.",
+            async () => {
+                try {
+                    const headers = getAuthHeaders();
+                    const response = await fetch(`${API_URL}/api/account/delete`, {
+                        method: 'DELETE',
+                        headers: headers
+                    });
+
+                    if (handleAuthError(response)) return;
+
+                    if (!response.ok) {
+                        let errorMsg = "Impossible de supprimer le compte.";
+                        try {
+                            const errorData = await response.json();
+                            errorMsg = errorData.error || response.statusText;
+                        } catch (e) {
+                            errorMsg = response.statusText;
+                        }
+                        throw new Error(errorMsg);
+                    }
+
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('activePatientId');
+                    localStorage.removeItem('activeTab');
+
+                    showCustomAlert("Compte supprimé", "Votre compte a été supprimé. Vous allez être redirigé.");
+
+                    setTimeout(() => {
+                        window.location.href = 'auth.html';
+                    }, 2000);
+
+                } catch (err) {
+                    showCustomAlert("Erreur", err.message);
+                }
+            }
+        );
+    }
+
+    async function handleChangeSubscription(newPlan) {
+        if (newPlan === 'centre') {
+            switchTab('contact');
+            return;
+        }
+
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${API_URL}/api/account/change-subscription`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({ newPlan })
+            });
+
+            if (handleAuthError(response)) return;
+
+            if (!response.ok) {
+                let errorMsg = "Erreur lors du changement d'abonnement.";
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.error || response.statusText;
+                } catch (e) {
+                    errorMsg = response.statusText || `Erreur ${response.status}`;
+                }
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+
+            showCustomAlert("Abonnement mis à jour", `Vous êtes maintenant sur le plan ${newPlan}.`);
+
+            loadAccountDetails();
+
+        } catch (err) {
+            showCustomAlert("Erreur", err.message);
+        }
+    }
+
+    async function handlePermissionChange(e) {
+        if (!e.target.matches('input[type="checkbox"]')) return;
+
+        const checkbox = e.target;
+        const login = checkbox.dataset.login;
+        const permission = checkbox.dataset.permission;
+        const value = checkbox.checked;
+
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetch(`${API_URL}/api/account/permissions`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify({ login, permission, value })
+            });
+
+            if (handleAuthError(response)) return;
+
+            if (!response.ok) {
+                let errorMsg = "Erreur de mise à jour";
+                try {
+                    const errorData = await response.json();
+                    errorMsg = errorData.error || response.statusText;
+                } catch (e) {
+                    errorMsg = response.statusText;
+                }
+                throw new Error(errorMsg);
+            }
+
+            console.log(`Permission ${permission} pour ${login} mise à jour: ${value}`);
+
+        } catch (err) {
+            showCustomAlert("Erreur", err.message);
+            checkbox.checked = !value;
+        }
+    }
+
+    async function handleTableClicks(e) {
+        const deleteBtn = e.target.closest('.delete-student-btn');
+        if (deleteBtn) {
+            const login = deleteBtn.dataset.login;
+            showDeleteConfirmation(
+                `Êtes-vous sûr de vouloir supprimer le compte étudiant "${login}" ?`,
+                async () => {
+                    try {
+                        const headers = getAuthHeaders();
+                        const response = await fetch(`${API_URL}/api/account/student`, {
+                            method: 'DELETE',
+                            headers: headers,
+                            body: JSON.stringify({ login })
+                        });
+
+                        if (handleAuthError(response)) return;
+
+                        if (!response.ok) {
+                            let errorMsg = "Impossible de supprimer l'étudiant.";
+                            try {
+                                const errorData = await response.json();
+                                errorMsg = errorData.error || response.statusText;
+                            } catch (e) {
+                                errorMsg = response.statusText;
+                            }
+                            throw new Error(errorMsg);
+                        }
+
+                        showCustomAlert("Succès", `Le compte "${login}" a été supprimé.`);
+                        loadAccountDetails();
+
+                    } catch (err) {
+                        showCustomAlert("Erreur", err.message);
+                    }
+                }
+            );
+            return;
+        }
+
+        const manageRoomsBtn = e.target.closest('.manage-rooms-btn');
+        if (manageRoomsBtn) {
+            handleOpenRoomModal(manageRoomsBtn);
+        }
+    }
+
+
+    // --- NOUVELLES FONCTIONS : Gestion Modale Chambres ---
 
     function hideRoomModal() {
         roomModalBox.classList.add('scale-95', 'opacity-0');
@@ -774,7 +882,6 @@
                 throw new Error(errData.error || "Erreur lors de la mise à jour");
             }
 
-            // Mettre à jour le bouton dans le tableau
             const button = document.querySelector(`.manage-rooms-btn[data-login="${login}"]`);
             if (button) {
                 button.textContent = `Gérer (${selectedRooms.length}/10)`;
@@ -788,24 +895,32 @@
         }
     }
 
-    // --- INIT ---
-
     function init() {
         if (!getAuthToken()) return;
 
-        ['security', 'subscription', 'centre', 'invitations', 'contact'].forEach(tab => {
-            const btn = document.getElementById(`tab-${tab}`);
-            const content = document.getElementById(`content-${tab}`);
-            if(btn && content) {
-                tabButtons[tab] = btn;
-                tabContents[tab] = content;
-                btn.addEventListener('click', () => switchTab(tab));
-            }
-        });
+        tabButtons = {
+            security: document.getElementById('tab-security'),
+            subscription: document.getElementById('tab-subscription'),
+            centre: document.getElementById('tab-centre'),
+            invitations: document.getElementById('tab-invitations'),
+            contact: document.getElementById('tab-contact')
+        };
+        tabContents = {
+            security: document.getElementById('content-security'),
+            subscription: document.getElementById('content-subscription'),
+            centre: document.getElementById('content-centre'),
+            invitations: document.getElementById('content-invitations'),
+            contact: document.getElementById('content-contact')
+        };
+
+        tabButtons.security.addEventListener('click', () => switchTab('security'));
+        tabButtons.subscription.addEventListener('click', () => switchTab('subscription'));
+        tabButtons.centre.addEventListener('click', () => switchTab('centre'));
+        tabButtons.invitations.addEventListener('click', () => switchTab('invitations'));
+        tabButtons.contact.addEventListener('click', () => switchTab('contact'));
 
         setupModalListeners();
 
-        // Initialisation références modale chambres
         roomModal = document.getElementById('room-modal');
         roomModalBox = document.getElementById('room-modal-box');
         roomModalForm = document.getElementById('room-modal-form');
@@ -813,101 +928,31 @@
         roomModalTitle = document.getElementById('room-modal-title');
         roomModalLoginInput = document.getElementById('room-modal-login');
 
-        // Écouteurs modale chambres
         document.getElementById('room-modal-cancel').addEventListener('click', hideRoomModal);
         roomModalForm.addEventListener('submit', handleSaveStudentRooms);
 
-        // Autres écouteurs
-        document.getElementById('change-password-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const cur = document.getElementById('current-password').value;
-            const neu = document.getElementById('new-password').value;
-            const conf = document.getElementById('confirm-password').value;
-            if(neu !== conf) return showCustomAlert("Erreur", "Mots de passe différents");
-            try {
-                const res = await fetch(`${API_URL}/api/account/change-password`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ currentPassword: cur, newPassword: neu }) });
-                if(!res.ok) throw new Error();
-                showCustomAlert("Succès", "Mot de passe changé.");
-                e.target.reset();
-            } catch(err) { showCustomAlert("Erreur", "Erreur changement mot de passe"); }
-        });
-
+        document.getElementById('change-password-form').addEventListener('submit', handleChangePassword);
+        document.getElementById('change-email-form').addEventListener('submit', handleChangeEmail);
         document.getElementById('delete-account-btn').addEventListener('click', handleDeleteAccount);
+
+        document.getElementById('sub-btn-free').addEventListener('click', () => handleChangeSubscription('free'));
+        document.getElementById('sub-btn-independant').addEventListener('click', () => handleChangeSubscription('independant'));
+        document.getElementById('sub-btn-promo').addEventListener('click', () => handleChangeSubscription('promo'));
+
         document.getElementById('invite-formateur-form').addEventListener('submit', handleInviteFormateur);
+        document.getElementById('formateurs-list-container').addEventListener('click', handleFormateursListClick);
+
         document.getElementById('create-student-form').addEventListener('submit', handleCreateStudent);
-        document.getElementById('generate-credentials-btn').addEventListener('click', () => {
-            document.getElementById('student-login').value = `etu${Math.floor(Math.random()*9000)+1000}`;
-            document.getElementById('student-password').value = generateRandomString(8);
-        });
+        document.getElementById('generate-credentials-btn').addEventListener('click', handleGenerateCredentials);
 
-        // MODIFIÉ : Écouteurs Tableaux (Délégation) avec gestion de la suppression des invitations
-        document.getElementById('formateurs-list-container').addEventListener('click', async (e) => {
-            // Cas 1 : Retirer un formateur actif
-            const removeBtn = e.target.closest('.remove-formateur-btn');
-            if (removeBtn) {
-                const email = removeBtn.dataset.email;
-                showDeleteConfirmation(`Retirer le formateur ${email} du centre ?\nIl repassera en compte "Free" indépendant.`, async () => {
-                    try {
-                        await fetch(`${API_URL}/api/organisation/remove`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ email }) });
-                        loadAccountDetails();
-                        showCustomAlert("Succès", "Formateur retiré.");
-                    } catch (err) { showCustomAlert("Erreur", "Impossible de retirer le formateur."); }
-                });
-                return;
-            }
+        const permissionsTbody = document.getElementById('permissions-tbody');
+        permissionsTbody.addEventListener('change', handlePermissionChange);
+        permissionsTbody.addEventListener('click', handleTableClicks);
 
-            // Cas 2 : Annuler une invitation (NOUVEAU)
-            const deleteInviteBtn = e.target.closest('.delete-invitation-btn');
-            if (deleteInviteBtn) {
-                const id = deleteInviteBtn.dataset.id;
-                const email = deleteInviteBtn.dataset.email;
-                
-                if(!confirm(`Annuler l'invitation pour ${email} ?`)) return;
-
-                try {
-                    const res = await fetch(`${API_URL}/api/organisation/invite/${id}`, { 
-                        method: 'DELETE', 
-                        headers: getAuthHeaders() 
-                    });
-                    
-                    if (!res.ok) throw new Error();
-                    
-                    // Recharger pour mettre à jour la liste
-                    loadAccountDetails();
-                } catch (err) {
-                    showCustomAlert("Erreur", "Impossible d'annuler l'invitation.");
-                }
-            }
-        });
-
-        document.getElementById('permissions-tbody').addEventListener('change', async (e) => {
-            if(e.target.type === 'checkbox') {
-                const { login, permission } = e.target.dataset;
-                try {
-                    await fetch(`${API_URL}/api/account/permissions`, { method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ login, permission, value: e.target.checked }) });
-                } catch(err) { e.target.checked = !e.target.checked; }
-            }
-        });
-
-        document.getElementById('permissions-tbody').addEventListener('click', async (e) => {
-            // Supprimer étudiant
-            if(e.target.closest('.delete-student-btn')) {
-                const login = e.target.closest('.delete-student-btn').dataset.login;
-                showDeleteConfirmation(`Supprimer étudiant ${login} ?`, async () => {
-                    await fetch(`${API_URL}/api/account/student`, { method: 'DELETE', headers: getAuthHeaders(), body: JSON.stringify({ login }) });
-                    loadAccountDetails();
-                });
-                return;
-            }
-            
-            // Gérer les chambres (Bouton restauré)
-            const manageRoomsBtn = e.target.closest('.manage-rooms-btn');
-            if (manageRoomsBtn) {
-                handleOpenRoomModal(manageRoomsBtn);
-            }
-        });
+        document.getElementById('copy-email-btn').addEventListener('click', handleCopyEmail);
 
         loadAccountDetails();
+
         switchTab('security');
     }
 

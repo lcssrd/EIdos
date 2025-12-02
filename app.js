@@ -11,12 +11,11 @@
         uiService.setupModalListeners(); // Configure les boutons "OK/Annuler" des modales
 
         // 2. Initialiser le service patient (permissions, liste des patients, patient actif)
-        // Note : initialize() utilise maintenant fetchWithCredentials pour s'authentifier via Cookie
         const initialized = await patientService.initialize();
         
-        // 3. Si l'initialisation échoue (ex: étudiant sans chambre ou non connecté), arrêter ici.
+        // 3. Si l'initialisation échoue (ex: étudiant sans chambre), arrêter ici.
         if (!initialized) {
-            console.warn("Initialisation du patientService arrêtée.");
+            console.warn("Initialisation du patientService arrêtée (ex: étudiant sans chambre).");
             // Les écouteurs de base (logout, etc.) sont quand même attachés
             setupBaseEventListeners();
             return;
@@ -31,7 +30,7 @@
         
         // 6. Démarrer le tutoriel si c'est la première visite
         if (!localStorage.getItem('tutorialCompleted')) {
-            setTimeout(() => uiService.startTutorial(), 1000);
+            setTimeout(uiService.startTutorial, 500);
         }
     }
 
@@ -39,17 +38,11 @@
      * Configure les écouteurs de base (toujours actifs, même si l'init échoue).
      */
     function setupBaseEventListeners() {
-        // [MODIFIÉ] Gestion de la déconnexion
-        document.getElementById('logout-btn')?.addEventListener('click', async (e) => {
-            e.preventDefault();
-            
-            // 1. Nettoyage des préférences UI locales
+        document.getElementById('logout-btn')?.addEventListener('click', () => {
+            localStorage.removeItem('authToken');
             localStorage.removeItem('activePatientId');
             localStorage.removeItem('activeTab');
-            // Note: On ne touche pas à 'isLoggedIn', c'est apiService.logout() qui s'en charge
-            
-            // 2. Appel au service pour déconnexion serveur (Suppression du Cookie) et redirection
-            await apiService.logout(); 
+            window.location.href = 'auth.html';
         });
 
         document.getElementById('account-management-btn')?.addEventListener('click', (e) => {
@@ -70,27 +63,22 @@
         setupBaseEventListeners();
         
         // --- Header (Sauvegarde, Chargement, etc.) ---
-        
-        document.getElementById('start-tutorial-btn').addEventListener('click', () => uiService.startTutorial());
-        
+        document.getElementById('start-tutorial-btn').addEventListener('click', uiService.startTutorial);
         document.getElementById('clear-all-data-btn').addEventListener('click', patientService.clearAllPatients);
         document.getElementById('save-patient-btn').addEventListener('click', patientService.saveCurrentPatientAsCase);
         document.getElementById('load-patient-btn').addEventListener('click', patientService.openLoadPatientModal);
         document.getElementById('export-json-btn').addEventListener('click', patientService.exportPatientData);
         document.getElementById('clear-current-patient-btn').addEventListener('click', patientService.clearCurrentPatient);
 
-        // Bouton de statut/sauvegarde (Force la synchro)
+        // NOUVEAU : Écouteur pour le bouton de statut/sauvegarde
         document.getElementById('save-status-button').addEventListener('click', patientService.forceSaveAndRefresh);
 
-        // --- Importation de fichier (Restriction Super Admin) ---
+        // --- Importation de fichier ---
         document.getElementById('import-json-btn').addEventListener('click', () => {
-            if (patientService.getUserPermissions().isSuperAdmin) {
+            if (!patientService.getUserPermissions().isStudent && patientService.getUserPermissions().subscription !== 'free') {
                 document.getElementById('import-file').click();
-            } else {
-                uiService.showToast("Réservé au Super Admin", "error");
             }
         });
-        
         document.getElementById('import-file').addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (!file) return;
@@ -104,7 +92,7 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; 
+            event.target.value = ''; // Permet de ré-importer le même fichier
         });
         
         // --- Navigation (Onglets & Patients) ---
@@ -127,13 +115,16 @@
         mainContent.addEventListener('input', patientService.debouncedSave);
         mainContent.addEventListener('change', patientService.debouncedSave);
 
+        // --- NOUVELLE MODIFICATION ---
+        // Ajoute la sauvegarde automatique pour l'en-tête patient
         const headerForm = document.getElementById('patient-header-form');
         if (headerForm) {
             headerForm.addEventListener('input', patientService.debouncedSave);
             headerForm.addEventListener('change', patientService.debouncedSave);
         }
+        // --- FIN MODIFICATION ---
 
-        // --- Mises à jour auto de l'UI ---
+        // --- Mises à jour auto de l'UI (Header & Vie) ---
         document.getElementById('patient-entry-date').addEventListener('input', () => {
             uiService.updateJourHosp();
             uiService.refreshAllRelativeDates();
@@ -141,37 +132,41 @@
         document.getElementById('patient-dob').addEventListener('input', uiService.updateAgeDisplay);
         document.getElementById('admin-dob').addEventListener('input', uiService.updateAgeDisplay);
 
+        // Active la synchronisation entre les champs du header et de l'onglet admin
         uiService.setupSync();
         
         document.getElementById('vie-poids').addEventListener('input', uiService.calculateAndDisplayIMC);
         document.getElementById('vie-taille').addEventListener('input', uiService.calculateAndDisplayIMC);
 
-        // --- Ajout d'entrées ---
+        // --- Ajout d'entrées (Observations, Transmissions, etc.) ---
         document.getElementById('add-observation-btn').addEventListener('click', () => {
             const data = uiService.readObservationForm();
             if (data) {
                 uiService.addObservation(data, false);
+                // Note: L'observation est le seul qui ne sauvegarde pas, car c'est souvent médical.
+                // Si vous voulez qu'il sauvegarde, ajoutez la ligne ci-dessous.
+                // patientService.debouncedSave(); 
             }
         });
         document.getElementById('add-transmission-btn').addEventListener('click', () => {
             const data = uiService.readTransmissionForm();
             if (data) {
                 uiService.addTransmission(data, false);
-                patientService.debouncedSave();
+                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
             }
         });
         document.getElementById('add-prescription-btn').addEventListener('click', () => {
             const data = uiService.readPrescriptionForm();
             if (data) {
                 uiService.addPrescription(data, false);
-                patientService.debouncedSave();
+                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
             }
         });
         document.getElementById('add-care-diagram-btn').addEventListener('click', () => {
             const data = uiService.readCareDiagramForm();
             if (data) {
                 uiService.addCareDiagramRow(data);
-                patientService.debouncedSave();
+                patientService.debouncedSave(); // <-- MODIFIÉ (Précédemment)
             }
         });
         
@@ -179,10 +174,10 @@
         document.getElementById('sort-observations-btn').addEventListener('click', () => uiService.toggleSort('observations'));
         document.getElementById('sort-transmissions-btn').addEventListener('click', () => uiService.toggleSort('transmissions'));
 
-        // --- Suppression d'entrées ---
+        // --- Suppression d'entrées (Listes) ---
         document.getElementById('observations-list').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette entrée ?", () => {
                     if (uiService.deleteEntry(deleteBtn)) patientService.debouncedSave();
                 });
@@ -190,15 +185,17 @@
         });
         document.getElementById('transmissions-list-ide').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette entrée ?", () => {
                     if (uiService.deleteEntry(deleteBtn)) patientService.debouncedSave();
                 });
             }
         });
+        
+        // --- Suppression d'entrées (Tables) ---
         document.getElementById('prescription-tbody').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer cette prescription ?", () => {
                     if (uiService.deletePrescription(deleteBtn)) patientService.debouncedSave();
                 });
@@ -206,31 +203,33 @@
         });
         document.getElementById('care-diagram-tbody').addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('button[title*="Supprimer"]');
-            if (deleteBtn && !patientService.getUserPermissions().isStudent) {
+            if (deleteBtn && !patientService.getUserPermissions().isStudent) { // TODO: Gérer perm
                 uiService.showDeleteConfirmation("Êtes-vous sûr de vouloir supprimer ce soin ?", () => {
                     if (uiService.deleteCareDiagramRow(deleteBtn)) patientService.debouncedSave();
                 });
             }
         });
         
-        // --- Pancarte ---
+        // --- Pancarte (Graphique) ---
         document.getElementById('pancarte-tbody').addEventListener('change', (e) => {
             if (e.target.tagName === 'INPUT') uiService.updatePancarteChart();
         });
         
-        // --- Logique Comptes Rendus ---
+        // --- Logique Comptes Rendus (CR) ---
         document.getElementById('cr-card-grid').addEventListener('click', (e) => {
             const card = e.target.closest('.cr-card');
             if (!card) return;
+            
             const crId = card.dataset.crId;
             const crTitle = card.dataset.crTitle;
             const crText = patientService.getCrText(crId);
+            
             uiService.openCrModal(crId, crTitle, crText);
         });
         
         document.getElementById('cr-modal-save-btn').addEventListener('click', () => {
             const crId = document.getElementById('cr-modal-active-id').value;
-            const crText = document.getElementById('cr-modal-content').innerHTML;
+            const crText = document.getElementById('cr-modal-textarea').value;
             patientService.handleCrModalSave(crId, crText);
         });
 
@@ -238,6 +237,8 @@
         document.addEventListener('mousedown', uiService.handleIVMouseDown);
         document.addEventListener('mousemove', uiService.handleIVMouseMove);
         document.addEventListener('mouseup', uiService.handleIVMouseUp);
+        
+        // Écouteur personnalisé pour déclencher une sauvegarde (utilisé par les barres IV)
         document.addEventListener('uiNeedsSave', patientService.debouncedSave);
 
         // --- Tutoriel ---
