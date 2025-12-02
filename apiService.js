@@ -1,39 +1,29 @@
 (function() {
     "use strict";
 
-    // MODIFIÉ : La constante API_URL est maintenant l'URL de base
-    const API_URL = 'https://eidos-api.onrender.com';
+    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT ---
+    // Si l'adresse contient 'vercel.app' OU 'pages.dev', on utilise le proxy (vide).
+    // Sinon (eidos-simul.fr ou localhost), on utilise l'API directe.
+    const IS_PROXY_ENV = window.location.hostname.includes('vercel.app') || window.location.hostname.includes('pages.dev');
+    const API_URL = IS_PROXY_ENV ? '' : 'https://api.eidos-simul.fr';
     
-    // NOUVEAU : Variable pour stocker la connexion socket
+    // Pour les sockets, c'est toujours l'URL directe (les proxies gratuits gèrent mal les WebSockets)
+    const SOCKET_URL = 'https://api.eidos-simul.fr';
+
+    // Variable pour stocker la connexion socket
     let socket = null;
 
     // --- Fonctions d'authentification "privées" ---
-    // (Elles ne sont pas exposées sur window.apiService, 
-    // mais sont utilisées par les autres fonctions de ce fichier)
 
     function getAuthToken() {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            console.error("Aucun token trouvé, redirection vers login.");
-            window.location.href = 'auth.html'; 
-            return null;
-        }
-        return token;
+        return localStorage.getItem('isLoggedIn') === 'true';
     }
 
-    // MODIFIÉ : Ajoute l'ID du socket aux en-têtes
     function getAuthHeaders() {
-        const token = getAuthToken();
-        if (!token) {
-            throw new Error("Token non trouvé, impossible de créer les headers.");
-        }
-        
         const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'application/json'
         };
 
-        // NOUVEAU : Ajoute l'ID du socket si la connexion est établie
         if (socket && socket.id) {
             headers['x-socket-id'] = socket.id;
         }
@@ -43,31 +33,34 @@
 
     function handleAuthError(response) {
         if (response.status === 401) {
-            console.error("Token invalide ou expiré, redirection vers login.");
-            localStorage.removeItem('authToken');
+            console.error("Session expirée ou invalide.");
+            localStorage.removeItem('isLoggedIn');
             window.location.href = 'auth.html'; 
             return true;
         }
         return false;
     }
 
+    // Helper pour fetch avec credentials (Cookies)
+    async function fetchWithCredentials(url, options = {}) {
+        const defaultOptions = {
+            credentials: 'include', 
+        };
+        
+        const finalOptions = { ...defaultOptions, ...options };
+        
+        if (options.headers) {
+            finalOptions.headers = { ...options.headers };
+        }
+
+        return fetch(url, finalOptions);
+    }
+
     // --- Fonctions API "publiques" ---
-    // (Celles-ci seront exposées sur window.apiService)
 
-    // NOUVEAU : Fonction pour initialiser la connexion Socket.io
-    /**
-     * Initialise la connexion Socket.io avec le serveur.
-     * @returns {Socket} L'instance du socket connecté.
-     */
     function connectSocket() {
-        const token = getAuthToken();
-        if (!token) return null;
-
-        // Se connecte à la racine du serveur où Socket.io écoute
-        socket = io(API_URL, {
-            auth: {
-                token: token
-            }
+        socket = io(SOCKET_URL, {
+            withCredentials: true, 
         });
 
         socket.on('connect', () => {
@@ -77,7 +70,6 @@
         socket.on('connect_error', (err) => {
             console.error('Erreur de connexion socket :', err.message);
             if (err.message.includes('Authentification')) {
-                // Si l'authentification socket échoue (ex: token expiré), on redirige
                 handleAuthError({ status: 401 });
             }
         });
@@ -86,22 +78,14 @@
             console.log('Socket déconnecté.');
         });
         
-        // La fonction retourne l'instance pour que patientService puisse l'écouter
         return socket;
     }
 
-
-    /**
-     * Récupère les permissions et les données de l'utilisateur connecté.
-     * @returns {Promise<Object>} Les données de l'utilisateur.
-     */
     async function fetchUserPermissions() {
         try {
-            const token = getAuthToken(); // On a besoin du token mais pas de 'Content-Type'
-            if (!token) return;
-
-            const response = await fetch(`${API_URL}/api/auth/me`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const response = await fetchWithCredentials(`${API_URL}/api/auth/me`, {
+                method: 'GET',
+                headers: getAuthHeaders()
             });
 
             if (handleAuthError(response)) return;
@@ -111,47 +95,38 @@
             return await response.json();
         } catch (err) {
             console.error(err);
-            // Redirige en cas d'erreur grave
-            if (err.message.includes("Token non trouvé")) {
+            if (err.message.includes("401")) {
                 window.location.href = 'auth.html';
-            }
-            throw err; // Propage l'erreur pour que le code appelant puisse réagir
-        }
-    }
-
-    /**
-     * Récupère la liste de tous les patients (chambres et sauvegardes) de l'utilisateur.
-     * @returns {Promise<Array>} La liste des patients.
-     */
-    async function fetchPatientList() {
-        try {
-            const headers = getAuthHeaders();
-            delete headers['Content-Type']; // Pas de body
-
-            const response = await fetch(`${API_URL}/api/patients`, { headers });
-            if (handleAuthError(response)) return;
-            
-            return await response.json();
-        } catch (err) {
-            console.error("Erreur de chargement de la liste des patients:", err);
-            if (err.message.includes("Token non trouvé")) {
-                 window.location.href = 'auth.html';
             }
             throw err;
         }
     }
 
-    /**
-     * Récupère les données complètes d'un dossier patient (chambre ou sauvegarde).
-     * @param {string} patientId - L'ID du patient (ex: 'chambre_101' ou 'save_...')
-     * @returns {Promise<Object>} Les données du dossier (dossierData).
-     */
+    async function fetchPatientList() {
+        try {
+            const headers = getAuthHeaders();
+            delete headers['Content-Type']; 
+
+            const response = await fetchWithCredentials(`${API_URL}/api/patients`, { 
+                method: 'GET',
+                headers: headers 
+            });
+            
+            if (handleAuthError(response)) return;
+            return await response.json();
+        } catch (err) {
+            console.error("Erreur chargement liste:", err);
+            throw err;
+        }
+    }
+
     async function fetchPatientData(patientId) {
         try {
             const headers = getAuthHeaders();
-            delete headers['Content-Type']; // Pas de body
+            delete headers['Content-Type'];
 
-            const response = await fetch(`${API_URL}/api/patients/${patientId}`, {
+            const response = await fetchWithCredentials(`${API_URL}/api/patients/${patientId}`, {
+                method: 'GET',
                 headers: headers
             });
 
@@ -159,41 +134,24 @@
 
             if (!response.ok) {
                 if (response.status === 404) {
-                    console.log(`Dossier ${patientId} non trouvé sur le serveur, initialisation.`);
-                    return {}; // Retourne un état vide si 404
+                    return {}; 
                 } else {
-                    throw new Error('Erreur réseau lors du chargement des données.');
+                    throw new Error('Erreur réseau.');
                 }
             }
-            return await response.json(); // Retourne le 'dossierData'
+            return await response.json();
         } catch (err) {
-            console.error("Erreur de chargement des données:", err);
-            if (err.message.includes("Token non trouvé")) {
-                window.location.href = 'auth.html';
-            }
-            return {}; // Retourne un état vide en cas d'erreur
+            console.error("Erreur chargement données:", err);
+            return {};
         }
     }
 
-    /**
-     * Enregistre les données d'une chambre (PAS une sauvegarde de cas).
-     * @param {string} patientId - L'ID de la chambre (ex: 'chambre_101')
-     * @param {Object} dossierData - L'objet complet contenant l'état du dossier.
-     * @param {string} patientName - Le nom du patient pour la sidebar.
-     * @returns {Promise<Object>} La réponse du serveur.
-     */
     async function saveChamberData(patientId, dossierData, patientName) {
-        if (!patientId || !patientId.startsWith('chambre_')) {
-            console.warn('saveChamberData ne doit être utilisé que pour les chambres.');
-            return;
-        }
+        if (!patientId || !patientId.startsWith('chambre_')) return;
         
         try {
-            // MODIFIÉ : getAuthHeaders() inclut maintenant le x-socket-id
             const headers = getAuthHeaders(); 
-            if (!headers) return;
-
-            const response = await fetch(`${API_URL}/api/patients/${patientId}`, {
+            const response = await fetchWithCredentials(`${API_URL}/api/patients/${patientId}`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({
@@ -203,29 +161,17 @@
             });
 
             if (handleAuthError(response)) return;
-            
             return await response.json();
         } catch (err) {
-            console.error("Erreur lors de la sauvegarde sur le serveur:", err);
-            if (err.message.includes("Token non trouvé")) {
-                 window.location.href = 'auth.html';
-            }
+            console.error("Erreur sauvegarde:", err);
             throw err;
         }
     }
 
-    /**
-     * Crée ou met à jour une sauvegarde de cas (dossier archivé).
-     * @param {Object} dossierData - L'objet complet contenant l'état du dossier.
-     * @param {string} patientName - Le nom du patient (obligatoire pour la sauvegarde).
-     * @returns {Promise<Object>} La réponse du serveur.
-     */
     async function saveCaseData(dossierData, patientName) {
         try {
             const headers = getAuthHeaders();
-            if (!headers) return;
-
-            const response = await fetch(`${API_URL}/api/patients/save`, {
+            const response = await fetchWithCredentials(`${API_URL}/api/patients/save`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({
@@ -241,62 +187,38 @@
                 throw new Error(data.error || 'Erreur lors de la sauvegarde');
             }
             return data;
-
         } catch (err) {
-            console.error("Erreur lors de la sauvegarde du cas:", err);
-            if (err.message.includes("Token non trouvé")) {
-                 window.location.href = 'auth.html';
-            }
+            console.error("Erreur sauvegarde cas:", err);
             throw err;
         }
     }
     
-    /**
-     * Supprime une sauvegarde de cas (dossier archivé).
-     * @param {string} patientId - L'ID de la sauvegarde (ex: 'save_...')
-     * @returns {Promise<Object>} La réponse du serveur.
-     */
     async function deleteSavedCase(patientId) {
-        if (!patientId || !patientId.startsWith('save_')) {
-             throw new Error("Cette fonction ne peut supprimer que des sauvegardes.");
-        }
+        if (!patientId || !patientId.startsWith('save_')) throw new Error("ID Invalide");
         
         try {
             const headers = getAuthHeaders();
-            delete headers['Content-Type']; // Pas de body
-            if (!headers) return;
+            delete headers['Content-Type'];
 
-            const response = await fetch(`${API_URL}/api/patients/${patientId}`, { 
+            const response = await fetchWithCredentials(`${API_URL}/api/patients/${patientId}`, { 
                 method: 'DELETE',
                 headers: headers
             });
 
             if (handleAuthError(response)) return;
-            
             return await response.json();
-
         } catch (err) {
-            console.error("Erreur lors de la suppression:", err);
-            if (err.message.includes("Token non trouvé")) {
-                window.location.href = 'auth.html';
-            }
+            console.error("Erreur suppression:", err);
             throw err;
         }
     }
 
-    /**
-     * Envoie une requête pour effacer toutes les chambres (pas les sauvegardes).
-     * @param {Array<string>} allChamberIds - Liste des ID de chambres.
-     * @returns {Promise<Array>} Réponse de Promise.all
-     */
     async function clearAllChamberData(allChamberIds) {
         const headers = getAuthHeaders();
-        if (!headers) return;
-        
         const clearPromises = [];
 
         for (const patientId of allChamberIds) {
-            const promise = fetch(`${API_URL}/api/patients/${patientId}`, {
+            const promise = fetchWithCredentials(`${API_URL}/api/patients/${patientId}`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({
@@ -310,23 +232,34 @@
         try {
             return await Promise.all(clearPromises);
         } catch (err) {
-             console.error("Erreur lors de la réinitialisation de toutes les chambres:", err);
+             console.error("Erreur réinitialisation:", err);
              throw err;
         }
     }
 
+    async function logout() {
+        try {
+            await fetchWithCredentials(`${API_URL}/auth/logout`, { method: 'POST' });
+        } catch (e) {
+            console.error("Erreur logout réseau", e);
+        } finally {
+            localStorage.removeItem('isLoggedIn');
+            window.location.href = 'auth.html';
+        }
+    }
 
     // --- Exposition du service ---
     
     window.apiService = {
-        connectSocket, // NOUVEAU
+        connectSocket,
         fetchUserPermissions,
         fetchPatientList,
         fetchPatientData,
         saveChamberData,
         saveCaseData,
         deleteSavedCase,
-        clearAllChamberData
+        clearAllChamberData,
+        logout
     };
 
 })();

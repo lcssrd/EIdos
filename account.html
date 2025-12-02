@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280">
+    <title>EIdos-simul - Gestion de compte</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%2300A693'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12' /%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap" rel="stylesheet">
+    
+    <link href="style.css" rel="stylesheet">
+    
+    <style>
+        /* Styles spécifiques pour la page de compte */
+        #account-sidebar nav button, #account-sidebar nav a {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            text-align: left;
+            font-weight: 500;
+            color: #374151; /* text-gray-700 */
+        }
+        #account-sidebar nav button:hover, #account-sidebar nav a:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+        #account-sidebar nav button.active, #account-sidebar nav a.active {
+            background-color: #0d9488; /* bg-teal-700 */
+            color: white;
+            font-weight: 600;
+        }
+        #account-sidebar nav button i, #account-sidebar nav a i {
+            width: 1.25rem;
+            margin-right: 0.75rem;
+            text-align: center;
+        }
+
+        /* Cacher les sections inactives */
+        .account-section {
+            display: none;
+        }
+        .account-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Styles pour les colonnes Admin (Miller Columns) */
+        .miller-column {
+            height: 500px;
+            overflow-y: auto;
+            border-right: 1px solid #e5e7eb;
+        }
+        .miller-column:last-child {
+            border-right: none;
+        }
+        .miller-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .miller-item:hover {
+            background-color: #f9fafb;
+        }
+        .miller-item.active {
+            background-color: #0d9488;
+            color: white;
+        }
+        .miller-item.active .text-gray-500 {
+            color: #ccfbf1; /* Light teal text for subtitles when active */
+        }
+        
+        /* Toggle switch style */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
+
+        /* --- NOUVEAUX STYLES DASHBOARD ADMIN --- */
+        .kpi-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 0.5rem;
+        }
+        .kpi-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .log-line {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            padding: 2px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .log-error { color: #dc2626; }
+        .log-warn { color: #d97706; }
+        .log-info { color: #2563eb; }
+        
+    </style>
+
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen">
+        <aside id="account-sidebar" class="w-64 bg-white shadow-xl flex flex-col flex-shrink-0 m-4 rounded-2xl h-[calc(100vh-2rem)]">
+            <div class="p-4 bg-gradient-to-br from-teal-500 to-cyan-600 text-white rounded-t-2xl">
+                <div class="flex items-center space-x-3">
+                    <svg class="h-10 w-10 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
+                    </svg>
+                    <div>
+                         <h1 class="text-2xl font-bold" style="font-family: 'Parkinsans', sans-serif; font-weight: 600;">EIdos</h1>
+                        <p class="text-xs text-cyan-100">Gestion de compte</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 p-2 space-y-1">
+                <button type="button" id="tab-security" class="account-tab-btn active">
+                    <i class="fas fa-shield-alt"></i> Sécurité
+                </button>
+                <button type="button" id="tab-subscription" class="account-tab-btn">
+                    <i class="fas fa-rocket"></i> Abonnement
+                </button>
+                <button type="button" id="tab-centre" class="account-tab-btn" style="display: none;">
+                    <i class="fas fa-building"></i> Gestion du Centre
+                </button>
+                <button type="button" id="tab-invitations" class="account-tab-btn">
+                    <i class="fas fa-users"></i> Gestion des étudiants
+                </button>
+                <button type="button" id="tab-contact" class="account-tab-btn">
+                    <i class="fas fa-envelope"></i> Contacter le développeur
+                </button>
+                <button type="button" id="tab-admin" class="account-tab-btn text-red-600 hover:bg-red-50" style="display: none;">
+                    <i class="fas fa-user-shield"></i> Super Admin
+                </button>
+            </nav>
+            <div class="p-2 border-t border-gray-100">
+                <a href="simul.html" class="block w-full text-left text-sm text-blue-600 hover:bg-blue-100 p-2 rounded-md transition-colors mb-1">
+                    <i class="fas fa-arrow-left w-6 text-center mr-1"></i>
+                    Retour au simulateur
+                </a>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden m-4 h-[calc(100vh-2rem)]">
+            <div id="main-content-wrapper" class="flex-1 overflow-x-hidden overflow-y-auto">
+                <main class="p-4 md:p-6 lg:p-8">
+
+                    <section id="content-security" class="account-section active">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-6">Sécurité</h1>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            
+                            <div class="card p-6">
+                                <h2 class="card-header header-teal">Changer le mot de passe</h2>
+                                <form id="change-password-form" class="mt-6 space-y-4">
+                                    <div>
+                                        <label for="current-password" class="block text-sm font-medium text-gray-700">Mot de passe actuel</label>
+                                        <input type="password" id="current-password" class="styled-input mt-1" required>
+                                    </div>
+                                    <div>
+                                        <label for="new-password" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+                                        <input type="password" id="new-password" class="styled-input mt-1" required>
+                                    </div>
+                                    <div>
+                                        <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirmer le nouveau mot de passe</label>
+                                        <input type="password" id="confirm-password" class="styled-input mt-1" required>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                                            Mettre à jour le mot de passe
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="card p-6">
+                                <h2 class="card-header header-teal">Changer l'adresse e-mail</h2>
+                                <form id="change-email-form" class="mt-6 space-y-4">
+                                    <p class="text-sm text-gray-600">Un lien de vérification sera envoyé à votre nouvelle adresse. Le changement ne sera effectif qu'après avoir cliqué sur ce lien.</p>
+                                    <div>
+                                        <label for="new-email" class="block text-sm font-medium text-gray-700">Nouvelle adresse e-mail</label>
+                                        <input type="email" id="new-email" class="styled-input mt-1" required>
+                                    </div>
+                                    <div>
+                                        <label for="current-password-for-email" class="block text-sm font-medium text-gray-700">Mot de passe actuel (pour confirmer)</label>
+                                        <input type="password" id="current-password-for-email" class="styled-input mt-1" required>
+                                    </div>
+                                    
+                                    <div class="flex justify-end">
+                                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700">
+                                            Demander le changement
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card p-6 mt-8 border-red-300">
+                            <h2 class="card-header header-rose">Zone de danger</h2>
+                            <div class="mt-6">
+                                <p class="text-sm text-gray-700">La suppression de votre compte est irréversible. Toutes vos données, y compris les dossiers patients sauvegardés et les comptes étudiants liés, seront définitivement effacés.</p>
+                                <div class="flex justify-end mt-4">
+                                    <button id="delete-account-btn" type="button" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                                        Supprimer mon compte
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="content-subscription" class="account-section">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-6">Abonnement</h1>
+                        
+                        <div class="card p-6 transition-none">
+                            <h2 class="card-header header-blue">Votre abonnement actuel</h2>
+                            <div class="mt-6">
+                                <p class="text-lg">Vous êtes actuellement sur le plan <strong id="current-plan-name" class="text-blue-600">...</strong>.</p>
+                                <p id="plan-description" class="text-gray-600 mt-2">Chargement des détails de votre plan...</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8 items-start">
+                            <div class="card relative bg-white p-6 flex flex-col border-t-4 border-yellow-300 h-full transition-all duration-200">
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <h3 class="text-2xl font-semibold text-yellow-700">Free</h3>
+                                <p class="text-4xl font-extrabold my-4">Gratuit</p>
+                                <p class="text-gray-500 mb-6 min-h-[4rem]">Pour la découverte et l'utilisation basique.</p>
+                                <ul class="space-y-3 text-gray-600 flex-grow">
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Découverte du logiciel</span></li>
+                                    <li class="flex items-start"><i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i><span>Pas de sauvegarde en ligne</span></li>
+                                    <li class="flex items-start"><i class="fas fa-times text-red-500 mr-2 mt-1 flex-shrink-0"></i><span>Pas de comptes étudiants</span></li>
+                                </ul>
+                                <button id="sub-btn-free" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-yellow-700 bg-yellow-50 hover:bg-yellow-100 sub-plan-btn transition-all">Choisir ce plan</button>
+                            </div>
+
+                            <div class="card relative bg-white p-6 flex flex-col border-t-4 border-teal-600 h-full transition-all duration-200">
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <h3 class="text-2xl font-semibold text-teal-700">Indépendant</h3>
+                                <p class="text-4xl font-extrabold my-4 text-gray-900">__€ <span class="text-lg font-normal text-gray-500">/ mois</span></p>
+                                <p class="text-gray-500 mb-6 min-h-[4rem]">Pour formateurs solo ou en test.</p>
+                                <ul class="space-y-3 text-gray-600 flex-grow">
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients (20)</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Jusqu'à 5 comptes étudiants</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                                </ul>
+                                <button id="sub-btn-independant" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 sub-plan-btn transition-all">Choisir ce plan</button>
+                            </div>
+                            
+                            <div class="card relative bg-white p-6 flex flex-col border-t-4 border-blue-600 h-full transition-all duration-200">
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <h3 class="text-2xl font-semibold text-blue-700">Promo</h3>
+                                <p class="text-4xl font-extrabold my-4 text-gray-900">__€ <span class="text-lg font-normal text-gray-500">/ mois</span></p>
+                                <p class="text-gray-500 mb-6 min-h-[4rem]">Pour gérer une promotion ou classe complète.</p>
+                                <ul class="space-y-3 text-gray-600 flex-grow">
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients (50)</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Jusqu'à 40 comptes étudiants</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                                </ul>
+                                <button id="sub-btn-promo" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 sub-plan-btn transition-all shadow-lg hover:shadow-xl">Choisir ce plan</button>
+                            </div>
+
+                            <div class="card relative bg-white p-6 flex flex-col border-t-4 border-indigo-600 h-full transition-all duration-200">
+                                <span class="js-active-plan-badge hidden absolute top-0 right-0 -mt-3 mr-3 text-xs font-bold uppercase px-3 py-1 rounded-full shadow-lg">Actuel</span>
+                                <h3 class="text-2xl font-semibold text-indigo-700">Centre</h3>
+                                <p class="text-4xl font-extrabold my-4 text-gray-900">Sur devis</p>
+                                <p class="text-gray-500 mb-6 min-h-[4rem]">Pour les centres de formation (IFSI, etc).</p>
+                                <ul class="space-y-3 text-gray-600 flex-grow">
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Sauvegardes en ligne</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Comptes multi-formateurs</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Archives patients illimitées</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Étudiants illimités</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Gestion des permissions</span></li>
+                                    <li class="flex items-start"><i class="fas fa-check text-green-500 mr-2 mt-1 flex-shrink-0"></i><span>Support prioritaire</span></li>
+                                </ul>
+                                <button id="sub-btn-centre" type="button" class="mt-8 w-full py-3 px-4 rounded-lg font-semibold text-gray-700 bg-gray-200 sub-plan-btn transition-all">Nous contacter</button>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section id="content-centre" class="account-section">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestion du Centre</h1>
+                        
+                        <div class="card p-6">
+                            <h2 class="card-header header-indigo">Statut de l'Abonnement</h2>
+                            <div class="mt-6">
+                                <p class="text-lg">Vous gérez l'abonnement <strong id="centre-plan-name" class="text-indigo-600">...</strong>.</p>
+                                <p id="centre-plan-details" class="text-gray-600 mt-2">Chargement des détails...</p>
+                            </div>
+                        </div>
+            
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                            <div class="card p-6">
+                                <h2 class="card-header header-indigo">Inviter un nouveau formateur</h2>
+                                <form id="invite-formateur-form" class="mt-6 space-y-4">
+                                    <p class="text-sm text-gray-600">Invitez un collègue à rejoindre votre centre. Il pourra créer ses propres cas et gérer ses propres étudiants, tout en bénéficiant de votre abonnement "Centre".</p>
+                                    <div>
+                                        <label for="invite-email" class="block text-sm font-medium text-gray-700">Adresse e-mail du formateur</label>
+                                        <input type="email" id="invite-email" class="styled-input mt-1" required placeholder="collegue@ifsi.fr">
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button type="submit" id="invite-formateur-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                            <i class="fas fa-paper-plane mr-2"></i> Envoyer l'invitation
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <div class="card p-6">
+                                <h2 class="card-header header-indigo">Formateurs rattachés</h2>
+                                <div id="formateurs-list-container" class="mt-4 space-y-2">
+                                    <p id="formateurs-loading" class="text-sm text-gray-500">Chargement...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="content-invitations" class="account-section">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-6">Invitations et Gestion (Étudiants)</h1>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            
+                            <div class="card p-6">
+                                <h2 class="card-header header-indigo">Créer des comptes étudiants</h2>
+                                <form id="create-student-form" class="mt-6 space-y-4">
+                                    <p class="text-sm text-gray-600">Créez un nouveau compte "étudiant" lié à votre compte. Vous pouvez saisir un identifiant et un mot de passe ou en générer.</p>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="student-login" class="block text-sm font-medium text-gray-700">Identifiant</label>
+                                            <input type="text" id="student-login" class="styled-input mt-1" placeholder="ex: etu01, promoA_01" required>
+                                        </div>
+                                        <div>
+                                            <label for="student-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                                            <input type="text" id="student-password" class="styled-input mt-1" placeholder="••••••••" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <button type="button" id="generate-credentials-btn" class="text-sm text-blue-600 hover:underline">
+                                            <i class="fas fa-random mr-1"></i> Suggérer
+                                        </button>
+                                        <button type="submit" id="create-student-submit-btn" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                            <i class="fas fa-plus mr-2"></i> Créer le compte
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="card p-6 bg-yellow-50 border-yellow-300">
+                                <h2 class="card-header header-orange" style="color: #c2410c; border-bottom-color: #fdba74;">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i> Information Importante
+                                </h2>
+                                <div class="mt-6 space-y-3 text-sm text-gray-700">
+                                    <p><strong>Gestion des mots de passe :</strong></p>
+                                    <p>Pour des raisons de sécurité, EIdos-simul <strong>ne stocke jamais les mots de passe</strong> des étudiants en clair. Ils sont chiffrés (hachés) et ne peuvent pas être récupérés.</p>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Vous devez <strong>noter le mot de passe</strong> au moment où vous le saisissez ou le générez.</li>
+                                        <li>Communiquez-le ensuite de manière sécurisée à l'étudiant.</li>
+                                    </ul>
+                                    <p class="font-semibold">En cas d'oubli, vous ne pourrez pas réinitialiser le mot de passe. Vous devrez <strong class="text-red-600">supprimer le compte</strong> de l'étudiant depuis le tableau ci-dessous et en créer un nouveau.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card p-6 mt-8">
+                            <h2 class="card-header header-indigo" id="student-list-title">Gestion des étudiants (0)</h2>
+                            <div class="overflow-x-auto mt-4">
+                                <table class="w-full border-collapse text-sm diagram" id="permissions-table">
+                                    <thead class="bg-gray-100 text-gray-600">
+                                        <tr>
+                                            <th class="p-2 text-left">Login</th>
+                                            <th class="p-2 text-center" title="Permet de modifier l'en-tête (Nom, Prénom, DDN, etc.)">En-tête Patient</th>
+                                            <th class="p-2 text-center" title="Permet de modifier l'onglet Administratif">Administratif</th>
+                                            <th class="p-2 text-center" title="Permet de modifier l'onglet Mode de Vie & ATCD">Vie & ATCD</th>
+                                            <th class="p-2 text-center" title="Permet d'ajouter/supprimer des observations">Observations</th>
+                                            <th class="p-2 text-center" title="Permet d'ajouter une nouvelle prescription">Prescr. (Ajout)</th>
+                                            <th class="p-2 text-center" title="Permet de supprimer une prescription">Prescr. (Suppr.)</th>
+                                            <th class="p-2 text-center" title="Permet de placer/déplacer les marqueurs de prise (losanges/barres)">Prescr. (Valid.)</th>
+                                            <th class="p-2 text-center" title="Permet d'ajouter/supprimer des transmissions">Transmissions</th>
+                                            <th class="p-2 text-center" title="Permet de modifier la Pancarte">Pancarte</th>
+                                            <th class="p-2 text-center" title="Permet de modifier le Diagramme de soins">Diagramme Soins</th>
+                                            <th class="p-2 text-center" title="Permet de modifier les résultats de Biologie">Biologie</th>
+                                            <th class="p-2 text-center" title="Permet d'ajouter/supprimer des comptes rendus">Comptes Rendus</th>                                            
+                                            <th class="p-2 text-center">Chambres</th>
+                                            
+                                            <th class="p-2 text-center" colspan="15">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="permissions-tbody">
+                                        <tr>
+                                            <td colspan="15" class="p-4 text-center text-gray-500">Vous n'avez pas encore créé de compte étudiant.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="content-contact" class="account-section">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-6">Contacter le développeur</h1>
+                        
+                        <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                            
+                            <div class="card p-8 flex flex-col items-center text-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-t-4 border-teal-500">
+                                <span class="flex items-center justify-center h-16 w-16 bg-teal-100 text-teal-600 rounded-full text-3xl mb-6">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Email Professionnel</h2>
+                                <p class="text-gray-600 mb-6">Pour toute demande commerciale, support technique ou collaboration.</p>
+                                <p id="contact-email" class="text-lg font-medium text-teal-700 bg-teal-50 p-3 rounded-lg">lucas.seraudie@eidos-simul.fr</p>
+                                <button id="copy-email-btn" type="button" class="mt-6 w-full py-3 px-4 rounded-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-all">
+                                    Copier l'email
+                                </button>
+                            </div>
+
+                            <div class="card bg-white p-8 flex flex-col items-center text-center transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 border-t-4 border-blue-600">
+                                <span class="flex items-center justify-center h-16 w-16 bg-blue-100 text-blue-600 rounded-full text-3xl mb-6">
+                                    <i class="fab fa-linkedin"></i>
+                                </span>
+                                <h2 class="text-2xl font-semibold text-gray-800 mb-3">Profil LinkedIn</h2>
+                                <p class="text-gray-600 mb-6">Pour un aperçu de mon parcours, de mes compétences et pour se connecter.</p>
+                                <p class="text-lg font-medium text-blue-700 bg-blue-50 p-3 rounded-lg">Lucas Séraudie</p>
+                                <a href="https://fr.linkedin.com/in/lucas-s%C3%A9raudie-1858ba14b" target="_blank" rel="noopener noreferrer" class="mt-6 w-full block py-3 px-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all text-center">
+                                    Voir le profil
+                                </a>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <section id="content-admin" class="account-section">
+                        <div class="flex justify-between items-center mb-6">
+                            <h1 class="text-3xl font-bold text-red-800 flex items-center">
+                                <i class="fas fa-user-shield mr-3"></i> Administration
+                            </h1>
+                            <div id="maintenance-badge" class="hidden px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-bold border border-red-200 shadow-sm animate-pulse">
+                                <i class="fas fa-tools mr-2"></i> MAINTENANCE ACTIVE
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6 border-b border-gray-200 bg-white rounded-t-lg shadow-sm">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="admin-tabs-nav">
+                                <li class="mr-2"><button class="inline-block p-4 border-b-2 rounded-t-lg text-red-600 border-red-600 active" data-target="admin-dashboard"><i class="fas fa-tachometer-alt mr-2"></i>Dashboard</button></li>
+                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-users"><i class="fas fa-users mr-2"></i>Utilisateurs</button></li>
+                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-patients"><i class="fas fa-folder-open mr-2"></i>Dossiers</button></li>
+                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-communication"><i class="fas fa-bullhorn mr-2"></i>Comms & Devis</button></li>
+                                <li class="mr-2"><button class="inline-block p-4 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300" data-target="admin-tech"><i class="fas fa-server mr-2"></i>Technique</button></li>
+                            </ul>
+                        </div>
+
+                        <div id="admin-dashboard" class="admin-tab-content">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                <div class="kpi-card border-l-4 border-blue-500">
+                                    <div class="flex justify-between items-start">
+                                        <span class="kpi-label">Utilisateurs Total</span>
+                                        <i class="fas fa-users text-blue-200 text-xl"></i>
+                                    </div>
+                                    <span class="kpi-value" id="kpi-total-users">-</span>
+                                </div>
+                                <div class="kpi-card border-l-4 border-teal-500">
+                                    <div class="flex justify-between items-start">
+                                        <span class="kpi-label">Formateurs</span>
+                                        <i class="fas fa-chalkboard-teacher text-teal-200 text-xl"></i>
+                                    </div>
+                                    <span class="kpi-value" id="kpi-formateurs">-</span>
+                                </div>
+                                <div class="kpi-card border-l-4 border-green-500">
+                                    <div class="flex justify-between items-start">
+                                        <span class="kpi-label">Dossiers Sauvegardés</span>
+                                        <i class="fas fa-save text-green-200 text-xl"></i>
+                                    </div>
+                                    <span class="kpi-value" id="kpi-patients">-</span>
+                                </div>
+                                <div class="kpi-card border-l-4 border-purple-500">
+                                    <div class="flex justify-between items-start">
+                                        <span class="kpi-label">Uptime Serveur</span>
+                                        <i class="fas fa-clock text-purple-200 text-xl"></i>
+                                    </div>
+                                    <span class="kpi-value text-xl mt-3" id="kpi-uptime">-</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div class="card p-6">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4">Dernières Inscriptions</h3>
+                                    <div id="admin-recent-users" class="space-y-3"></div>
+                                </div>
+                                <div class="card p-6">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4">Répartition des Abonnements</h3>
+                                    <div class="relative h-64 w-full">
+                                        <canvas id="adminPlanChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="admin-users" class="admin-tab-content hidden">
+                            <div class="card p-4 mb-6 bg-blue-50 border-blue-200">
+                                <div class="relative">
+                                    <input type="text" id="admin-user-search" class="w-full p-3 pl-10 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Rechercher par email ou login (ex: prof@ifsi.fr)...">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <div id="admin-search-results" class="mt-4 hidden bg-white rounded-lg shadow border border-gray-200 max-h-60 overflow-y-auto">
+                                    </div>
+                            </div>
+
+                            <div class="card p-6 h-[600px]">
+                                <h3 class="text-sm font-bold text-gray-500 uppercase mb-2">Navigation Hiérarchique</h3>
+                                <div class="flex h-full border border-gray-200 rounded-lg overflow-hidden">
+                                    <div class="w-1/3 miller-column bg-gray-50" id="admin-col-orgs">
+                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Structure</div>
+                                        <div id="admin-list-orgs"><p class="p-4 text-sm text-gray-500">Chargement...</p></div>
+                                    </div>
+                                    <div class="w-1/3 miller-column bg-white border-l" id="admin-col-trainers">
+                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Formateurs</div>
+                                        <div id="admin-list-trainers"><p class="p-4 text-sm text-gray-400 italic">Sélectionnez...</p></div>
+                                    </div>
+                                    <div class="w-1/3 miller-column bg-gray-50 border-l" id="admin-col-students">
+                                        <div class="p-3 border-b bg-gray-100 font-bold text-gray-700 sticky top-0">Étudiants</div>
+                                        <div id="admin-list-students"><p class="p-4 text-sm text-gray-400 italic">Sélectionnez...</p></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between hidden" id="admin-user-actions">
+                                <div>
+                                    <span class="font-bold text-gray-800 block">Utilisateur : <span id="admin-selected-user-email" class="text-blue-600">...</span></span>
+                                    <span class="text-xs text-gray-500" id="admin-selected-user-id">ID: ...</span>
+                                </div>
+                                <div class="space-x-2">
+                                    <button id="admin-impersonate-btn" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-sm hover:bg-indigo-700"><i class="fas fa-mask mr-1"></i> Se connecter en tant que</button>
+                                    <button id="admin-edit-user-btn" class="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700"><i class="fas fa-edit mr-1"></i> Modifier</button>
+                                    <button id="admin-delete-user-btn" class="bg-red-600 text-white px-3 py-1.5 rounded text-sm hover:bg-red-700"><i class="fas fa-trash mr-1"></i> Supprimer</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="admin-patients" class="admin-tab-content hidden">
+                            <div class="card p-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-lg font-bold text-gray-800">Base de données Patients</h2>
+                                    <button id="admin-refresh-patients" class="text-blue-600 hover:text-blue-800"><i class="fas fa-sync-alt"></i> Actualiser</button>
+                                </div>
+                                
+                                <div class="overflow-x-auto min-h-[400px]">
+                                    <table class="w-full text-sm text-left text-gray-500">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                            <tr>
+                                                <th class="px-6 py-3">Nom du dossier</th>
+                                                <th class="px-6 py-3">Créateur</th>
+                                                <th class="px-6 py-3">Dernière Modif.</th>
+                                                <th class="px-6 py-3 text-center">Public</th>
+                                                <th class="px-6 py-3 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-patients-tbody"></tbody>
+                                    </table>
+                                </div>
+
+                                <div class="flex justify-between items-center mt-4 border-t pt-4">
+                                    <span class="text-sm text-gray-700">Page <span id="admin-patient-page" class="font-bold">1</span> sur <span id="admin-patient-total-pages">1</span></span>
+                                    <div class="inline-flex mt-2 xs:mt-0">
+                                        <button id="admin-prev-page" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-l hover:bg-gray-900">Précédent</button>
+                                        <button id="admin-next-page" class="px-4 py-2 text-sm font-medium text-white bg-gray-800 border-0 border-l border-gray-700 rounded-r hover:bg-gray-900">Suivant</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="admin-communication" class="admin-tab-content hidden">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div class="card p-6 border-l-4 border-yellow-400">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-bullhorn mr-2 text-yellow-600"></i>Message Système (Broadcast)</h3>
+                                    <p class="text-sm text-gray-600 mb-4">Affiche un bandeau d'alerte en temps réel sur l'écran de TOUS les utilisateurs connectés.</p>
+                                    <textarea id="admin-broadcast-msg" class="styled-input w-full mb-3" rows="2" placeholder="Ex: Maintenance prévue à 22h..."></textarea>
+                                    <button id="admin-broadcast-btn" class="w-full bg-yellow-500 text-white font-bold py-2 rounded hover:bg-yellow-600">Diffuser le message</button>
+                                </div>
+
+                                <div class="card p-6 border-l-4 border-blue-400">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-envelope mr-2 text-blue-600"></i>Emailing Ciblé</h3>
+                                    <div class="space-y-3">
+                                        <select id="admin-email-target" class="styled-input w-full">
+                                            <option value="all">Tous les utilisateurs</option>
+                                            <option value="formateurs">Tous les formateurs</option>
+                                            <option value="specific">Utilisateur spécifique...</option>
+                                        </select>
+                                        <input type="email" id="admin-email-specific" class="styled-input w-full hidden" placeholder="Email du destinataire">
+                                        <input type="text" id="admin-email-subject" class="styled-input w-full" placeholder="Sujet">
+                                        <textarea id="admin-email-body" class="styled-input w-full" rows="3" placeholder="Message HTML autorisé..."></textarea>
+                                        <button id="admin-send-email-btn" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">Envoyer</button>
+                                    </div>
+                                </div>
+
+                                <div class="card p-6 border-l-4 border-indigo-400 lg:col-span-2">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-2"><i class="fas fa-file-invoice-dollar mr-2 text-indigo-600"></i>Générateur de Devis Rapide</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Client</label>
+                                            <input type="email" id="quote-client-email" class="styled-input w-full mt-1" placeholder="client@ecole.fr">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Montant (€)</label>
+                                            <input type="number" id="quote-amount" class="styled-input w-full mt-1" placeholder="500">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700">Détails de l'offre</label>
+                                            <textarea id="quote-details" class="styled-input w-full mt-1" rows="2" placeholder="Licence Centre 1 an, 10 formateurs..."></textarea>
+                                        </div>
+                                    </div>
+                                    <button id="admin-send-quote-btn" class="mt-4 bg-indigo-600 text-white font-bold px-6 py-2 rounded hover:bg-indigo-700 flex items-center">
+                                        <i class="fas fa-paper-plane mr-2"></i> Envoyer la proposition
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="admin-tech" class="admin-tab-content hidden">
+                            <div class="card p-4 mb-6 flex items-center justify-between bg-gray-50 border-gray-200">
+                                <div>
+                                    <h3 class="font-bold text-gray-800">Mode Maintenance</h3>
+                                    <p class="text-sm text-gray-600">Empêche les nouvelles connexions (sauf Admin).</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="admin-maintenance-toggle" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                </label>
+                            </div>
+
+                            <div class="card p-0 overflow-hidden bg-[#1e1e1e] text-gray-300 font-mono text-xs rounded-lg shadow-inner h-[500px] flex flex-col">
+                                <div class="flex justify-between items-center p-2 bg-[#2d2d2d] border-b border-[#3d3d3d]">
+                                    <span class="font-bold">Serveur Logs (Dernières erreurs)</span>
+                                    <button id="admin-refresh-logs" class="text-xs bg-[#3d3d3d] hover:bg-[#4d4d4d] px-2 py-1 rounded">Rafraîchir</button>
+                                </div>
+                                <div id="admin-logs-container" class="flex-1 overflow-y-auto p-4 space-y-1">
+                                    <p class="text-gray-500">Chargement des logs...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section> </main>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden" style="z-index: 10001;">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="custom-confirm-box">
+            <h3 class="text-lg font-bold text-gray-800" id="custom-confirm-title">Confirmation requise</h3>
+            <p class="mt-2 text-sm text-gray-600" id="custom-confirm-message">Êtes-vous sûr ?</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="custom-confirm-cancel" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">Annuler</button>
+                <button id="custom-confirm-ok" type="button" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="room-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden" style="z-index: 10002;">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md m-4 transform transition-all scale-95 opacity-0" id="room-modal-box">
+            <h3 class="text-lg font-bold text-gray-800" id="room-modal-title">Gérer les chambres</h3>
+            <p class="mt-1 text-sm text-gray-500">Sélectionnez les chambres accessibles.</p>
+            <form id="room-modal-form" class="mt-4">
+                <input type="hidden" id="room-modal-login">
+                <div id="room-modal-list" class="grid grid-cols-5 gap-2"></div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button id="room-modal-cancel" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">Annuler</button>
+                    <button id="room-modal-save" type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-user-edit-modal" class="fixed inset-0 bg-gray-900 bg-opacity-60 backdrop-blur-sm flex items-center justify-center hidden" style="z-index: 10005;">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg m-4 transform transition-all scale-95 opacity-0" id="admin-user-edit-box">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-user-edit text-blue-600 mr-2"></i>Édition Admin</h3>
+                <button id="admin-user-edit-close" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <form id="admin-user-edit-form" class="space-y-4">
+                <input type="hidden" id="admin-edit-user-id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email (Correction)</label>
+                    <input type="email" id="admin-edit-email" class="styled-input w-full mt-1">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Plan d'abonnement (Force)</label>
+                    <select id="admin-edit-plan" class="styled-input w-full mt-1">
+                        <option value="free">Free</option>
+                        <option value="independant">Indépendant</option>
+                        <option value="promo">Promo</option>
+                        <option value="centre">Centre</option>
+                        <option value="student">Étudiant (Fixe)</option>
+                    </select>
+                </div>
+
+                <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="admin-edit-suspended" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
+                        <span class="text-red-800 font-bold">Suspendre le compte</span>
+                    </label>
+                    <p class="text-xs text-red-600 mt-1 ml-8">L'utilisateur ne pourra plus se connecter.</p>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="admin-user-edit-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200">Annuler</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Sauvegarder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="apiService.js"></script>
+    <script src="utils.js"></script>
+    <script src="uiService.js"></script>
+    <script src="patientService.js"></script>
+    <script src="account.js"></script>
+
+</body>
+</html>

@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap');
 
+/* --- NOUVEAU : Variables pour le Zoom --- */
+:root {
+    --hour-col-width: 48px; /* Largeur par défaut */
+}
+
 /* NOUVEAU : Keyframes pour les animations du bouton */
 @keyframes fadeInStatus {
     from {
@@ -235,6 +240,15 @@ textarea.info-value {
     cursor: move;
     z-index: 10;
 }
+/* --- UX BARRE : Indiquer le survol et la possibilité de suppression --- */
+.iv-bar:hover {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 4px rgba(0,0,0,0.5);
+    z-index: 20; 
+}
+.iv-bar[title*="supprimer"]:hover {
+    cursor: help; 
+}
+
 .resize-handle {
     position: absolute;
     right: -2px;
@@ -323,17 +337,19 @@ body.is-drawing-iv, body.is-resizing-iv, body.is-moving-iv {
 }
 
 
+/* --- MODIFICATION : Small-col utilise la variable pour le zoom --- */
 .small-col {
-min-width: 48px;   
-width: 48px;       
-text-align: center;
-padding-left: 0.125rem; 
-padding-right: 0.125rem;
-font-size: 0.75rem;
+    min-width: var(--hour-col-width);
+    width: var(--hour-col-width);
+    text-align: center;
+    padding-left: 0.125rem; 
+    padding-right: 0.125rem;
+    font-size: 0.75rem;
+    transition: width 0.2s ease, min-width 0.2s ease;
 }
 .small-col input[type="checkbox"] {
-display: block;
-margin: 0.35rem auto; 
+    display: block;
+    margin: 0.35rem auto; 
 }
 
 
@@ -612,4 +628,46 @@ margin: 0.35rem auto;
     0% { border-color: #f97316; box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
     50% { border-color: #fb923c; box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.2); }
     100% { border-color: #f97316; box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+
+/* --- STYLES POUR L'ÉDITEUR DE COMPTE RENDU --- */
+
+#cr-modal-content {
+    font-family: 'Times New Roman', Times, serif; /* Police type courrier/médical */
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: #000;
+}
+
+#cr-modal-content ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+#cr-modal-content ol {
+    list-style-type: decimal;
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+#cr-modal-content b, #cr-modal-content strong {
+    font-weight: bold;
+}
+
+#cr-modal-content i, #cr-modal-content em {
+    font-style: italic;
+}
+
+#cr-modal-content u {
+    text-decoration: underline;
+}
+
+/* Style spécifique pour les tailles de police générées par execCommand */
+#cr-modal-content font[size="5"] {
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
 }
