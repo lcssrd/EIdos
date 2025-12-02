@@ -8,12 +8,14 @@
     const loginSection = document.getElementById('login-section');
     const signupSection = document.getElementById('signup-section');
     const verifySection = document.getElementById('verify-section');
+    // NOUVEAU : Sections Mot de passe oublié
     const forgotPasswordSection = document.getElementById('forgot-password-section');
     const resetPasswordSection = document.getElementById('reset-password-section');
 
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
     const verifyForm = document.getElementById('verify-form');
+    // NOUVEAU : Formulaires Mot de passe oublié
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const resetPasswordForm = document.getElementById('reset-password-form');
     
@@ -23,13 +25,14 @@
     const showSignupLink = document.getElementById('show-signup-link');
     const showLoginLink1 = document.getElementById('show-login-link-1');
     const showLoginLink2 = document.getElementById('show-login-link-2');
+    // NOUVEAU : Liens Mot de passe oublié
     const showForgotPasswordLink = document.getElementById('show-forgot-password-link');
     const backToLoginLink1 = document.getElementById('back-to-login-link-1');
     const backToLoginLink2 = document.getElementById('back-to-login-link-2');
 
     // --- Gestion de la sélection de plan ---
     const planCards = signupSection.querySelectorAll('.plan-card');
-    let selectedPlan = 'free';
+    let selectedPlan = 'free'; // 'free' par défaut
 
     planCards.forEach(card => {
         if (card.dataset.plan === 'free') {
@@ -52,17 +55,29 @@
         
         if (token) {
             invitationToken = token;
+            console.log("Token d'invitation détecté :", invitationToken);
+            
             showSection(signupSection);
+
             if (emailParam) {
                 const emailInput = document.getElementById('signup-email');
-                if (emailInput) emailInput.value = decodeURIComponent(emailParam);
+                if (emailInput) {
+                    emailInput.value = decodeURIComponent(emailParam);
+                }
             }
+            
             const planSelectionContainer = document.querySelector('#signup-form .pt-2');
+            
             if (planSelectionContainer) {
                 planSelectionContainer.innerHTML = `
                     <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 text-center">
-                        <p class="text-indigo-800 font-semibold text-lg"><i class="fas fa-building mr-2"></i> Invitation Centre acceptée</p>
-                        <p class="text-sm text-indigo-600 mt-2">Votre compte sera automatiquement rattaché au centre et validé.</p>
+                        <p class="text-indigo-800 font-semibold text-lg">
+                            <i class="fas fa-building mr-2"></i> Invitation Centre acceptée
+                        </p>
+                        <p class="text-sm text-indigo-600 mt-2">
+                            Vous n'avez pas besoin de choisir d'abonnement.<br>
+                            Votre compte sera automatiquement rattaché au centre et validé.
+                        </p>
                     </div>
                 `;
             }
@@ -71,30 +86,43 @@
 
     // --- Gestionnaires d'affichage ---
     function showSection(sectionToShow) {
+        // On cache tout
         [loginSection, signupSection, verifySection, forgotPasswordSection, resetPasswordSection].forEach(sec => {
             if (sec) sec.classList.add('hidden');
         });
+        // On affiche la cible
         if (sectionToShow) sectionToShow.classList.remove('hidden');
     }
 
+    // Écouteurs Navigation de base
     showSignupLink.addEventListener('click', (e) => { e.preventDefault(); showSection(signupSection); window.history.pushState(null, '', '#signup'); });
     showLoginLink1.addEventListener('click', (e) => { e.preventDefault(); showSection(loginSection); window.history.pushState(null, '', '#login'); });
     showLoginLink2.addEventListener('click', (e) => { e.preventDefault(); showSection(loginSection); window.history.pushState(null, '', '#login'); });
 
-    if (showForgotPasswordLink) showForgotPasswordLink.addEventListener('click', (e) => { e.preventDefault(); showSection(forgotPasswordSection); });
+    // NOUVEAU : Écouteurs Navigation Mot de passe oublié
+    if (showForgotPasswordLink) {
+        showForgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSection(forgotPasswordSection);
+        });
+    }
     if (backToLoginLink1) backToLoginLink1.addEventListener('click', (e) => { e.preventDefault(); showSection(loginSection); });
     if (backToLoginLink2) backToLoginLink2.addEventListener('click', (e) => { e.preventDefault(); showSection(loginSection); });
 
+
     // --- Gestionnaires d'événements Formulaires ---
+
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
     if (signupForm) signupForm.addEventListener('submit', handleSignup);
     if (verifyForm) verifyForm.addEventListener('submit', handleVerify);
     if (resendCodeBtn) resendCodeBtn.addEventListener('click', handleResendCode);
+    
+    // NOUVEAU : Listeners formulaires MDP
     if (forgotPasswordForm) forgotPasswordForm.addEventListener('submit', handleForgotPassword);
     if (resetPasswordForm) resetPasswordForm.addEventListener('submit', handleResetPassword);
 
     /**
-     * Connexion [MODIFIÉ]
+     * Connexion
      */
     async function handleLogin(e) {
         e.preventDefault();
@@ -112,25 +140,20 @@
             const response = await fetch(`${API_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identifier, password }),
-                credentials: 'include' // [CRUCIAL] Accepte le cookie du serveur
+                body: JSON.stringify({ identifier, password })
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                // Gestion des erreurs Zod (details) ou erreur générique
-                throw new Error(data.details || data.error || 'Identifiants invalides');
+                throw new Error(data.error || 'Identifiants invalides');
             }
 
-            if (data.success) {
-                // [MODIFIÉ] On ne stocke PLUS le token JWT.
-                // On stocke juste un indicateur non-sensible pour l'UI
-                localStorage.setItem('isLoggedIn', 'true');
-                
+            if (data.token) {
+                localStorage.setItem('authToken', data.token);
                 window.location.href = 'simul.html';
             } else {
-                throw new Error('Erreur de connexion inconnue.');
+                throw new Error('Aucun token reçu du serveur.');
             }
 
         } catch (err) {
@@ -156,8 +179,15 @@
         signupBtn.disabled = true;
         signupBtn.textContent = 'Inscription en cours...';
         
-        const requestBody = { email, password, plan: selectedPlan };
-        if (invitationToken) requestBody.token = invitationToken;
+        const requestBody = {
+            email: email,
+            password: password,
+            plan: selectedPlan
+        };
+        
+        if (invitationToken) {
+            requestBody.token = invitationToken;
+        }
 
         try {
             const response = await fetch(`${API_URL}/auth/signup`, {
@@ -169,7 +199,7 @@
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.details || data.error || 'Erreur lors de l\'inscription');
+                throw new Error(data.error || 'Erreur lors de l\'inscription');
             }
 
             signupForm.reset();
@@ -178,6 +208,7 @@
                 alert("Compte créé et validé avec succès ! Vous pouvez maintenant vous connecter.");
                 showSection(loginSection);
                 document.getElementById('login-identifier').value = email;
+                
                 if (invitationToken) {
                     window.history.replaceState({}, document.title, window.location.pathname);
                     invitationToken = null;
@@ -187,9 +218,15 @@
 
             document.getElementById('verify-email').value = email;
             document.getElementById('verify-email-display').textContent = email;
-            showSection(verifySection);
             
-            // Reset plan selection
+            const testCodeDisplay = document.getElementById('test-code-display');
+            if (data._test_code) {
+                testCodeDisplay.textContent = `(Code pour test : ${data._test_code})`;
+                testCodeDisplay.classList.remove('hidden');
+            }
+
+            showSection(verifySection);
+
             planCards.forEach(c => c.classList.remove('selected'));
             planCards[0].classList.add('selected');
             selectedPlan = 'free';
@@ -204,7 +241,7 @@
     }
     
     /**
-     * Vérification du code [MODIFIÉ]
+     * Vérification du code (AVEC REDIRECTION AUTO)
      */
     async function handleVerify(e) {
         e.preventDefault();
@@ -224,8 +261,7 @@
             const response = await fetch(`${API_URL}/auth/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, code }),
-                credentials: 'include' // [CRUCIAL] Accepte le cookie
+                body: JSON.stringify({ email, code })
             });
 
             const data = await response.json();
@@ -234,19 +270,27 @@
                 throw new Error(data.error || 'Erreur lors de la vérification');
             }
 
-            // [MODIFIÉ] Vérification du succès uniquement
-            if (data.success) {
-                localStorage.setItem('isLoggedIn', 'true');
+            // --- MODIFICATION MAJEURE : Connexion automatique ---
+            if (data.token) {
+                localStorage.setItem('authToken', data.token);
                 
                 successMsg.textContent = 'Compte vérifié ! Connexion en cours...';
                 successMsg.classList.remove('hidden');
-                document.getElementById('test-code-display')?.classList.add('hidden');
+                document.getElementById('test-code-display').classList.add('hidden');
 
+                // Redirection directe vers le simulateur
                 setTimeout(() => {
                     window.location.href = 'simul.html';
                 }, 1000);
             } else {
-                throw new Error("Erreur inattendue.");
+                // Fallback (ne devrait pas arriver avec le nouveau backend)
+                successMsg.textContent = 'Compte vérifié. Veuillez vous connecter.';
+                successMsg.classList.remove('hidden');
+                setTimeout(() => {
+                    showSection(loginSection);
+                    verifyForm.reset();
+                    successMsg.classList.add('hidden');
+                }, 2000);
             }
 
         } catch (err) {
@@ -313,10 +357,9 @@
         }
     }
 
-    // ... Fonctions ForgotPassword et ResetPassword identiques à l'original, juste fetch ...
-    // (Pas de changement majeur requis sauf si vous voulez ajouter credentials: 'include' par sécurité,
-    // mais ces routes ne nécessitent pas d'être authentifié).
-
+    /**
+     * NOUVEAU : Demander la réinitialisation (Envoi email)
+     */
     async function handleForgotPassword(e) {
         e.preventDefault();
         const email = document.getElementById('forgot-email').value;
@@ -335,12 +378,21 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
             });
+
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || "Erreur");
+
+            // Succès : on passe à l'étape suivante (saisie du code)
             successMsg.textContent = "Code envoyé ! Vérifiez votre boîte mail.";
             successMsg.classList.remove('hidden');
+            
+            // Stocker l'email pour l'étape suivante
             document.getElementById('reset-email-hidden').value = email;
-            setTimeout(() => { showSection(resetPasswordSection); }, 1500);
+
+            setTimeout(() => {
+                showSection(resetPasswordSection);
+            }, 1500);
+
         } catch (err) {
             errorMsg.textContent = err.message;
             errorMsg.classList.remove('hidden');
@@ -350,6 +402,9 @@
         }
     }
 
+    /**
+     * NOUVEAU : Valider le nouveau mot de passe
+     */
     async function handleResetPassword(e) {
         e.preventDefault();
         const email = document.getElementById('reset-email-hidden').value;
@@ -370,15 +425,20 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, code, newPassword })
             });
+
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || "Erreur");
+
             successMsg.textContent = "Mot de passe modifié ! Redirection...";
             successMsg.classList.remove('hidden');
+
             setTimeout(() => {
                 showSection(loginSection);
+                // Pré-remplir le login
                 document.getElementById('login-identifier').value = email;
                 document.getElementById('reset-password-form').reset();
             }, 2000);
+
         } catch (err) {
             errorMsg.textContent = err.message;
             errorMsg.classList.remove('hidden');
@@ -387,12 +447,14 @@
         }
     }
     
+    // Vérification du hash au chargement
     function checkForHash() {
         if (window.location.hash === '#signup') {
             showSection(signupSection);
         }
     }
 
+    // Initialisation
     checkForInvitationToken();
     checkForHash();
 
