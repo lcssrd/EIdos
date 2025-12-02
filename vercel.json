@@ -9,6 +9,10 @@
       "destination": "https://api.eidos-simul.fr/auth/:match*"
     },
     {
+      "source": "/socket.io/",
+      "destination": "https://api.eidos-simul.fr/socket.io/"
+    },
+    {
       "source": "/socket.io/:match*",
       "destination": "https://api.eidos-simul.fr/socket.io/:match*"
     }

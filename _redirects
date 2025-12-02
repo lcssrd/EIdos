@@ -4,5 +4,6 @@
 # Proxy pour l'Authentification
 /auth/* https://api.eidos-simul.fr/auth/:splat  200
 
-# Proxy pour Socket.io (Temps réel)
+# Proxy pour Socket.io (Temps réel) - Règles blindées
+/socket.io/ https://api.eidos-simul.fr/socket.io/ 200
 /socket.io/* https://api.eidos-simul.fr/socket.io/:splat 200
