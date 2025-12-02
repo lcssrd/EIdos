@@ -10,7 +10,6 @@
     const API_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
     
     // Pour les sockets, on tente aussi de passer par le proxy si on est en prod
-    // (Cela permet de contourner le pare-feu entreprise qui bloque le sous-domaine api)
     const SOCKET_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
 
     // Variable pour stocker la connexion socket
@@ -62,11 +61,16 @@
     // --- Fonctions API "publiques" ---
 
     function connectSocket() {
-        // En prod, SOCKET_URL est vide, donc socket.io se connecte au domaine courant (proxy)
+        // [MODIF] Configuration des transports
+        // En local : on essaie tout ('polling' puis upgrade 'websocket').
+        // En prod/entreprise : on force 'polling' SEULEMENT. 
+        // Cela évite l'erreur "WEBSOCKET_CONNECTION_REFUSED" causée par les pare-feux ou le proxy Vercel qui bloquent l'upgrade WSS.
+        const transports = isLocal ? ['polling', 'websocket'] : ['polling'];
+
         socket = io(SOCKET_URL, {
             withCredentials: true, 
-            path: '/socket.io/', // Chemin standard, intercepté par le proxy si configuré
-            transports: ['polling', 'websocket'] // Force le polling d'abord (passe mieux les pare-feux)
+            path: '/socket.io/', 
+            transports: transports 
         });
 
         socket.on('connect', () => {
@@ -75,6 +79,7 @@
 
         socket.on('connect_error', (err) => {
             console.warn('Erreur de connexion socket (Temps réel désactivé) :', err.message);
+            // On ne redirige pas forcément sur une erreur de socket, car le polling peut échouer temporairement
             if (err.message.includes('Authentification')) {
                 handleAuthError({ status: 401 });
             }
