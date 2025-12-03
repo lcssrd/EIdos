@@ -1,12 +1,9 @@
 (function() {
     "use strict";
 
-    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT (MODIFIÉE POUR CONTOURNEMENT PARE-FEU) ---
-    // Si on est en local, on tape l'API directe.
-    // Si on est en production (eidos-simul.fr, vercel, etc.), on utilise le chemin relatif ''
-    // Cela force le navigateur à passer par le domaine principal (autorisé) qui fera proxy vers l'API.
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const API_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
+    // --- CONFIGURATION API ---
+    // URL directe vers le backend de production pour compatibilité Render/Vercel/etc.
+    const API_URL = 'https://api.eidos-simul.fr';
 
     // --- Sélections DOM ---
     const loginSection = document.getElementById('login-section');
@@ -117,7 +114,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ identifier, password }),
-                credentials: 'include' // [IMPORTANT] Accepte le cookie HttpOnly
+                credentials: 'include' // [IMPORTANT] Accepte le cookie HttpOnly cross-site
             });
 
             const data = await response.json();
@@ -225,7 +222,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, code }),
-                credentials: 'include' // [IMPORTANT] Accepte le cookie après vérification réussie
+                credentials: 'include' // [IMPORTANT] Accepte le cookie après vérification
             });
 
             const data = await response.json();

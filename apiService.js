@@ -1,16 +1,11 @@
 (function() {
     "use strict";
 
-    // --- DETECTION INTELLIGENTE DE L'ENVIRONNEMENT (MODIFIÉE POUR CONTOURNEMENT PARE-FEU) ---
-    // Si on est en local, on tape l'API directe.
-    // Si on est en production (eidos-simul.fr, vercel, etc.), on utilise le chemin relatif ''
-    // Cela force le navigateur à passer par le domaine principal (autorisé) qui fera proxy vers l'API.
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    const API_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
-    
-    // Pour les sockets, on tente aussi de passer par le proxy si on est en prod
-    const SOCKET_URL = isLocal ? 'https://api.eidos-simul.fr' : '';
+    // --- CONFIGURATION API ---
+    // Sur Render (et partout ailleurs), nous pointons directement vers le backend officiel.
+    // Cela évite d'avoir à configurer des règles de réécriture (proxy) sur le serveur statique.
+    const API_URL = 'https://api.eidos-simul.fr';
+    const SOCKET_URL = 'https://api.eidos-simul.fr';
 
     // Variable pour stocker la connexion socket
     let socket = null;
@@ -61,11 +56,9 @@
     // --- Fonctions API "publiques" ---
 
     function connectSocket() {
-        // [MODIF] Configuration des transports
-        // En local : on essaie tout ('polling' puis upgrade 'websocket').
-        // En prod/entreprise : on force 'polling' SEULEMENT. 
-        // Cela évite l'erreur "WEBSOCKET_CONNECTION_REFUSED" causée par les pare-feux ou le proxy Vercel qui bloquent l'upgrade WSS.
-        const transports = isLocal ? ['polling', 'websocket'] : ['polling'];
+        // Configuration des transports
+        // On force le polling si nécessaire, mais websocket est préféré pour la performance
+        const transports = ['polling', 'websocket'];
 
         socket = io(SOCKET_URL, {
             withCredentials: true, 
@@ -79,7 +72,7 @@
 
         socket.on('connect_error', (err) => {
             console.warn('Erreur de connexion socket (Temps réel désactivé) :', err.message);
-            // On ne redirige pas forcément sur une erreur de socket, car le polling peut échouer temporairement
+            // On ne redirige pas forcément sur une erreur de socket
             if (err.message.includes('Authentification')) {
                 handleAuthError({ status: 401 });
             }
