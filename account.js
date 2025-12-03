@@ -3,7 +3,7 @@
 
     // --- CONFIGURATION API ---
     // URL directe vers le backend de production pour compatibilité Render/Vercel/etc.
-    const API_URL = 'https://api.eidos-simul.fr';
+    const API_URL = 'https://eidos-api.onrender.com/';
 
     // --- AUTHENTIFICATION ---
 
