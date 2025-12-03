@@ -4,8 +4,8 @@
     // --- CONFIGURATION API ---
     // Sur Render (et partout ailleurs), nous pointons directement vers le backend officiel.
     // Cela évite d'avoir à configurer des règles de réécriture (proxy) sur le serveur statique.
-    const API_URL = 'https://eidos-api.onrender.com/';
-    const SOCKET_URL = 'https://eidos-api.onrender.com/';
+    const API_URL = 'https://eidos-api.onrender.com';
+    const SOCKET_URL = 'https://eidos-api.onrender.com';
 
     // Variable pour stocker la connexion socket
     let socket = null;
