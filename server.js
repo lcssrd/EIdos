@@ -83,12 +83,16 @@ app.use(cors({
         if (!origin) return callback(null, true);
         
         // Liste blanche explicite
-        const allowedOrigins = [process.env.CLIENT_URL, 'https://eidos-simul.onrender.com'];
+            const allowedOrigins = [
+            process.env.CLIENT_URL, 
+            'https://eidos-simul.onrender.com',
+            'https://eidos-simul.fr',      // <--- AJOUTÉ
+            'https://www.eidos-simul.fr'   // <--- AJOUTÉ
+        ];
         
         // Vérification
         if (allowedOrigins.indexOf(origin) !== -1 || 
             origin.endsWith('.onrender.com') || // Autorise tous les sous-domaines Render (ex: pr-123.onrender.com)
-            origin.includes('localhost') ||     // Autorise le développement local
             origin.includes('127.0.0.1')) {
             callback(null, true);
         } else {
