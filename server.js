@@ -21,15 +21,15 @@ const app = express();
 // [CRITIQUE POUR RENDER] Faire confiance au proxy
 app.set('trust proxy', 1);
 
-// Sécurisation des en-têtes HTTP (CORRECTION: CSP Ajustée pour admin onclick)
+// Sécurisation des en-têtes HTTP
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: [
                 "'self'",
-                "'unsafe-inline'", // Requis pour les scripts inline (ex: AOS.init dans index.html)
-                "'unsafe-eval'",   // Requis pour le CDN Tailwind CSS
+                "'unsafe-inline'",
+                "'unsafe-eval'",
                 "https://cdn.tailwindcss.com",
                 "https://cdnjs.cloudflare.com",
                 "https://cdn.jsdelivr.net",
@@ -37,11 +37,10 @@ app.use(helmet({
                 "https://cloud.umami.is",
                 "https://cdn.socket.io"
             ],
-            // AJOUT: Autoriser les attributs onclick="..." utilisés dans l'interface admin
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: [
                 "'self'",
-                "'unsafe-inline'", // Requis pour Tailwind et les styles inline
+                "'unsafe-inline'",
                 "https://cdnjs.cloudflare.com",
                 "https://fonts.googleapis.com",
                 "https://unpkg.com"
@@ -51,12 +50,11 @@ app.use(helmet({
                 "https://fonts.gstatic.com",
                 "https://cdnjs.cloudflare.com"
             ],
-            imgSrc: ["'self'", "data:", "https://eidos-simul.fr", "blob:"], // blob: ajouté pour URL.createObjectURL
+            imgSrc: ["'self'", "data:", "https://eidos-simul.fr", "blob:"],
             connectSrc: [
                 "'self'",
                 "https://cloud.umami.is",
                 "https://cloud.umami.is/api/send",
-                // Autoriser les connexions WebSocket (WSS) vers le même domaine
                 "wss:", 
                 "https:" 
             ],
@@ -69,30 +67,24 @@ app.use(helmet({
 
 // Gestion du proxy (redirection HTTP -> HTTPS)
 app.use((req, res, next) => {
-    // Sur Render, x-forwarded-proto vaut 'http' ou 'https'
     if (req.headers['x-forwarded-proto'] === 'http') {
         return res.redirect(`https://${req.headers.host}${req.url}`);
     }
     next();
 });
 
-// Configuration CORS Dynamique (CORRECTION: Support localhost et prévisualisations Render)
+// Configuration CORS Dynamique
 app.use(cors({
     origin: (origin, callback) => {
-        // Autoriser les requêtes sans origine (ex: curl, postman, applications mobiles)
         if (!origin) return callback(null, true);
-        
-        // Liste blanche explicite
-            const allowedOrigins = [
+        const allowedOrigins = [
             process.env.CLIENT_URL, 
             'https://eidos-simul.onrender.com',
-            'https://eidos-simul.fr',      // <--- AJOUTÉ
-            'https://www.eidos-simul.fr'   // <--- AJOUTÉ
+            'https://eidos-simul.fr',
+            'https://www.eidos-simul.fr'
         ];
-        
-        // Vérification
         if (allowedOrigins.indexOf(origin) !== -1 || 
-            origin.endsWith('.onrender.com') || // Autorise tous les sous-domaines Render (ex: pr-123.onrender.com)
+            origin.endsWith('.onrender.com') || 
             origin.includes('127.0.0.1')) {
             callback(null, true);
         } else {
@@ -122,17 +114,13 @@ const apiLimiter = rateLimit({
     message: { error: "Trop de requêtes à l'API, veuillez ralentir." }
 });
 
-// --- SERVIR LE FRONTEND (FICHIERS STATIQUES) ---
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Appliquer les rate limits aux routes API uniquement
 app.use('/auth', authLimiter);
 app.use('/api', apiLimiter);
 
 // --- SOCKET.IO ---
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
-    // Configuration CORS Socket.io (Alignée avec Express)
     cors: {
         origin: (origin, callback) => {
             if (!origin) return callback(null, true);
@@ -164,8 +152,54 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// --- SCHÉMAS DE VALIDATION ZOD ---
+// --- HELPER EMAIL TEMPLATE (NOUVEAU) ---
+const getEmailTemplate = (title, bodyContent, cta = null) => {
+    return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+            .email-wrapper { width: 100%; background-color: #f3f4f6; padding: 40px 0; }
+            .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+            .header { background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%); padding: 35px 20px; text-align: center; }
+            .header h1 { color: #ffffff; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+            .content { padding: 40px 30px; color: #374151; line-height: 1.6; font-size: 16px; }
+            .content p { margin-bottom: 15px; }
+            .content strong { color: #111827; }
+            .code-box { background-color: #f0fdfa; border: 2px dashed #0d9488; border-radius: 8px; text-align: center; padding: 20px; margin: 25px 0; color: #0f766e; font-size: 32px; font-weight: 800; letter-spacing: 6px; font-family: monospace; }
+            .btn-container { text-align: center; margin-top: 30px; margin-bottom: 20px; }
+            .btn { display: inline-block; background-color: #0d9488; color: #ffffff !important; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; transition: background-color 0.3s; box-shadow: 0 2px 4px rgba(13, 148, 136, 0.3); }
+            .btn:hover { background-color: #0f766e; }
+            .footer { background-color: #f9fafb; padding: 25px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
+            .footer a { color: #0d9488; text-decoration: none; }
+            .info-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; font-size: 14px; color: #1e40af; border-radius: 0 4px 4px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="email-wrapper">
+            <div class="email-container">
+                <div class="header">
+                    <h1>${title}</h1>
+                </div>
+                <div class="content">
+                    ${bodyContent}
+                    ${cta ? `<div class="btn-container"><a href="${cta.link}" class="btn">${cta.text}</a></div>` : ''}
+                    ${cta && cta.fallback ? `<p style="font-size: 12px; color: #9ca3af; margin-top: 20px; text-align: center; word-break: break-all;">Si le bouton ne fonctionne pas, copiez ce lien :<br>${cta.link}</p>` : ''}
+                </div>
+                <div class="footer">
+                    <p>© ${new Date().getFullYear()} EIdos-simul. Tous droits réservés.</p>
+                    <p>Ceci est un message automatique, merci de ne pas y répondre directement.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+};
 
+// --- SCHÉMAS DE VALIDATION ZOD ---
 const loginSchema = z.object({
     identifier: z.string().min(1, "Identifiant requis").max(100),
     password: z.string().min(1, "Mot de passe requis").max(100)
@@ -188,7 +222,7 @@ const dossierItemSchema = z.object({
     text: z.string().max(20000).optional(),
     dateOffset: z.number().optional(),
     date: z.string().max(50).optional()
-}).catchall(z.any()); // On garde z.any() ici pour flexibilité interne
+}).catchall(z.any());
 
 const patientSaveSchema = z.object({
     sidebar_patient_name: z.string().min(1, "Nom du patient requis").max(100),
@@ -202,18 +236,15 @@ const patientSaveSchema = z.object({
         careDiagramRows: z.array(z.object({ name: z.string().max(200) })).optional(),
         careDiagramCheckboxes: z.array(z.boolean()).optional(),
         comptesRendus: z.record(z.string().max(50000)).optional(),
-    // Restriction: On accepte strings, nombres, booléens ou null, mais pas d'objets complexes arbitraires profonds
     }).catchall(z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(z.any()), z.record(z.any())]))
 });
 
-// Admin update user schema
 const adminUserUpdateSchema = z.object({
     plan: z.enum(['free', 'independant', 'promo', 'centre', 'student']).optional(),
     email: z.string().email().optional(),
     isSuspended: z.boolean().optional()
 });
 
-// Broadcast schema
 const broadcastSchema = z.object({
     message: z.string().min(1).max(500)
 });
@@ -231,7 +262,6 @@ const validate = (schema) => (req, res, next) => {
     }
 };
 
-// Helper pour gestion d'erreur sécurisée
 const safeError = (res, err, status = 500) => {
     console.error(err);
     const message = process.env.NODE_ENV === 'production'
@@ -240,26 +270,18 @@ const safeError = (res, err, status = 500) => {
     if (!res.headersSent) res.status(status).json({ error: message });
 };
 
-// --- HELPER COOKIE ---
 const sendTokenResponse = (user, statusCode, res) => {
-    // Session réduite à 12h
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
-
     const options = {
-        expires: new Date(Date.now() + 12 * 60 * 60 * 1000), // 12 heures
+        expires: new Date(Date.now() + 12 * 60 * 60 * 1000),
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'Strict' : 'Lax',
     };
-
-    res.status(statusCode)
-        .cookie('jwt', token, options)
-        .json({ success: true, role: user.role });
+    res.status(statusCode).cookie('jwt', token, options).json({ success: true, role: user.role });
 };
 
 // --- MODÈLES ---
-
-// Modèle pour les Logs Système (ADMIN TECHNIQUE)
 const systemLogSchema = new mongoose.Schema({
     level: { type: String, enum: ['info', 'warn', 'error'], default: 'info' },
     message: { type: String },
@@ -268,14 +290,12 @@ const systemLogSchema = new mongoose.Schema({
 }, { capped: { size: 1024 * 1024, max: 1000 } });
 const SystemLog = mongoose.model('SystemLog', systemLogSchema);
 
-// Modèle Configuration Globale (Maintenance)
 const globalConfigSchema = new mongoose.Schema({
     key: { type: String, required: true, unique: true },
     value: { type: mongoose.Schema.Types.Mixed }
 });
 const GlobalConfig = mongoose.model('GlobalConfig', globalConfigSchema);
 
-// Override console.error pour capturer les erreurs dans Mongo
 const originalConsoleError = console.error;
 console.error = function (...args) {
     try {
@@ -342,20 +362,13 @@ patientSchema.pre('save', function(next) { this.updatedAt = Date.now(); next(); 
 const Patient = mongoose.model('Patient', patientSchema);
 
 // --- MIDDLEWARES ---
-
-// Middleware Maintenance Mode
 const checkMaintenance = async (req, res, next) => {
     try {
         const maintenanceConfig = await GlobalConfig.findOne({ key: 'maintenance_mode' });
-
         if (maintenanceConfig && maintenanceConfig.value === true) {
-
-            // 1. Toujours autoriser les routes API Admin et Auth
             if (req.path.startsWith('/api/admin') || req.path.startsWith('/auth')) {
                 return next();
             }
-
-            // 2. Exception : Laisser passer les Super Admins
             const token = req.cookies.jwt;
             if (token) {
                 try {
@@ -366,7 +379,6 @@ const checkMaintenance = async (req, res, next) => {
                     }
                 } catch (err) {}
             }
-
             return res.status(503).json({ error: "Maintenance en cours. Réessayez plus tard." });
         }
         next();
@@ -374,44 +386,36 @@ const checkMaintenance = async (req, res, next) => {
 };
 app.use(checkMaintenance);
 
-// Lecture du Cookie HttpOnly + Vérification Suspension
 const protect = async (req, res, next) => {
     let token;
-
     if (req.cookies && req.cookies.jwt) {
         token = req.cookies.jwt;
     }
     else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         token = req.headers.authorization.split(' ')[1];
     }
-
     if (!token) {
         return res.status(401).json({ error: 'Non autorisé (pas de token)' });
     }
-
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.id).populate('organisation');
         if (!user) {
             return res.status(401).json({ error: 'Utilisateur non trouvé' });
         }
-
         if (user.isSuspended) {
             return res.status(403).json({ error: "Votre compte a été suspendu. Contactez le support." });
         }
-
         if (user.role === 'user' && (user.subscription === 'independant' || user.subscription === 'promo')) {
             user.role = 'formateur';
             await user.save();
         }
-
         req.user = user;
         if (user.role === 'etudiant') {
             req.user.resourceId = user.createdBy;
         } else {
             req.user.resourceId = user._id;
         }
-
         if ((user.role === 'formateur' || user.role === 'owner') && user.organisation && user.organisation.is_active) {
             req.user.effectivePlan = user.organisation.plan;
         } else if (user.role === 'etudiant') {
@@ -438,7 +442,6 @@ io.use(async (socket, next) => {
     try {
         const cookieString = socket.handshake.headers.cookie;
         let token = null;
-
         if (cookieString) {
             const cookies = cookieString.split(';').reduce((acc, cookie) => {
                 const [name, value] = cookie.split('=').map(c => c.trim());
@@ -447,14 +450,11 @@ io.use(async (socket, next) => {
             }, {});
             token = cookies['jwt'];
         }
-
         if (!token) return next(new Error('Authentification échouée'));
-
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.id).populate('organisation');
         if (!user) return next(new Error('Utilisateur non trouvé'));
         if (user.isSuspended) return next(new Error('Compte suspendu'));
-
         let resourceId;
         if (user.role === 'etudiant') {
             resourceId = user.createdBy;
@@ -469,23 +469,16 @@ io.use(async (socket, next) => {
     }
 });
 
-// Helper pour diffuser la liste des utilisateurs connectés dans une "room" (classe)
 const broadcastRoomUsers = async (roomName) => {
     try {
         const sockets = await io.in(roomName).fetchSockets();
-        // On filtre pour ne récupérer que les étudiants
         const students = sockets
             .filter(s => s.user && s.user.role === 'etudiant')
             .map(s => ({ 
                 login: s.user.login, 
                 id: s.user._id.toString() 
             }));
-        
-        // On enlève les doublons (si un étudiant a plusieurs onglets ouverts)
         const uniqueStudents = Array.from(new Map(students.map(item => [item.login, item])).values());
-
-        // On envoie la liste mise à jour à tout le monde dans la room
-        // (Le filtrage pour que seul le formateur le voie se fera côté client)
         io.to(roomName).emit('room_users_update', uniqueStudents);
     } catch (e) {
         console.error("Erreur broadcast users:", e);
@@ -496,12 +489,8 @@ io.on('connection', async (socket) => {
     const roomName = `room_${socket.resourceId}`;
     socket.join(roomName);
     socket.join('global_broadcast');
-    
-    // Mettre à jour la liste quand quelqu'un arrive
     await broadcastRoomUsers(roomName);
-
     socket.on('disconnect', async () => {
-        // Mettre à jour la liste quand quelqu'un part
         await broadcastRoomUsers(roomName);
     });
 });
@@ -566,7 +555,22 @@ app.post('/auth/signup', validate(signupSchema), async (req, res) => {
                 await newUser.save();
             }
             try {
-                await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Vérification EIdos-simul', html: `Votre code de vérification : <b>${confirmationCode}</b>` });
+                // [MAIL AMÉLIORÉ - INSCRIPTION]
+                const emailHtml = getEmailTemplate(
+                    "Bienvenue sur EIdos-simul",
+                    `
+                    <p>Bonjour,</p>
+                    <p>Nous sommes ravis de vous compter parmi les utilisateurs d'EIdos-simul.</p>
+                    <p>Pour sécuriser votre compte et accéder à l'ensemble des fonctionnalités du simulateur, veuillez confirmer votre adresse email en utilisant le code ci-dessous :</p>
+                    <div class="code-box">${confirmationCode}</div>
+                    <p>Ce code est valable pendant une durée limitée.</p>
+                    <div class="info-box">
+                        <strong>Pourquoi confirmer ?</strong><br>
+                        La validation de votre email nous permet de vous assurer un accès sécurisé à vos dossiers patients sauvegardés.
+                    </div>
+                    `
+                );
+                await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Confirmez votre inscription sur EIdos-simul', html: emailHtml });
             } catch (e) { console.error("Erreur envoi mail:", e); }
             return res.status(201).json({ success: true, verified: false });
         }
@@ -598,7 +602,19 @@ app.post('/auth/resend-code', async (req, res) => {
 
         user.confirmationCode = confirmationCode;
         await user.save();
-        await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Nouveau code', html: `Code: <b>${confirmationCode}</b>` });
+        
+        // [MAIL AMÉLIORÉ - RENVOI CODE]
+        const emailHtml = getEmailTemplate(
+            "Votre nouveau code de vérification",
+            `
+            <p>Bonjour,</p>
+            <p>Vous avez demandé le renvoi de votre code de validation.</p>
+            <p>Voici votre nouveau code d'accès :</p>
+            <div class="code-box">${confirmationCode}</div>
+            <p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.</p>
+            `
+        );
+        await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Nouveau code de vérification', html: emailHtml });
         res.json({ success: true });
     } catch (e) { safeError(res, e); }
 });
@@ -627,11 +643,23 @@ app.post('/auth/forgot-password', async (req, res) => {
         user.resetPasswordExpires = Date.now() + 3600000;
         await user.save();
 
+        // [MAIL AMÉLIORÉ - MOT DE PASSE OUBLIÉ]
+        const emailHtml = getEmailTemplate(
+            "Réinitialisation de votre mot de passe",
+            `
+            <p>Bonjour,</p>
+            <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte EIdos-simul.</p>
+            <p>Utilisez le code de sécurité suivant pour définir un nouveau mot de passe :</p>
+            <div class="code-box">${code}</div>
+            <p>Attention, ce code expirera dans <strong>1 heure</strong>.</p>
+            `
+        );
+
         await transporter.sendMail({
             from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Réinitialisation de mot de passe',
-            html: `<p>Voici votre code de réinitialisation : <b>${code}</b></p><p>Ce code expire dans 1 heure.</p>`
+            html: emailHtml
         });
 
         res.json({ success: true });
@@ -768,8 +796,15 @@ app.post('/api/admin/email', protect, checkAdmin, async (req, res) => {
             recipients = [to];
         }
 
+        // [MAIL AMÉLIORÉ - ADMIN CUSTOM]
+        // On enveloppe le HTML custom de l'admin dans notre template standard
+        const wrappedHtml = getEmailTemplate(
+            subject, 
+            html // On injecte le HTML brut ici
+        );
+
         for (const email of recipients) {
-            await transporter.sendMail({ from: `"EIdos Admin" <${process.env.EMAIL_FROM}>`, to: email, subject, html });
+            await transporter.sendMail({ from: `"EIdos Admin" <${process.env.EMAIL_FROM}>`, to: email, subject, html: wrappedHtml });
         }
 
         res.json({ success: true, count: recipients.length });
@@ -779,20 +814,29 @@ app.post('/api/admin/email', protect, checkAdmin, async (req, res) => {
 app.post('/api/admin/quotes', protect, checkAdmin, async (req, res) => {
     try {
         const { clientEmail, amount, details } = req.body;
-        const html = `
-            <h1>Devis EIdos-simul</h1>
+        
+        // [MAIL AMÉLIORÉ - DEVIS]
+        const emailHtml = getEmailTemplate(
+            "Proposition Commerciale EIdos-simul",
+            `
             <p>Bonjour,</p>
-            <p>Voici la proposition pour votre abonnement Centre.</p>
-            <p><strong>Montant :</strong> ${amount} €</p>
-            <p><strong>Détails :</strong> ${details}</p>
-            <p>Pour accepter, répondez à cet email.</p>
-        `;
-        await transporter.sendMail({ from: `"EIdos Commercial" <${process.env.EMAIL_FROM}>`, to: clientEmail, cc: process.env.EMAIL_FROM, subject: 'Votre Devis EIdos', html });
+            <p>Suite à votre demande, voici notre proposition pour l'abonnement <strong>Centre de Formation</strong>.</p>
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                <h3 style="margin-top: 0; color: #0d9488;">Détails de l'offre</h3>
+                <p style="white-space: pre-wrap;">${details}</p>
+                <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 15px 0;">
+                <p style="font-size: 18px; font-weight: bold; text-align: right;">Total : <span style="color: #0d9488;">${amount} €</span></p>
+            </div>
+            <p>Pour valider ce devis et activer votre licence Centre, merci de répondre directement à cet email.</p>
+            `
+        );
+
+        await transporter.sendMail({ from: `"EIdos Commercial" <${process.env.EMAIL_FROM}>`, to: clientEmail, cc: process.env.EMAIL_FROM, subject: 'Votre Devis EIdos', html: emailHtml });
         res.json({ success: true });
     } catch(e) { safeError(res, e); }
 });
 
-// --- ROUTE DOWNGRADE (NOUVEAU) ---
+// --- ROUTE DOWNGRADE ---
 app.post('/api/account/downgrade', protect, async (req, res) => {
     try {
         if (req.user.role === 'etudiant') {
@@ -802,7 +846,6 @@ app.post('/api/account/downgrade', protect, async (req, res) => {
         if (req.user.role === 'formateur') {
             req.user.role = 'user';
         }
-        // TODO: Stripe cancellation logic here
         await req.user.save();
         res.json({ success: true, message: "Abonnement résilié. Vous êtes maintenant en version gratuite." });
     } catch (e) { safeError(res, e); }
@@ -927,9 +970,27 @@ app.post('/api/organisation/invite', protect, async (req, res) => {
         const token = crypto.randomBytes(32).toString('hex');
         const email = req.body.email.toLowerCase();
         await new Invitation({ email: email, organisation: req.user.organisation._id, token }).save();
-        const baseUrl = 'https://eidos-simul.onrender.com'; // Modifiez avec votre domaine Render
+        const baseUrl = process.env.CLIENT_URL || 'https://eidos-simul.onrender.com';
         const inviteLink = `${baseUrl}/auth.html?invitation_token=${token}&email=${email}`;
-        await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Invitation à rejoindre EIdos-simul', html: `<a href="${inviteLink}">Accepter l'invitation</a>` });
+        
+        // [MAIL AMÉLIORÉ - INVITATION CENTRE]
+        const emailHtml = getEmailTemplate(
+            "Invitation à rejoindre l'équipe de formation",
+            `
+            <p>Bonjour,</p>
+            <p>L'établissement <strong>${req.user.organisation.name}</strong> vous invite à rejoindre son espace sur EIdos-simul.</p>
+            <p>En acceptant cette invitation, vous obtiendrez le statut de <strong>Formateur</strong> rattaché à cet établissement. Cela vous permettra de :</p>
+            <ul style="color: #4b5563;">
+                <li>Créer des dossiers patients et scénarios pédagogiques illimités.</li>
+                <li>Gérer vos propres groupes d'étudiants.</li>
+                <li>Bénéficier de toutes les fonctionnalités du plan Centre.</li>
+            </ul>
+            <p>Cliquez sur le bouton ci-dessous pour créer votre compte formateur et valider votre accès.</p>
+            `,
+            { text: "Accepter l'invitation et rejoindre", link: inviteLink, fallback: true }
+        );
+
+        await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Invitation à rejoindre EIdos-simul', html: emailHtml });
         res.json({ success: true });
     } catch (err) { safeError(res, err); }
 });
@@ -1104,9 +1165,7 @@ app.post('/api/payments/create-checkout-session', protect, async (req, res) => {
     res.status(501).json({ error: "Paiement non encore implémenté" });
 });
 
-// Route "Catch-All" pour le SPA (Single Page Application)
-// Si une requête arrive ici et qu'elle n'a pas été traitée par /api ou /auth ou les fichiers statiques,
-// on renvoie index.html (pour la navigation côté client si vous en aviez, sinon ça redirige vers l'accueil)
+// Route "Catch-All"
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
