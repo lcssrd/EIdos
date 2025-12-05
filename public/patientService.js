@@ -175,17 +175,40 @@
             setTimeout(() => { isLoadingData = false; }, 500);
         });
 
-        // NOUVEAU : Écouteur pour la liste des étudiants
         socket.on('room_users_update', (students) => {
-            // Sécurité côté client : on n'affiche le widget que pour les formateurs/owners
             if (userPermissions.role === 'formateur' || userPermissions.role === 'owner' || userPermissions.isSuperAdmin) {
-                // Initialiser le widget s'il n'est pas déjà prêt
                 const widget = document.getElementById('connected-students-widget');
                 if (widget && !widget.dataset.initialized) {
                     uiService.initStudentWidget();
                     widget.dataset.initialized = "true";
                 }
                 uiService.updateConnectedStudentsList(students);
+            }
+        });
+
+        // [NOUVEAU] Mise à jour dynamique de la liste des chambres
+        socket.on('rooms_updated', (newRooms) => {
+            console.log('Liste des chambres mise à jour via socket:', newRooms);
+            updatePatientListFromRooms(newRooms);
+        });
+    }
+
+    // [NOUVEAU] Helper pour mettre à jour la liste des chambres
+    function updatePatientListFromRooms(roomNumbers) {
+        // Tri numérique naturel (1, 2, 10 au lieu de 1, 10, 2)
+        roomNumbers.sort((a, b) => parseInt(a) - parseInt(b));
+        
+        patientList = roomNumbers.map(num => ({
+            id: `chambre_${num}`,
+            room: `${num}`
+        }));
+        
+        // Recharger la sidebar
+        loadPatientList().then(() => {
+            // Si la chambre active a disparu, switcher sur la première dispo
+            const currentStillExists = patientList.find(p => p.id === activePatientId);
+            if (!currentStillExists && patientList.length > 0) {
+                switchPatient(patientList[0].id);
             }
         });
     }
@@ -199,9 +222,6 @@
             userPermissions.allowedRooms = userData.allowedRooms || []; 
             userPermissions.isSuperAdmin = userData.is_super_admin || false;
 
-            // --- CORRECTION CRITIQUE ---
-            // On vérifie UNIQUEMENT le rôle. 
-            // Même si permissions est vide (cas d'un nouvel étudiant), on force le statut étudiant.
             if (userData.role === 'etudiant') {
                 const perms = userData.permissions || {};
                 userPermissions = { ...userPermissions, ...perms, isStudent: true, role: 'etudiant' };
@@ -209,7 +229,7 @@
 
                 patientList = userPermissions.allowedRooms
                     .map(roomId => ({ id: roomId, room: roomId.split('_')[1] }))
-                    .sort((a, b) => a.room.localeCompare(b.room));
+                    .sort((a, b) => parseInt(a.room) - parseInt(b.room));
             } else {
                 // Pour les autres (user, formateur, owner)
                 let role = userData.role || 'user';
@@ -222,9 +242,19 @@
                     transmissions: true, pancarte: true, diagramme: true, biologie: true,
                     comptesRendus: true
                 };
-                patientList = Array.from({ length: 10 }, (_, i) => ({
-                    id: `chambre_${101 + i}`,
-                    room: `${101 + i}`
+                
+                // [MODIFICATION] Gestion dynamique des chambres
+                let rooms = userData.rooms;
+                // Fallback pour les anciens comptes ou si vide
+                if (!rooms || rooms.length === 0) {
+                    rooms = Array.from({ length: 10 }, (_, i) => `${101 + i}`);
+                }
+                
+                rooms.sort((a, b) => parseInt(a) - parseInt(b));
+
+                patientList = rooms.map(num => ({
+                    id: `chambre_${num}`,
+                    room: `${num}`
                 }));
             }
         } catch (error) {
@@ -250,11 +280,13 @@
         if (storedPatientId && patientList.find(p => p.id === storedPatientId)) {
             activePatientId = storedPatientId;
         } else {
-            activePatientId = patientList[0].id;
+            activePatientId = patientList[0]?.id || null;
         }
 
         await loadPatientList();
-        await switchPatient(activePatientId, true); 
+        if (activePatientId) {
+            await switchPatient(activePatientId, true); 
+        }
         return true; 
     }
     
@@ -275,6 +307,8 @@
     }
     
     async function switchPatient(newPatientId, skipSave = false) {
+        if (!newPatientId) return;
+
         if (!skipSave && activePatientId) {
             await saveCurrentPatientData();
         }
@@ -490,7 +524,7 @@
     function clearAllPatients() {
         if (userPermissions.role === 'etudiant') return;
         
-        uiService.showDeleteConfirmation("Réinitialiser les 10 chambres ?", async () => {
+        uiService.showDeleteConfirmation("Réinitialiser toutes les chambres ?", async () => {
             currentPatientState = {};
             uiService.resetForm();
 
@@ -522,6 +556,41 @@
         uiService.closeCrModal();
         debouncedSave(); 
     }
+
+    // [NOUVEAU] Gestion Ajout Chambre
+    async function addRoom() {
+        // Sécurité côté client (renforcée par serveur)
+        if (userPermissions.role === 'etudiant' || userPermissions.role === 'user') return;
+        
+        try {
+            uiService.updateSaveStatus('saving');
+            const res = await apiService.addCustomRoom();
+            updatePatientListFromRooms(res.rooms);
+            uiService.showToast(`Chambre ${res.newRoom} ajoutée.`);
+            uiService.updateSaveStatus('saved');
+        } catch (err) {
+            uiService.showToast(err.message, 'error');
+            uiService.updateSaveStatus('saved');
+        }
+    }
+
+    // [NOUVEAU] Gestion Suppression Chambre
+    async function deleteRoom(roomNumber) {
+        if (userPermissions.role === 'etudiant' || userPermissions.role === 'user') return;
+
+        uiService.showDeleteConfirmation(`Supprimer définitivement la chambre ${roomNumber} et toutes ses données ?`, async () => {
+            try {
+                uiService.updateSaveStatus('saving');
+                const res = await apiService.deleteCustomRoom(roomNumber);
+                updatePatientListFromRooms(res.rooms);
+                uiService.showToast(`Chambre ${roomNumber} supprimée.`);
+                uiService.updateSaveStatus('saved');
+            } catch (err) {
+                uiService.showToast(err.message, 'error');
+                uiService.updateSaveStatus('saved');
+            }
+        });
+    }
     
     window.patientService = {
         initialize, switchPatient, getActivePatientId: () => activePatientId,
@@ -529,7 +598,7 @@
         debouncedSave, forceSaveAndRefresh, saveCurrentPatientAsCase, openLoadPatientModal,
         loadCaseIntoCurrentPatient, deleteCase, importPatientData, exportPatientData,
         clearCurrentPatient, clearAllPatients, getCrText, handleCrModalSave,
-        // [NOUVEAU] Exports pour la Bibliothèque Publique
-        openPublicLibrary, loadPublicCaseIntoCurrentPatient
+        // [NOUVEAU] Exports
+        openPublicLibrary, loadPublicCaseIntoCurrentPatient, addRoom, deleteRoom
     };
 })();

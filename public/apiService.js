@@ -240,6 +240,52 @@
         }
     }
 
+    // --- [NOUVEAU] Gestion des chambres personnalisées ---
+
+    async function addCustomRoom() {
+        try {
+            const headers = getAuthHeaders();
+            const response = await fetchWithCredentials(`${API_URL}/api/rooms`, {
+                method: 'POST',
+                headers: headers
+            });
+
+            if (handleAuthError(response)) return;
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Erreur lors de la création de la chambre');
+            }
+            return data;
+        } catch (err) {
+            console.error("Erreur ajout chambre:", err);
+            throw err;
+        }
+    }
+
+    async function deleteCustomRoom(roomNumber) {
+        try {
+            const headers = getAuthHeaders();
+            delete headers['Content-Type'];
+
+            const response = await fetchWithCredentials(`${API_URL}/api/rooms/${roomNumber}`, {
+                method: 'DELETE',
+                headers: headers
+            });
+
+            if (handleAuthError(response)) return;
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Erreur lors de la suppression de la chambre');
+            }
+            return data;
+        } catch (err) {
+            console.error("Erreur suppression chambre:", err);
+            throw err;
+        }
+    }
+
     async function logout() {
         try {
             await fetchWithCredentials(`${API_URL}/auth/logout`, { method: 'POST' });
@@ -262,6 +308,9 @@
         saveCaseData,
         deleteSavedCase,
         clearAllChamberData,
+        // [NOUVEAU] Export des nouvelles fonctions
+        addCustomRoom,
+        deleteCustomRoom,
         logout
     };
 

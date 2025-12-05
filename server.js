@@ -80,6 +80,7 @@ app.use(cors({
         const allowedOrigins = [
             process.env.CLIENT_URL, 
             'https://eidos-simul.onrender.com',
+            'https://eidos-beta.onrender.com',
             'https://eidos-simul.fr',
             'https://www.eidos-simul.fr'
         ];
@@ -189,7 +190,7 @@ const getEmailTemplate = (title, bodyContent, cta = null) => {
                     ${cta && cta.fallback ? `<p style="font-size: 12px; color: #9ca3af; margin-top: 20px; text-align: center; word-break: break-all;">Si le bouton ne fonctionne pas, copiez ce lien :<br>${cta.link}</p>` : ''}
                 </div>
                 <div class="footer">
-                    <p>© ${new Date().getFullYear()} EIdos-simul. Tous droits réservés.</p>
+                    <p>© ${new Date().getFullYear()} EIdos-Simul. Tous droits réservés.</p>
                     <p>Ceci est un message automatique, merci de ne pas y répondre directement.</p>
                 </div>
             </div>
@@ -338,6 +339,8 @@ const userSchema = new mongoose.Schema({
     is_owner: { type: Boolean, default: false },
     permissions: { type: mongoose.Schema.Types.Mixed, default: {} },
     allowedRooms: { type: [String], default: [] },
+    // NOUVEAU: Liste des chambres personnalisées
+    rooms: { type: [String], default: [] },
     newEmail: { type: String, lowercase: true, default: null },
     newEmailToken: { type: String, default: null },
     newEmailTokenExpires: { type: Date, default: null },
@@ -557,10 +560,10 @@ app.post('/auth/signup', validate(signupSchema), async (req, res) => {
             try {
                 // [MAIL AMÉLIORÉ - INSCRIPTION]
                 const emailHtml = getEmailTemplate(
-                    "Bienvenue sur EIdos-simul",
+                    "Bienvenue sur EIdos-Simul",
                     `
                     <p>Bonjour,</p>
-                    <p>Nous sommes ravis de vous compter parmi les utilisateurs d'EIdos-simul.</p>
+                    <p>Nous sommes ravis de vous compter parmi les utilisateurs d'EIdos-Simul.</p>
                     <p>Pour sécuriser votre compte et accéder à l'ensemble des fonctionnalités du simulateur, veuillez confirmer votre adresse email en utilisant le code ci-dessous :</p>
                     <div class="code-box">${confirmationCode}</div>
                     <p>Ce code est valable pendant une durée limitée.</p>
@@ -570,7 +573,7 @@ app.post('/auth/signup', validate(signupSchema), async (req, res) => {
                     </div>
                     `
                 );
-                await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Confirmez votre inscription sur EIdos-simul', html: emailHtml });
+                await transporter.sendMail({ from: `"EIdos-Simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Confirmez votre inscription sur EIdos-Simul', html: emailHtml });
             } catch (e) { console.error("Erreur envoi mail:", e); }
             return res.status(201).json({ success: true, verified: false });
         }
@@ -614,7 +617,7 @@ app.post('/auth/resend-code', async (req, res) => {
             <p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.</p>
             `
         );
-        await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Nouveau code de vérification', html: emailHtml });
+        await transporter.sendMail({ from: `"EIdos-Simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Nouveau code de vérification', html: emailHtml });
         res.json({ success: true });
     } catch (e) { safeError(res, e); }
 });
@@ -648,7 +651,7 @@ app.post('/auth/forgot-password', async (req, res) => {
             "Réinitialisation de votre mot de passe",
             `
             <p>Bonjour,</p>
-            <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte EIdos-simul.</p>
+            <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte EIdos-Simul.</p>
             <p>Utilisez le code de sécurité suivant pour définir un nouveau mot de passe :</p>
             <div class="code-box">${code}</div>
             <p>Attention, ce code expirera dans <strong>1 heure</strong>.</p>
@@ -656,7 +659,7 @@ app.post('/auth/forgot-password', async (req, res) => {
         );
 
         await transporter.sendMail({
-            from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`,
+            from: `"EIdos-Simul" <${process.env.EMAIL_FROM}>`,
             to: email,
             subject: 'Réinitialisation de mot de passe',
             html: emailHtml
@@ -692,6 +695,81 @@ app.post('/auth/reset-password', async (req, res) => {
         res.json({ success: true });
     } catch (e) { safeError(res, e); }
 });
+
+// --- GESTION DES CHAMBRES (NOUVEAU) ---
+
+// Route pour ajouter une chambre
+app.post('/api/rooms', protect, async (req, res) => {
+    try {
+        // Vérification du plan
+        if (!['promo', 'centre'].includes(req.user.effectivePlan)) {
+            return res.status(403).json({ error: "Fonctionnalité réservée aux plans Promo et Centre." });
+        }
+
+        // Initialisation de la liste si vide (migration douce)
+        if (!req.user.rooms || req.user.rooms.length === 0) {
+            req.user.rooms = Array.from({ length: 10 }, (_, i) => `${101 + i}`);
+        }
+
+        // Vérification de la limite (40)
+        if (req.user.rooms.length >= 40) {
+            return res.status(403).json({ error: "Limite de 40 chambres atteinte." });
+        }
+
+        // Génération du prochain numéro de chambre
+        // On cherche le plus grand numéro existant dans le tableau
+        const existingNumbers = req.user.rooms.map(r => parseInt(r)).filter(n => !isNaN(n));
+        const maxRoom = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 100;
+        const newRoomNumber = String(maxRoom + 1);
+
+        req.user.rooms.push(newRoomNumber);
+        await req.user.save();
+
+        // Broadcast pour mettre à jour la liste des chambres côté étudiant
+        try {
+            io.to(`room_${req.user._id}`).emit('rooms_updated', req.user.rooms);
+        } catch(e) {}
+
+        res.json({ success: true, rooms: req.user.rooms, newRoom: newRoomNumber });
+    } catch (e) { safeError(res, e); }
+});
+
+// Route pour supprimer une chambre
+app.delete('/api/rooms/:roomNumber', protect, async (req, res) => {
+    try {
+        const roomNumber = req.params.roomNumber;
+
+        // Vérification du plan
+        if (!['promo', 'centre'].includes(req.user.effectivePlan)) {
+            return res.status(403).json({ error: "Fonctionnalité réservée aux plans Promo et Centre." });
+        }
+
+        // Initialisation de la liste si vide
+        if (!req.user.rooms || req.user.rooms.length === 0) {
+            req.user.rooms = Array.from({ length: 10 }, (_, i) => `${101 + i}`);
+        }
+
+        if (!req.user.rooms.includes(roomNumber)) {
+            return res.status(404).json({ error: "Chambre introuvable." });
+        }
+
+        // Suppression de la chambre de la liste utilisateur
+        req.user.rooms = req.user.rooms.filter(r => r !== roomNumber);
+        await req.user.save();
+
+        // Suppression du document Patient associé (Nettoyage DB)
+        const patientId = `chambre_${roomNumber}`;
+        await Patient.deleteOne({ user: req.user._id, patientId: patientId });
+
+        // Broadcast
+        try {
+            io.to(`room_${req.user._id}`).emit('rooms_updated', req.user.rooms);
+        } catch(e) {}
+
+        res.json({ success: true, rooms: req.user.rooms });
+    } catch (e) { safeError(res, e); }
+});
+
 
 // --- ROUTES SUPER ADMIN AVANCÉES ---
 
@@ -817,7 +895,7 @@ app.post('/api/admin/quotes', protect, checkAdmin, async (req, res) => {
         
         // [MAIL AMÉLIORÉ - DEVIS]
         const emailHtml = getEmailTemplate(
-            "Proposition Commerciale EIdos-simul",
+            "Proposition Commerciale EIdos-Simul",
             `
             <p>Bonjour,</p>
             <p>Suite à votre demande, voici notre proposition pour l'abonnement <strong>Centre de Formation</strong>.</p>
@@ -897,6 +975,7 @@ app.get('/api/admin/patients', protect, checkAdmin, async (req, res) => {
 });
 
 app.get('/api/auth/me', protect, async (req, res) => {
+    // IMPORTANT : On renvoie la liste des chambres (rooms)
     res.json({ ...req.user.toObject(), effectivePlan: req.user.effectivePlan });
 });
 
@@ -918,7 +997,8 @@ app.get('/api/account/details', protect, async (req, res) => {
         }
     }
 
-    res.json({ email: req.user.email, plan: req.user.effectivePlan, role: req.user.role, is_owner: req.user.is_owner, is_super_admin: req.user.is_super_admin, students, organisation: organisationData });
+    // MODIFICATION ICI : On renvoie également la liste des chambres du formateur
+    res.json({ email: req.user.email, plan: req.user.effectivePlan, role: req.user.role, is_owner: req.user.is_owner, is_super_admin: req.user.is_super_admin, students, organisation: organisationData, rooms: req.user.rooms });
 });
 
 app.post('/api/account/change-password', protect, async (req, res) => {
@@ -978,7 +1058,7 @@ app.post('/api/organisation/invite', protect, async (req, res) => {
             "Invitation à rejoindre l'équipe de formation",
             `
             <p>Bonjour,</p>
-            <p>L'établissement <strong>${req.user.organisation.name}</strong> vous invite à rejoindre son espace sur EIdos-simul.</p>
+            <p>L'établissement <strong>${req.user.organisation.name}</strong> vous invite à rejoindre son espace sur EIdos-Simul.</p>
             <p>En acceptant cette invitation, vous obtiendrez le statut de <strong>Formateur</strong> rattaché à cet établissement. Cela vous permettra de :</p>
             <ul style="color: #4b5563;">
                 <li>Créer des dossiers patients et scénarios pédagogiques illimités.</li>
@@ -990,7 +1070,7 @@ app.post('/api/organisation/invite', protect, async (req, res) => {
             { text: "Accepter l'invitation et rejoindre", link: inviteLink, fallback: true }
         );
 
-        await transporter.sendMail({ from: `"EIdos-simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Invitation à rejoindre EIdos-simul', html: emailHtml });
+        await transporter.sendMail({ from: `"EIdos-Simul" <${process.env.EMAIL_FROM}>`, to: email, subject: 'Invitation à rejoindre EIdos-Simul', html: emailHtml });
         res.json({ success: true });
     } catch (err) { safeError(res, err); }
 });
@@ -1170,4 +1250,4 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-mongoose.connect(MONGO_URI).then(() => { console.log('✅ MongoDB Connecté'); httpServer.listen(PORT, () => console.log(`🚀🚀 Serveur sur port ${PORT}`)); }).catch(e => console.error(e));
+mongoose.connect(MONGO_URI).then(() => { console.log('✅ MongoDB Connecté'); httpServer.listen(PORT, () => console.log(`🚀🚀🚀 Serveur sur port ${PORT}`)); }).catch(e => console.error(e));

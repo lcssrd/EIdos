@@ -94,7 +94,6 @@
             text: "Charger un Cas.\n\nOuvre votre bibliothèque. Vous pouvez y choisir un dossier archivé pour l'installer dans la chambre actuelle.",
             position: 'bottom'
         },
-        // [MODIFICATION TUTORIEL] Ajout étape bibliothèque publique
         {
             element: '#public-library-btn',
             text: "Bibliothèque Publique.\n\nAccédez aux cas cliniques partagés par la communauté. Vous pouvez les importer dans vos chambres mais pas les modifier directement.",
@@ -191,7 +190,6 @@
         crModalCloseBtn = document.getElementById('cr-modal-close-btn');
         crModalActiveIdInput = document.getElementById('cr-modal-active-id');
         
-        // [NOUVEAU] Éléments de la Bibliothèque Publique
         publicLibraryModal = document.getElementById('public-library-modal');
         publicLibraryBox = document.getElementById('public-library-box');
         publicLibraryListContainer = document.getElementById('public-library-list-container');
@@ -211,10 +209,11 @@
         const allergyInput = document.getElementById('atcd-allergies');
         if (allergyInput) allergyInput.addEventListener('input', checkAllergyStatus);
 
-        // Initialisation des contrôles de zoom du tableau Prescriptions
         initZoomControls();
-        // Initialisation des contrôles de zoom de la Pancarte
         initPancarteZoomControls();
+        
+        // [NOUVEAU] Initialisation des événements de la sidebar (Ajout/Suppression)
+        setupSidebarEvents();
     }
 
     function checkAllergyStatus() {
@@ -331,6 +330,37 @@
         crModalCloseBtn.addEventListener('click', closeCrModal);
     }
 
+    // [NOUVEAU] Gestion des événements de la sidebar (Délégation)
+    function setupSidebarEvents() {
+        const list = document.getElementById('patient-list');
+        if (!list) return;
+
+        list.addEventListener('click', (e) => {
+            // Clic sur "Ajouter une chambre"
+            const addBtn = e.target.closest('#add-room-btn');
+            if (addBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.patientService && window.patientService.addRoom) {
+                    window.patientService.addRoom();
+                }
+                return;
+            }
+
+            // Clic sur "Supprimer la chambre"
+            const deleteBtn = e.target.closest('.delete-room-btn');
+            if (deleteBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const roomNumber = deleteBtn.dataset.room;
+                if (window.patientService && window.patientService.deleteRoom) {
+                    window.patientService.deleteRoom(roomNumber);
+                }
+                return;
+            }
+        });
+    }
+
     function disableSectionInputs(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -389,9 +419,6 @@
             if (saveStatusButton) saveStatusButton.style.display = 'none';
         }
         
-        // [NOUVEAU] Gestion visibilité bouton Public Library
-        // Accessible aux formateurs, owners, admins et Free (user)
-        // Interdit aux étudiants
         const publicLibBtn = document.getElementById('public-library-btn');
         if (publicLibBtn) {
             if (userPermissions.isStudent) {
@@ -423,18 +450,52 @@
         if (!userPermissions.biologie) document.querySelectorAll('#bio-table input').forEach(el => el.disabled = true);
     }
 
+    // [MODIFICATION] Sidebar avec suppression et ajout
     function initSidebar(patients, patientMap) {
         const list = document.getElementById('patient-list');
+        const perms = window.patientService ? window.patientService.getUserPermissions() : {};
+        const canEdit = !perms.isStudent && perms.role !== 'user';
+
         let listHTML = '';
         patients.forEach(patient => {
             const patientName = patientMap.get(patient.id) || `Chambre ${patient.room}`;
-            listHTML += `<li class="mb-1"><button type="button" data-patient-id="${patient.id}"><span class="patient-icon"><i class="fas fa-bed"></i></span><span class="patient-name">${patientName}</span><span class="patient-room">${patient.room}</span></button></li>`;
+            // Structure modifiée : Compacte, Numéro à droite, Poubelle remplace Numéro au survol
+            listHTML += `
+            <li class="mb-1 relative group patient-item-container">
+                <button type="button" data-patient-id="${patient.id}" class="relative z-10 group-hover:bg-gray-50">
+                    <span class="patient-icon flex-shrink-0"><i class="fas fa-bed"></i></span>
+                    <div class="flex-1 flex justify-between items-center min-w-0">
+                        <div class="patient-name font-medium text-gray-700 truncate text-sm">${patientName}</div>
+                        <div class="patient-room text-xs text-gray-500 font-mono transition-opacity duration-200 group-hover:opacity-0">CH ${patient.room}</div>
+                    </div>
+                </button>
+                ${canEdit ? `
+                <button type="button" class="delete-room-btn absolute right-2 top-1/2 -translate-y-1/2 z-20 p-1.5 text-gray-400 hover:text-red-600 hover:bg-white rounded transition-all opacity-0 group-hover:opacity-100" title="Supprimer la chambre" data-room="${patient.room}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                ` : ''}
+            </li>`;
         });
+
+        if (canEdit) {
+            listHTML += `
+            <li class="mt-2 pt-2 border-t border-gray-200">
+                <button type="button" id="add-room-btn" class="w-full py-1.5 px-3 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-teal-500 hover:text-teal-600 hover:bg-teal-50 transition-all text-xs font-medium flex items-center justify-center group">
+                    <i class="fas fa-plus mr-2"></i> Ajouter chambre
+                </button>
+            </li>
+            `;
+        }
+
         list.innerHTML = listHTML;
     }
 
     function updateSidebarActiveState(patientId) {
-        document.querySelectorAll('#patient-list button').forEach(btn => { btn.classList.remove('active'); if (btn.dataset.patientId === patientId) btn.classList.add('active'); });
+        // [IMPORTANT] On cible spécifiquement les boutons de sélection, pas ceux de suppression
+        document.querySelectorAll('#patient-list button[data-patient-id]').forEach(btn => { 
+            btn.classList.remove('active'); 
+            if (btn.dataset.patientId === patientId) btn.classList.add('active'); 
+        });
     }
 
     function updateSidebarEntryName(patientId, patientName) {
@@ -790,7 +851,7 @@
         confirmOkBtn.textContent = 'Confirmer';
         confirmCallback = callback;
         confirmModal.classList.remove('hidden');
-        setTimeout(() => { confirmModalBox.classList.remove('scale-95', 'opacity-0'); }, 10);
+        setTimeout(() => confirmModalBox.classList.remove('scale-95', 'opacity-0'), 10);
     }
     
     function hideConfirmation() {
@@ -1603,6 +1664,37 @@
             </li>`;
         });
         list.innerHTML = html;
+    }
+
+    // [NOUVEAU] Gestion des événements de la sidebar (Délégation)
+    function setupSidebarEvents() {
+        const list = document.getElementById('patient-list');
+        if (!list) return;
+
+        list.addEventListener('click', (e) => {
+            // Clic sur "Ajouter une chambre"
+            const addBtn = e.target.closest('#add-room-btn');
+            if (addBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.patientService && window.patientService.addRoom) {
+                    window.patientService.addRoom();
+                }
+                return;
+            }
+
+            // Clic sur "Supprimer la chambre"
+            const deleteBtn = e.target.closest('.delete-room-btn');
+            if (deleteBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const roomNumber = deleteBtn.dataset.room;
+                if (window.patientService && window.patientService.deleteRoom) {
+                    window.patientService.deleteRoom(roomNumber);
+                }
+                return;
+            }
+        });
     }
     
     window.uiService = {

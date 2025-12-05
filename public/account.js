@@ -136,6 +136,9 @@
     let tabContents = {};
     let currentPlan = 'free';
     
+    // [MODIFICATION] Liste des chambres disponibles pour le formateur
+    let availableRooms = []; 
+    
     // Variables pour la modale des chambres (Formateurs)
     let roomModal, roomModalBox, roomModalForm, roomModalList, roomModalTitle, roomModalLoginInput;
 
@@ -640,6 +643,13 @@
 
             // Assignation immédiate du plan
             currentPlan = data.plan;
+            
+            // [MODIFICATION] Gestion dynamique des chambres
+            // Récupère les chambres du serveur ou fallback sur 101-110 si vide
+            availableRooms = data.rooms || [];
+            if (availableRooms.length === 0) {
+                for (let i = 101; i <= 110; i++) availableRooms.push(String(i));
+            }
 
             // UI Standard
             const planNameEl = document.getElementById('current-plan-name');
@@ -906,21 +916,27 @@
     function handleOpenRoomModal(button) {
         const login = button.dataset.login;
         const name = button.dataset.name;
-        const rooms = JSON.parse(button.dataset.rooms || '[]');
+        const assignedRooms = JSON.parse(button.dataset.rooms || '[]'); // Chambres déjà assignées à l'étudiant
 
         roomModalTitle.textContent = `Gérer les chambres pour ${name}`;
         roomModalLoginInput.value = login;
 
         let roomCheckboxesHTML = '';
-        for (let i = 101; i <= 110; i++) {
-            const roomId = `chambre_${i}`;
-            const isChecked = rooms.includes(roomId);
+        
+        // [MODIFICATION] Utilisation de la liste dynamique availableRooms
+        // On trie les chambres numériquement
+        availableRooms.sort((a, b) => parseInt(a) - parseInt(b));
+
+        availableRooms.forEach(roomNb => {
+            const roomId = `chambre_${roomNb}`;
+            const isChecked = assignedRooms.includes(roomId);
             roomCheckboxesHTML += `
                 <label class="flex items-center space-x-2 p-2 border rounded-md ${isChecked ? 'bg-indigo-50 border-indigo-300' : 'bg-gray-50' } cursor-pointer hover:bg-gray-100">
                     <input type="checkbox" name="room" value="${roomId}" ${isChecked ? 'checked' : ''} class="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4">
-                    <span class="font-medium text-sm">${i}</span>
+                    <span class="font-medium text-sm">${roomNb}</span>
                 </label>`;
-        }
+        });
+
         roomModalList.innerHTML = roomCheckboxesHTML;
         roomModal.classList.remove('hidden');
         setTimeout(() => roomModalBox.classList.remove('scale-95', 'opacity-0'), 10);

@@ -49,6 +49,89 @@ body {
     display: none;
 }
 
+/* --- MODIFICATIONS SIDEBAR --- */
+
+/* 1. Cacher la barre de scroll */
+#sidebar nav::-webkit-scrollbar {
+    display: none;
+}
+#sidebar nav {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* 2. Style des boutons de la liste (Compact) */
+#patient-list li button[data-patient-id] {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem 0.75rem; /* Plus compact (py-2) */
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-align: left;
+    height: 100%;
+}
+
+/* 3. Style de l'icône de lit (MODIFIÉ : Sans fond) */
+.patient-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem; /* Un peu plus petit sans le cadre */
+    height: 1.5rem;
+    margin-right: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    
+    /* Sans fond ni bordure */
+    background-color: transparent;
+    border: none;
+    color: #9ca3af; /* Gris clair (text-gray-400) par défaut */
+}
+
+/* État Hover sur la ligne */
+#patient-list li button[data-patient-id]:hover .patient-icon {
+    color: #4b5563; /* Gris plus foncé au survol */
+}
+
+/* État Actif : Blanc (le fond vert est sur le bouton parent) */
+#patient-list li button[data-patient-id].active .patient-icon {
+    background-color: transparent;
+    border: none;
+    color: white; /* Blanc pour contraster avec le fond vert du bouton */
+}
+
+/* --- FIN MODIFICATIONS --- */
+
+#patient-list li button[data-patient-id]:hover {
+    background-color: #f3f4f6; 
+}
+#patient-list li button[data-patient-id].active {
+    background-color: #0d9488; 
+    color: white;
+    font-weight: 600;
+}
+#patient-list li button[data-patient-id].active .patient-room {
+    color: #ccfbf1; 
+}
+
+/* Style spécifique pour le bouton de suppression */
+.delete-room-btn {
+    width: auto !important; 
+}
+
+.patient-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.patient-room {
+    font-size: 0.8rem;
+    color: #6b7280; 
+    margin-left: 0.5rem;
+}
+
 .content-section { display: none; }
 .content-section.active { display: block; animation: fadeIn 0.5s ease-in-out; }
 @keyframes fadeIn {
@@ -185,42 +268,6 @@ textarea.info-value {
 }
 #sidebar {
     transition: width 0.3s ease;
-}
-#patient-list li button {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    text-align: left;
-}
-#patient-list li button:hover {
-    background-color: #f3f4f6; 
-}
-#patient-list li button.active {
-    background-color: #0d9488; 
-    color: white;
-    font-weight: 600;
-}
-#patient-list li button.active .patient-room {
-    color: #ccfbf1; 
-}
-#patient-list li button .patient-icon {
-    margin-right: 0.75rem;
-    width: 1.25rem;
-    text-align: center;
-}
-.patient-name {
-    flex-grow: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.patient-room {
-    font-size: 0.8rem;
-    color: #6b7280; 
-    margin-left: 0.5rem;
 }
 
 .iv-bar-container {
