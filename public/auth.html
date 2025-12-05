@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EIdos-simul - Authentification</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%2300A693'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12' /%3E%3C/svg%3E">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Parkinsans:wght@600&display=swap" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+
+    <style>
+        .font-custom-title {
+            font-family: 'Parkinsans', sans-serif;
+            font-weight: 600;
+        }
+        /* Masquer les sections inactives */
+        .auth-section.hidden {
+            display: none;
+        }
+
+        /* Style pour la carte de plan sélectionnée */
+        .plan-card {
+            transition: all 0.2s ease-in-out;
+            /* S'assurer que les cartes ont la même hauteur */
+            height: 100%; 
+            /* Rendre la carte entière cliquable */
+            display: flex;
+            flex-direction: column;
+        }
+        .plan-card .plan-content {
+            flex-grow: 1; /* Pousse le prix en bas */
+        }
+        .plan-card.selected {
+            outline: 3px solid #0d9488; /* teal-700 */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="w-full max-w-3xl bg-white shadow-2xl rounded-2xl overflow-hidden">
+            
+            <div class="p-8 md:p-10 bg-gradient-to-br from-teal-500 to-cyan-600 text-white">
+                <div class="flex flex-col items-center text-center">
+                    <svg class="h-14 w-14 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
+                    </svg>
+                    <h1 class="text-4xl font-custom-title">EIdos-simul</h1>
+                    <p class="text-md text-cyan-100 mt-1">Simulation de Dossier Patient</p>
+                </div>
+            </div>
+
+            <div class="p-8 md:p-10">
+
+                <div id="login-section" class="auth-section">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Connexion</h2>
+                    
+                    <form id="login-form" class="space-y-5">
+                        <div>
+                            <label for="login-identifier" class="block text-sm font-medium text-gray-700">Email ou Identifiant</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-user text-gray-400"></i> </div>
+                                <input type="text" id="login-identifier" name="identifier" required
+                                       class="styled-input pl-10"
+                                       placeholder="Email ou identifiant étudiant">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <label for="login-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                                <div class="text-sm">
+                                    <a href="#" id="show-forgot-password-link" class="font-medium text-teal-600 hover:text-teal-500">
+                                        Mot de passe oublié ?
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input type="password" id="login-password" name="password" required
+                                       class="styled-input pl-10"
+                                       placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <p id="login-error-message" class="text-sm text-red-600 text-center hidden"></p>
+
+                        <div>
+                            <button type="submit" id="login-btn"
+                                    class="w-full inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-lg text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out hover:scale-105">
+                                Connexion
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600">
+                            Pas encore de compte ? 
+                            <a href="#" id="show-signup-link" class="font-medium text-teal-600 hover:text-teal-500">
+                                S'inscrire
+                            </a>
+                        </p>
+                    </div>
+                </div>
+
+                <div id="signup-section" class="auth-section hidden">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Créer un compte</h2>
+                
+                    <form id="signup-form" class="space-y-5">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                            <div>
+                                <label for="signup-email" class="block text-sm font-medium text-gray-700">Adresse email</label>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-envelope text-gray-400"></i>
+                                    </div>
+                                    <input type="email" id="signup-email" name="email" required class="styled-input pl-10" placeholder="vous@hopital.fr">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="signup-password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                                <div class="relative mt-1">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-lock text-gray-400"></i>
+                                    </div>
+                                    <input type="password" id="signup-password" name="password" required class="styled-input pl-10" placeholder="••••••••">
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="pt-2">
+                            <h3 class="text-center text-sm font-medium text-gray-700 mb-3">Choisissez votre forfait</h3>
+                            <div class="grid grid-cols-4 gap-3">
+                                
+                                <div class="plan-card border rounded-lg p-3 cursor-pointer" data-plan="free">
+                                    <div class="plan-content">
+                                        <h4 class="font-semibold text-gray-800 border-b-2 border-gray-400 pb-1">Free</h4>
+                                        <ul class="text-xs text-gray-500 mt-2 space-y-1">
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Découverte du logiciel</span></li>
+                                            <li class="flex items-start"><i class="fas fa-times text-red-500 w-3 mr-1 mt-1"></i><span>Pas de sauvegarde en ligne</span></li>
+                                            <li class="flex items-start"><i class="fas fa-times text-red-500 w-3 mr-1 mt-1"></i><span>Pas de comptes étudiants</span></li>
+                                        </ul>
+                                    </div>
+                                    <p class="text-xl font-bold mt-2 text-right">Gratuit</p>
+                                </div>
+                                
+                                <div class="plan-card border rounded-lg p-3 cursor-pointer" data-plan="independant">
+                                    <div class="plan-content">
+                                        <h4 class="font-semibold text-teal-700 border-b-2 border-teal-600 pb-1">Indépendant</h4>
+                                        <ul class="text-xs text-gray-500 mt-2 space-y-1">
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Service de soins de 10 chambres</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Sauvegardes en ligne</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Archives patients (20)</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Jusqu'à 5 comptes étudiants</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Gestion des permissions</span></li>
+                                        </ul>
+                                    </div>
+                                    <p class="text-xl font-bold mt-2 text-right">__€<span class="text-sm font-normal">/mois</span></p>
+                                </div>
+                                
+                                <div class="plan-card border rounded-lg p-3 cursor-pointer" data-plan="promo">
+                                     <div class="plan-content">
+                                        <h4 class="font-semibold text-blue-700 border-b-2 border-blue-600 pb-1">Promo</h4>
+                                        <ul class="text-xs text-gray-500 mt-2 space-y-1">
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Service de soins de 10 chambres</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Sauvegardes en ligne</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Archives patients (50)</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Jusqu'à 40 comptes étudiants</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Gestion des permissions</span></li>
+                                        </ul>
+                                    </div>
+                                    <p class="text-xl font-bold mt-2 text-right">__€<span class="text-sm font-normal">/mois</span></p>
+                                </div>
+                                
+                                <div class="plan-card border rounded-lg p-3 cursor-pointer" data-plan="centre">
+                                     <div class="plan-content">
+                                        <h4 class="font-semibold text-indigo-700 border-b-2 border-indigo-600 pb-1">Centre</h4>
+                                        <ul class="text-xs text-gray-500 mt-2 space-y-1">
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Service de soins de 10 chambres</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Sauvegardes en ligne</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Comptes multi-formateurs</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Archives patients illimitées</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Étudiants illimités</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Gestion des permissions</span></li>
+                                            <li class="flex items-start"><i class="fas fa-check text-green-500 w-3 mr-1 mt-1"></i><span>Support prioritaire</span></li>
+                                        </ul>
+                                    </div>
+                                    <p class="text-xl font-bold mt-2 text-right">Sur Devis</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p id="signup-error-message" class="text-sm text-red-600 text-center hidden"></p>
+                        
+                        <div class="pt-2">
+                            <button type="submit" id="signup-btn"
+                                    class="w-full inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-lg text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out hover:scale-105">
+                                S'inscrire
+                            </button>
+                        </div>
+                    </form>
+
+                    <p class="mt-6 text-center text-sm text-gray-600">
+                        Déjà un compte ? 
+                        <a href="#" id="show-login-link-1" class="font-medium text-teal-600 hover:text-teal-500">
+                            Se connecter
+                        </a>
+                    </p>
+                </div>
+
+                <div id="verify-section" class="auth-section hidden">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Vérifier votre email</h2>
+                    <p class="text-center text-gray-600 mb-4">Un code a été envoyé à <strong id="verify-email-display"></strong>. Veuillez le saisir ci-dessous.</p>
+                    
+                    <form id="verify-form" class="space-y-5">
+                        <input type="hidden" id="verify-email">
+                        <div>
+                            <label for="verify-code" class="block text-sm font-medium text-gray-700">Code de vérification</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-key text-gray-400"></i>
+                                </div>
+                                <input type="text" id="verify-code" name="code" required
+                                       class="styled-input pl-10 text-center tracking-[0.5em]"
+                                       placeholder="••••••">
+                            </div>
+                        </div>
+
+                        <p id="verify-error-message" class="text-sm text-red-600 text-center hidden"></p>
+                        <p id="verify-success-message" class="text-sm text-green-600 text-center hidden"></p>
+                        <p id="test-code-display" class="text-sm text-blue-600 text-center hidden bg-blue-50 p-2 rounded"></p>
+
+                        <div>
+                            <button type="submit" id="verify-btn"
+                                    class="w-full inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-lg text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out hover:scale-105">
+                                Vérifier
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <p class="text-sm text-gray-600">
+                            Vous n'avez pas reçu le code ? 
+                            <button type="button" id="resend-code-btn" class="text-teal-600 hover:text-teal-800 font-medium focus:outline-none transition-colors">
+                                Renvoyer le code
+                            </button>
+                        </p>
+                        <p id="resend-message" class="text-xs mt-2 h-4"></p>
+                    </div>
+                    
+                    <p class="mt-6 text-center text-sm text-gray-600">
+                        Vous connecter ? 
+                        <a href="#" id="show-login-link-2" class="font-medium text-teal-600 hover:text-teal-500">
+                            Connexion
+                        </a>
+                    </p>
+                </div>
+
+                <div id="forgot-password-section" class="auth-section hidden">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Mot de passe oublié</h2>
+                    <p class="text-center text-gray-600 mb-4">Entrez votre adresse email pour recevoir un code de réinitialisation.</p>
+                    
+                    <form id="forgot-password-form" class="space-y-5">
+                        <div>
+                            <label for="forgot-email" class="block text-sm font-medium text-gray-700">Adresse email</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input type="email" id="forgot-email" name="email" required class="styled-input pl-10" placeholder="vous@hopital.fr">
+                            </div>
+                        </div>
+
+                        <p id="forgot-error-message" class="text-sm text-red-600 text-center hidden"></p>
+                        <p id="forgot-success-message" class="text-sm text-green-600 text-center hidden"></p>
+
+                        <div>
+                            <button type="submit" id="forgot-btn"
+                                    class="w-full inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-lg text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out hover:scale-105">
+                                Envoyer le code
+                            </button>
+                        </div>
+                    </form>
+
+                    <p class="mt-6 text-center text-sm text-gray-600">
+                        Retour à la <a href="#" id="back-to-login-link-1" class="font-medium text-teal-600 hover:text-teal-500">connexion</a>
+                    </p>
+                </div>
+
+                <div id="reset-password-section" class="auth-section hidden">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Nouveau mot de passe</h2>
+                    <p class="text-center text-gray-600 mb-4">Un code a été envoyé à votre adresse. Définissez votre nouveau mot de passe.</p>
+                    
+                    <form id="reset-password-form" class="space-y-5">
+                        <input type="hidden" id="reset-email-hidden">
+                        <div>
+                            <label for="reset-code" class="block text-sm font-medium text-gray-700">Code de vérification</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-key text-gray-400"></i>
+                                </div>
+                                <input type="text" id="reset-code" name="code" required class="styled-input pl-10 text-center tracking-[0.5em]" placeholder="••••••">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="reset-new-password" class="block text-sm font-medium text-gray-700">Nouveau mot de passe</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input type="password" id="reset-new-password" name="newPassword" required class="styled-input pl-10" placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <p id="reset-error-message" class="text-sm text-red-600 text-center hidden"></p>
+                        <p id="reset-success-message" class="text-sm text-green-600 text-center hidden"></p>
+
+                        <div>
+                            <button type="submit" id="reset-btn"
+                                    class="w-full inline-flex justify-center items-center py-3 px-8 border border-transparent rounded-lg shadow-lg text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-300 ease-in-out hover:scale-105">
+                                Réinitialiser
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <p class="mt-6 text-center text-sm text-gray-600">
+                        <a href="#" id="back-to-login-link-2" class="font-medium text-teal-600 hover:text-teal-500">Annuler</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <script src="auth.js"></script>
+</body>
+</html>
