@@ -125,7 +125,12 @@ const io = new Server(httpServer, {
     cors: {
         origin: (origin, callback) => {
             if (!origin) return callback(null, true);
-            const allowedOrigins = [process.env.CLIENT_URL, 'https://eidos-simul.onrender.com'];
+                const allowedOrigins = [
+                process.env.CLIENT_URL, 
+                'https://eidos-simul.onrender.com',
+                'https://eidos-simul.fr',      // AJOUTER ICI
+                'https://www.eidos-simul.fr'   // AJOUTER ICI
+            ];
             if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.onrender.com') || origin.includes('localhost') || origin.includes('127.0.0.1')) {
                 callback(null, true);
             } else {
